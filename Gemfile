@@ -29,3 +29,8 @@ gem 'thin'
 gem 'instagram'
 gem 'httparty'
 gem 'render_csv'
+
+group :production do
+  gem 'pg'
+  gem 'rails_12factor'
+end
