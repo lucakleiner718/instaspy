@@ -30,6 +30,12 @@ class Tag < ActiveRecord::Base
     self.recent_media max_id: self.newest_media.insta_id
   end
 
+  def self.recent_media
+    Tag.observed.each do |tag|
+      tag.recent_media
+    end
+  end
+
   def recent_media *args
     options = args.extract_options!
 

@@ -1,6 +1,6 @@
 class PagesController < ApplicationController
   def home
-    redirect_to oauth_connect_path if Setting.g('instagram_access_token').blank?
+    # redirect_to oauth_connect_path if Setting.g('instagram_access_token').blank?
   end
 
   def export

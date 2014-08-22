@@ -1,8 +1,10 @@
 <h3>Basic links</h3>
-<p><%= link_to 'Get all users from all 5 tags', export_path(format: :csv) %></p>
+<p><%= link_to "Get all users from all #{Tag.observed.size} tags", export_path(format: :csv) %></p>
 <p><%= link_to 'Login to Instagram', oauth_connect_path %></p>
 
-<h3>View API Rate Limit and calls remaining</h3>
-<% client = Instagram.client(:access_token => Setting.g('instagram_access_token')) %>
-<% response = client.utils_raw_response %>
-<p>Rate Limit = <%= response.headers[:x_ratelimit_limit] %>.  <br/>Calls Remaining = <%= response.headers[:x_ratelimit_remaining] %></p>
+<% if Setting.g('instagram_access_token').present? %>
+  <h3>View API Rate Limit and calls remaining</h3>
+  <% client = Instagram.client(:access_token => Setting.g('instagram_access_token')) %>
+  <% response = client.utils_raw_response %>
+  <p>Rate Limit = <%= response.headers[:x_ratelimit_limit] %>.  <br/>Calls Remaining = <%= response.headers[:x_ratelimit_remaining] %></p>
+<% end %>
