@@ -3,19 +3,19 @@ class User < ActiveRecord::Base
   has_many :media
 
   before_save do
-    # if self.full_name_changed?
+    if self.full_name_changed?
       self.full_name = self.full_name.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: '')
       self.full_name = self.full_name.encode(self.full_name.encoding, "binary", invalid: :replace, undef: :replace, replace: '')
-    # end
+    end
 
-    # if self.bio_changed?
+    if self.bio_changed?
       self.bio = self.bio.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: '')
       self.bio = self.bio.encode(self.bio.encoding, "binary", invalid: :replace, undef: :replace, replace: '')
-    # end
+    end
   end
 
   def self.update_info
-    User.where("bio is NULL OR website is NULL OR full_name is NULL").each do |u|
+    User.all.each do |u|
       u.update_info!
     end
   end
