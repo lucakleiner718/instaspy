@@ -1,10 +1,10 @@
 class OauthController < ApplicationController
   def connect
-    redirect_to Instagram.authorize_url(:redirect_uri => ENV['REDIRECT_URI'])
+    redirect_to Instagram.authorize_url(redirect_uri: Rails.application.secrets.instagram_redirect_uri)
   end
 
   def signin
-    response = Instagram.get_access_token(params[:code], :redirect_uri => ENV['REDIRECT_URI'])
+    response = Instagram.get_access_token(params[:code], redirect_uri: Rails.application.secrets.instagram_redirect_uri)
     Setting.s('instagram_access_token', response.access_token)
     session[:access_token] = response.access_token
     redirect_to root_path
