@@ -35,6 +35,21 @@ GEM
     binding_of_caller (0.7.2)
       debug_inspector (>= 0.0.1)
     builder (3.2.2)
+    capistrano (3.2.1)
+      i18n
+      rake (>= 10.0.0)
+      sshkit (~> 1.3)
+    capistrano-bundler (1.1.3)
+      capistrano (~> 3.1)
+      sshkit (~> 1.2)
+    capistrano-puma (0.2.3)
+      capistrano (>= 3.0)
+    capistrano-rails (1.1.1)
+      capistrano (~> 3.1)
+      capistrano-bundler (~> 1.1)
+    capistrano-rvm (0.1.1)
+      capistrano (~> 3.0)
+      sshkit (~> 1.2)
     celluloid (0.15.2)
       timers (~> 1.1.0)
     coderay (1.1.0)
@@ -45,6 +60,7 @@ GEM
       coffee-script-source
       execjs
     coffee-script-source (1.7.1)
+    colorize (0.7.3)
     connection_pool (2.0.0)
     daemons (1.1.9)
     debug_inspector (0.0.2)
@@ -84,7 +100,9 @@ GEM
     multi_xml (0.5.5)
     multipart-post (2.0.0)
     mysql2 (0.3.16)
-    pg (0.17.1)
+    net-scp (1.2.1)
+      net-ssh (>= 2.6.5)
+    net-ssh (2.9.1)
     polyglot (0.3.5)
     pry (0.10.1)
       coderay (~> 1.1.0)
@@ -92,6 +110,8 @@ GEM
       slop (~> 3.4)
     pry-rails (0.3.2)
       pry (>= 0.9.10)
+    puma (2.8.2)
+      rack (>= 1.1, < 2.0)
     quiet_assets (1.0.3)
       railties (>= 3.1, < 5.0)
     rack (1.5.2)
@@ -109,11 +129,6 @@ GEM
       bundler (>= 1.3.0, < 2.0)
       railties (= 4.1.5)
       sprockets-rails (~> 2.0)
-    rails_12factor (0.0.2)
-      rails_serve_static_assets
-      rails_stdout_logging
-    rails_serve_static_assets (0.0.2)
-    rails_stdout_logging (0.0.3)
     railties (4.1.5)
       actionpack (= 4.1.5)
       activesupport (= 4.1.5)
@@ -163,6 +178,10 @@ GEM
       actionpack (>= 3.0)
       activesupport (>= 3.0)
       sprockets (~> 2.8)
+    sshkit (1.5.1)
+      colorize
+      net-scp (>= 1.1.2)
+      net-ssh (>= 2.8.0)
     temple (0.6.8)
     therubyracer (0.12.1)
       libv8 (~> 3.16.14.0)
@@ -192,17 +211,21 @@ PLATFORMS
 DEPENDENCIES
   better_errors
   binding_of_caller
+  capistrano (~> 3.2.0)
+  capistrano-bundler (~> 1.1)
+  capistrano-puma
+  capistrano-rails (~> 1.1)
+  capistrano-rvm (~> 0.1)
   coffee-rails (~> 4.0.0)
   httparty
   instagram
   jbuilder (~> 2.0)
   jquery-rails
   mysql2
-  pg
   pry-rails
+  puma (~> 2.8.2)
   quiet_assets
   rails (= 4.1.5)
-  rails_12factor
   render_csv
   sass-rails (~> 4.0.3)
   sidekiq

@@ -21,10 +21,16 @@ group :development do
   gem 'quiet_assets'
   gem 'better_errors'
   gem 'binding_of_caller'
+
+  gem 'capistrano', '~> 3.2.0'
+  gem 'capistrano-bundler', '~> 1.1', require: false
+  gem 'capistrano-rails', '~> 1.1', require: false
+  gem 'capistrano-puma', require: false
+  gem 'capistrano-rvm', '~> 0.1', require: false
+  gem 'thin'
 end
 
 gem 'pry-rails'
-gem 'thin'
 gem 'instagram'
 gem 'httparty'
 gem 'render_csv'
@@ -34,6 +40,5 @@ gem 'sinatra', require: false             # Web interface of Sidekiq processes
 gem 'slim'
 
 group :production do
-  gem 'pg'
-  gem 'rails_12factor'
+  gem 'puma', '~> 2.8.2'                                    # Production Web Server
 end
