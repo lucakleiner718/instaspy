@@ -11,3 +11,4 @@
 /log/*.log
 /tmp
 /config/database.yml
+/.env
