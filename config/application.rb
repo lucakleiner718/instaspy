@@ -21,5 +21,7 @@ module Instaspy
     # config.i18n.default_locale = :de
 
     config.autoload_paths += %W(#{config.root}/lib)
+
+    config.action_mailer.default_options = { from: 'admin@1bid1.com' }
   end
 end

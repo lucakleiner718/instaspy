@@ -1,9 +1,9 @@
 class ReportWorker
   include Sidekiq::Worker
 
-  def perform
-    ends = 1.day.ago.end_of_day
-    starts = 6.days.ago(ends).beginning_of_day
+  def perform starts=nil, ends=nil
+    ends ||= Time.now#1.day.ago.end_of_day
+    starts ||= 6.days.ago(ends).beginning_of_day
 
     header = ['Username', 'Full Name', 'Website', 'Follows', 'Followed By', 'Media Amount']
     csv_files = {}
