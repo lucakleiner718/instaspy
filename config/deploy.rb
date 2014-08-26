@@ -8,7 +8,7 @@ set :branch, :master
 # ask :branch, proc { `git rev-parse --abbrev-ref HEAD`.chomp }.call
 set :scm, :git
 set :format, :pretty
-set :pty, true
+set :pty, false
 
 set :log_level, :info #:debug
 
@@ -35,12 +35,30 @@ set :puma_conf, "#{shared_path}/puma.rb"
 # set :puma_preload_app, true
 
 
+# :sidekiq_default_hooks =>  true
+# :sidekiq_pid =>  File.join(shared_path, 'tmp', 'pids', 'sidekiq.pid')
+# :sidekiq_env =>  fetch(:rack_env, fetch(:rails_env, fetch(:stage)))
+# :sidekiq_log =>  File.join(shared_path, 'log', 'sidekiq.log')
+# :sidekiq_options =>  nil
+# :sidekiq_require => nil
+# :sidekiq_tag => nil
+# :sidekiq_config => nil
+# :sidekiq_queue => nil
+# :sidekiq_timeout =>  10
+# :sidekiq_role =>  :app
+# :sidekiq_processes =>  1
+# :sidekiq_concurrency => nil
+# :sidekiq_cmd => "#{fetch(:bundle_cmd, "bundle")} exec sidekiq"  # Only for capistrano2.5
+# :sidekiqctl_cmd => "#{fetch(:bundle_cmd, "bundle")} exec sidekiqctl" # Only for capistrano2.5
+
+
 namespace :deploy do
 
   desc 'Restart application'
   task :restart do
     on roles(:app), in: :sequence, wait: 5 do
       invoke 'puma:restart'
+      invoke 'sidekiq:restart'
     end
   end
 

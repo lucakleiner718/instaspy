@@ -27,6 +27,8 @@ group :development do
   gem 'capistrano-rails', '~> 1.1', require: false
   gem 'capistrano3-puma', require: false
   gem 'capistrano-rvm', '~> 0.1', require: false
+  gem "capistrano-sidekiq", require: false
+
   gem 'thin'
 end
 
