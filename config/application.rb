@@ -22,6 +22,6 @@ module Instaspy
 
     config.autoload_paths += %W(#{config.root}/lib)
 
-    config.action_mailer.default_options = { from: 'admin@1bid1.com' }
+    config.action_mailer.default_options = { from: 'instaspy@digitallylux.com' }
   end
 end
