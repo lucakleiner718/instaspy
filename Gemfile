@@ -38,6 +38,7 @@ gem 'httparty'
 gem 'render_csv'
 gem 'sidekiq'                             # Delayed jobs processor
 gem 'sidekiq-scheduler'                   # Scheduler for sidekiq
+gem 'sidekiq-failures'
 gem 'sinatra', require: false             # Web interface of Sidekiq processes
 gem 'slim'
 gem 'dotenv', '~> 0.11.1'
