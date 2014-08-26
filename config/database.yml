@@ -20,8 +20,8 @@ default: &default
 development:
   <<: *default
   database: instaspy_development
-  encoding: utf8mb4
-  collation: utf8mb4_unicode_ci
+#  encoding: utf8mb4
+#  collation: utf8mb4_unicode_ci
 
 # Warning: The database defined as "test" will be erased and
 # re-generated from your development database when you run "rake".
@@ -53,4 +53,4 @@ production:
   <<: *default
   database: instaspy_production
   username: instaspy
-  password: <%= ENV['INSTASPY_DATABASE_PASSWORD'] %>
+#  password: <%= ENV['INSTASPY_DATABASE_PASSWORD'] %>
