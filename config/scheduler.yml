@@ -5,3 +5,7 @@ media_grabber:
 media_grabber:
   every: 10m
   class: UserWorker
+
+report_weekly:
+  cron: "0 0 * * 1 *"
+  class: ReportWorker

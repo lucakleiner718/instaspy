@@ -2,7 +2,6 @@ class ReportWorker
   include Sidekiq::Worker
 
   def perform
-    # week
     ends = 1.day.ago.end_of_day
     starts = 6.days.ago(ends).beginning_of_day
 
@@ -17,5 +16,8 @@ class ReportWorker
       end
       csv_files[tag.name] = csv_string
     end
+    csv_files
+
+    ReportMailer.weekly(csv_files, starts, ends).deliver
   end
 end
