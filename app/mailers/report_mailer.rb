@@ -5,7 +5,7 @@ class ReportMailer < ActionMailer::Base
     end
     ends = ends.class.name == 'String' ? Time.parse(ends) : ends
     starts = starts.class.name == 'String' ? Time.parse(starts) : starts
-#"rob@ladylux.com", bcc:
-    mail to: 'me@antonzaytsev.com', subject: "Weekly InstaSpy report #{starts.strftime('%m/%d/%y')}-#{ends.strftime('%m/%d/%y')}"
+
+    mail to: "rob@ladylux.com", bcc: 'me@antonzaytsev.com', subject: "Weekly InstaSpy report #{starts.strftime('%m/%d/%y')}-#{ends.strftime('%m/%d/%y')}"
   end
 end
