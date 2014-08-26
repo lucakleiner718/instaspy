@@ -17,7 +17,7 @@ class Tag < ActiveRecord::Base
   end
 
   def get_old_media
-    self.recent_media min_id: self.oldest_media.insta_id
+    self.recent_media max_id: self.oldest_media.insta_id
   end
 
   def self.get_new_media
@@ -40,10 +40,8 @@ class Tag < ActiveRecord::Base
     options = args.extract_options!
 
     client = Instagram.client(:access_token => Setting.g('instagram_access_token'))
-    # resp = HTTParty.get "https://api.instagram.com/v1/tags/#{tag.name}/media/recent?access_token=#{Setting.g('instagram_access_token')}"
-    # tags = client.tag_search(tag.name)
-    client.tag_recent_media(self.name, min_tag_id: options[:min_id], max_tag_id: options[:max_id]).each do |media_item|
-      # resp['data'].each do |media|
+
+    client.tag_recent_media(self.name, min_tag_id: options[:min_id], max_tag_id: options[:max_id], count: 1000).each do |media_item|
       media = Media.where(insta_id: media_item['id']).first_or_initialize
 
       user = User.where(insta_id: media_item['user']['id']).first_or_initialize

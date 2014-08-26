@@ -61,6 +61,8 @@ ActiveRecord::Schema.define(version: 20140822075558) do
     t.integer  "follows"
     t.integer  "followed_by"
     t.integer  "media_amount"
+    t.boolean  "private",         default: false
+    t.datetime "grabbed_at"
     t.datetime "created_at"
     t.datetime "updated_at"
   end

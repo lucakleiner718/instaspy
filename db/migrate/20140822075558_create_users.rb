@@ -10,6 +10,8 @@ class CreateUsers < ActiveRecord::Migration
       t.integer :follows
       t.integer :followed_by
       t.integer :media_amount
+      t.boolean :private, default: false
+      t.datetime :grabbed_at
 
       t.timestamps
     end

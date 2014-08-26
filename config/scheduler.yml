@@ -1,0 +1,4 @@
+media_grabber:
+  every: '10m'
+  class: MediaWorker
+#  queue: media

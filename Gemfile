@@ -28,6 +28,10 @@ gem 'thin'
 gem 'instagram'
 gem 'httparty'
 gem 'render_csv'
+gem 'sidekiq'                             # Delayed jobs processor
+gem 'sidekiq-scheduler'                   # Scheduler for sidekiq
+gem 'sinatra', require: false             # Web interface of Sidekiq processes
+gem 'slim'
 
 group :production do
   gem 'pg'
