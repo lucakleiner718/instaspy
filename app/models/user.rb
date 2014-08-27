@@ -14,6 +14,11 @@ class User < ActiveRecord::Base
       self.bio = self.bio.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: '')
       self.bio = self.bio.encode(self.bio.encoding, "binary", invalid: :replace, undef: :replace, replace: '')
     end
+
+    if self.website_changed?
+      self.website = self.website.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: '')
+      self.website = self.website.encode(self.website.encoding, "binary", invalid: :replace, undef: :replace, replace: '')
+    end
   end
 
   def self.update_info
