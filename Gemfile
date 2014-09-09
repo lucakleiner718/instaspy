@@ -41,7 +41,7 @@ gem 'instagram'
 gem 'httparty'
 gem 'render_csv'
 gem 'sidekiq'                             # Delayed jobs processor
-gem "sidekiq-cron", "~> 0.2.0"
+# gem "sidekiq-cron", "~> 0.2.0"
 gem 'sidekiq-failures'
 gem 'sinatra', require: false             # Web interface of Sidekiq processes
 gem 'slim'
