@@ -40,7 +40,7 @@ class User < ActiveRecord::Base
     self.website = data['website']
     self.profile_picture = data['profile_picture']
     self.full_name = data['full_name'] if data['full_name'].present?
-    self.followed_by = data['counts']['followed_by']
+    self.followed_by = data['counts']['followed_by'] if data['counts']
     self.follows = data['counts']['follows']
     self.media_amount = data['counts']['media']
     self.grabbed_at = Time.now
