@@ -7,6 +7,8 @@ Rails.application.routes.draw do
 
   get 'export' => 'pages#export'
 
+  get 'chart' => 'pages#chart'
+
   require 'sidekiq/web'
   mount Sidekiq::Web, at: '/sidekiq'
 

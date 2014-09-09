@@ -32,6 +32,10 @@ group :development do
   gem 'thin'
 end
 
+group :production do
+  gem 'puma', '~> 2.8.2'                                    # Production Web Server
+end
+
 gem 'pry-rails'
 gem 'instagram'
 gem 'httparty'
@@ -44,7 +48,3 @@ gem 'slim'
 gem 'dotenv', '~> 0.11.1'
 gem 'dotenv-deployment', require: 'dotenv/deployment'       # Automatic Vars in Production/Staging
 gem 'whenever', :require => false
-
-group :production do
-  gem 'puma', '~> 2.8.2'                                    # Production Web Server
-end
