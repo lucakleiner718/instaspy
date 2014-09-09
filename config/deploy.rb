@@ -51,6 +51,7 @@ set :puma_conf, "#{shared_path}/puma.rb"
 # :sidekiq_cmd => "#{fetch(:bundle_cmd, "bundle")} exec sidekiq"  # Only for capistrano2.5
 # :sidekiqctl_cmd => "#{fetch(:bundle_cmd, "bundle")} exec sidekiqctl" # Only for capistrano2.5
 
+set :sidekiq_config, "#{current_path}/config/sidekiq.yml"
 
 namespace :deploy do
 

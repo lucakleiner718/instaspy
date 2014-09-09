@@ -1,7 +1,7 @@
 class UserWorker
   include Sidekiq::Worker
 
-  sidekiq_options queue: :default, retry: false, backtrace: true
+  sidekiq_options queue: :default, retry: false, backtrace: true, unique: true
 
   def perform
     User.not_grabbed.each do |u|

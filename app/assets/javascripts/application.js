@@ -13,23 +13,6 @@
 //= require jquery
 //= require jquery_ujs
 //= require turbolinks
-/*
-//= require flot/jquery.flot
-//= require flot/jquery.flot.canvas
-//= require flot/jquery.flot.categories
-//= require flot/jquery.flot.crosshair
-//= require flot/jquery.flot.errorbars
-//= require flot/jquery.flot.fillbetween
-//= require flot/jquery.flot.image
-//= require flot/jquery.flot.navigate
-//= require flot/jquery.flot.pie
-//= require flot/jquery.flot.resize
-//= require flot/jquery.flot.selection
-//= require flot/jquery.flot.stack
-//= require flot/jquery.flot.symbol
-//= require flot/jquery.flot.threshold
-//= require flot/jquery.flot.time
-*/
 //= require underscore/underscore.js
 //= require highcharts/highcharts.js
 //= require highcharts/themes/gray.js

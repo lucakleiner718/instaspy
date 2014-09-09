@@ -1,6 +1,8 @@
 class ReportWorker
   include Sidekiq::Worker
 
+  sidekiq_options queue: :report, retry: false, backtrace: true, unique: true
+
   def perform starts=nil, ends=nil
     ends ||= 1.day.ago.end_of_day
     starts ||= 6.days.ago(ends).beginning_of_day
