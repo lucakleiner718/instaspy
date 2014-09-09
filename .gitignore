@@ -13,3 +13,4 @@
 /config/database.yml
 /.env
 /vendor/emerald
+/public/assets
