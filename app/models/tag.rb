@@ -2,6 +2,8 @@ class Tag < ActiveRecord::Base
 
   has_and_belongs_to_many :media, class_name: 'Media'
 
+  before_destroy { media.clear }
+
   scope :observed, -> { where observed: true }
 
   def users limit=1000
@@ -41,7 +43,9 @@ class Tag < ActiveRecord::Base
 
     client = Instagram.client(:access_token => Setting.g('instagram_access_token'))
 
-    client.tag_recent_media(self.name, min_tag_id: options[:min_id], max_tag_id: options[:max_id], count: 1000).each do |media_item|
+    @media_list = client.tag_recent_media(self.name, min_tag_id: options[:min_id], max_tag_id: options[:max_id], count: 1000)
+
+    @media_list.data.each do |media_item|
       media = Media.where(insta_id: media_item['id']).first_or_initialize
 
       user = User.where(insta_id: media_item['user']['id']).first_or_initialize

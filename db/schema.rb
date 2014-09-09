@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140822075558) do
+ActiveRecord::Schema.define(version: 20140909053853) do
 
   create_table "media", force: true do |t|
     t.string   "insta_id"
@@ -49,6 +49,7 @@ ActiveRecord::Schema.define(version: 20140822075558) do
     t.boolean  "observed"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.boolean  "grabs_users_csv", default: false
   end
 
   create_table "users", force: true do |t|

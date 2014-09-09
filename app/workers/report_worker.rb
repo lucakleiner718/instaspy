@@ -7,7 +7,7 @@ class ReportWorker
 
     header = ['Username', 'Full Name', 'Website', 'Follows', 'Followed By', 'Media Amount']
     csv_files = {}
-    Tag.observed.each do |tag|
+    Tag.where(grabs_users_csv: true).each do |tag|
       csv_string = CSV.generate do |csv|
         csv << header
         tag.media.where('created_at > ? AND created_at <= ?', starts, ends).to_a.map{|m| m.user}.select{|u|u.website.present?}.uniq.each do |user|

@@ -30,15 +30,3 @@ end
 every :tuesday, at: '4am' do
   runner 'ReportWorker.perform_async'
 end
-
-# media_grabber:
-#   cron: "*/1 * * * *"
-#   class: MediaWorker
-#
-# user_grabber:
-#   cron: "*/10 * * * *"
-#   class: UserWorker
-#
-# report_weekly:
-#   cron: "4 0 * * 2"
-#   class: ReportWorker
