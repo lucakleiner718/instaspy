@@ -58,23 +58,39 @@ namespace :deploy do
   desc 'Restart application'
   task :restart do
     on roles(:app), in: :sequence, wait: 5 do
-      invoke 'puma:restart'
-      invoke 'sidekiq:restart'
+      invoke 'god:restart'
+      # invoke 'puma:restart'
+      # invoke 'sidekiq:restart'
     end
   end
 
   after :publishing, :restart
 
-  after :restart, :clear_cache do
-    on roles(:web), in: :groups, limit: 3, wait: 10 do
-      # Here we can do anything such as:
-      # within release_path do
-      #   puma.restart
-      #   execute :rake, 'cache:clear'
-      # end
+  # after :restart, :clear_cache do
+  #   on roles(:web), in: :groups, limit: 3, wait: 10 do
+  #     # Here we can do anything such as:
+  #     # within release_path do
+  #     #   puma.restart
+  #     #   execute :rake, 'cache:clear'
+  #     # end
+  #   end
+  # end
+
+end
+
+
+namespace :god do
+  desc "God restart"
+  task :restart do
+    on roles :app do
+      within current_path do
+        with rack_env: :app do
+          execute :god, :terminate
+          execute :god, "-c #{current_path}/config/procs.god"
+        end
+      end
     end
   end
-
 end
 
 # namespace :deploy do
