@@ -97,6 +97,7 @@ namespace :god do
     end
   end
 end
+# after 'deploy:restart', 'god:restart'
 
 # namespace :deploy do
 #   desc 'Restart Passenger'
@@ -136,5 +137,3 @@ end
 #     end
 #   end
 # end
-
-after 'deploy:restart', 'god:restart'
