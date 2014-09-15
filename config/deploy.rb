@@ -51,6 +51,8 @@ set :puma_conf, "#{shared_path}/puma.rb"
 # :sidekiq_cmd => "#{fetch(:bundle_cmd, "bundle")} exec sidekiq"  # Only for capistrano2.5
 # :sidekiqctl_cmd => "#{fetch(:bundle_cmd, "bundle")} exec sidekiqctl" # Only for capistrano2.5
 
+set :rvm_ruby_version, '2.1.1@instaspy'
+
 set :sidekiq_config, "#{current_path}/config/sidekiq.yml"
 
 namespace :deploy do
@@ -58,9 +60,9 @@ namespace :deploy do
   desc 'Restart application'
   task :restart do
     on roles(:app), in: :sequence, wait: 5 do
-      invoke 'god:restart'
-      # invoke 'puma:restart'
-      # invoke 'sidekiq:restart'
+      # invoke 'god:restart'
+      invoke 'puma:restart'
+      invoke 'sidekiq:restart'
     end
   end
 
@@ -79,14 +81,17 @@ namespace :deploy do
 end
 
 
+
+
 namespace :god do
   desc "God restart"
   task :restart do
-    on roles :app do
+    on roles :web do
       within current_path do
-        with rack_env: :app do
-          execute :god, :terminate
-          execute :god, "-c #{current_path}/config/procs.god"
+        with rack_env: :web do
+          # execute 'cd /home/app/instaspy/current'
+          execute :rvm, fetch(:rvm_ruby_version), :do, :god, :terminate
+          # execute :bundle, exec, :god, "-c #{current_path}/config/procs.god"
         end
       end
     end
@@ -131,3 +136,5 @@ end
 #     end
 #   end
 # end
+
+after 'deploy:restart', 'god:restart'
