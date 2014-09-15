@@ -60,7 +60,6 @@ namespace :deploy do
   desc 'Restart application'
   task :restart do
     on roles(:app), in: :sequence, wait: 5 do
-      # invoke 'god:restart'
       invoke 'puma:restart'
       invoke 'sidekiq:restart'
     end
@@ -68,36 +67,7 @@ namespace :deploy do
 
   after :publishing, :restart
 
-  # after :restart, :clear_cache do
-  #   on roles(:web), in: :groups, limit: 3, wait: 10 do
-  #     # Here we can do anything such as:
-  #     # within release_path do
-  #     #   puma.restart
-  #     #   execute :rake, 'cache:clear'
-  #     # end
-  #   end
-  # end
-
 end
-
-
-
-
-namespace :god do
-  desc "God restart"
-  task :restart do
-    on roles :web do
-      within current_path do
-        with rack_env: :web do
-          # execute 'cd /home/app/instaspy/current'
-          execute :rvm, fetch(:rvm_ruby_version), :do, :god, :terminate
-          # execute :bundle, exec, :god, "-c #{current_path}/config/procs.god"
-        end
-      end
-    end
-  end
-end
-# after 'deploy:restart', 'god:restart'
 
 # namespace :deploy do
 #   desc 'Restart Passenger'
