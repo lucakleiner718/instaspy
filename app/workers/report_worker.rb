@@ -12,7 +12,7 @@ class ReportWorker
     Tag.where(grabs_users_csv: true).each do |tag|
       csv_string = CSV.generate do |csv|
         csv << header
-        tag.media.where('created_at > ? AND created_at <= ?', starts, ends).to_a.map{|m| m.user}.select{|u|u.website.present?}.uniq.each do |user|
+        tag.media.where('created_at > ? AND created_at <= ?', starts, ends).to_a.map{|m| m.user}.select{|u| u.present? && u.website.present?}.uniq.each do |user|
           csv << [user.username, user.full_name, user.website, user.follows, user.followed_by, user.media_amount]
         end
       end
