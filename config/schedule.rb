@@ -20,13 +20,16 @@
 # Learn more: http://github.com/javan/whenever
 
 every 5.minutes do
-  runner 'MediaWorker.perform_async'
+  # runner 'MediaWorker.perform_async'
+  runner 'Media.recent_media'
 end
 
 every 10.minutes do
-  runner 'UserWorker.perform_async'
+  # runner 'UserWorker.perform_async'
+  runner 'User.update_worker'
 end
 
 every :tuesday, at: '4am' do
-  runner 'ReportWorker.perform_async'
+  # runner 'ReportWorker.perform_async'
+  runner 'Media.report'
 end

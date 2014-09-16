@@ -54,4 +54,10 @@ class User < ActiveRecord::Base
     end
   end
 
+  def self.update_worker
+    User.not_grabbed.limit(1000).each do |u|
+      u.update_info!
+    end
+  end
+
 end
