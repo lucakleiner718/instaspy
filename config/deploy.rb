@@ -69,6 +69,21 @@ namespace :deploy do
 
 end
 
+namespace :god do
+  desc "God restart"
+  task :restart do
+    on roles :web do
+      within current_path do
+        with rack_env: :web do
+          # execute 'cd /home/app/instaspy/current'
+          execute :rvm, fetch(:rvm_ruby_version), :do, :god, :terminate
+          # execute :bundle, exec, :god, "-c #{current_path}/config/procs.god"
+        end
+      end
+    end
+  end
+end
+
 # namespace :deploy do
 #   desc 'Restart Passenger'
 #   task :restart do
