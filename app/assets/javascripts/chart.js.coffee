@@ -48,11 +48,11 @@ $(document).on 'ready page:load', ->
           color: '#fff'
       lineColor: '#fff'
       tickColor: '#fff'
-#    plotOptions:
-#      line:
+    plotOptions:
+      line:
 #        dataLabels:
 #          enabled: true
-#        enableMouseTracking: true
+        enableMouseTracking: true
     series: series
     legend:
       itemStyle:
@@ -60,4 +60,4 @@ $(document).on 'ready page:load', ->
 
 #    colors: ['#ffffff', '#434348', '#90ed7d', '#f7a35c', '#8085e9',
 #             '#f15c80', '#e4d354', '#8085e8', '#8d4653', '#91e8e1']
-    colors: ['#058DC7', '#50B432', '#ED561B', '#DDDF00', '#24CBE5', '#64E572', '#FF9655', '#FFF263', '#6AF9C4']
+    colors: ['#058DC7', '#5EE63F', '#ED561B', '#DDDF00', '#24CBE5', '#64E572', '#FF9655', '#FFF263', '#6AF9C4']

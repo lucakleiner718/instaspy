@@ -14,8 +14,10 @@ class PagesController < ApplicationController
     @xcategories = []
     blank = {}
 
-    10.times do |i|
-      cat = (9-i).days.ago.strftime('%m/%d')
+    amount_of_days = 10
+
+    amount_of_days.times do |i|
+      cat = (amount_of_days-1-i).days.ago.strftime('%m/%d')
       @xcategories << cat
       blank[cat] = 0
     end
@@ -24,9 +26,12 @@ class PagesController < ApplicationController
 
     Tag.where(show_graph: 1).each do |tag|
       @groups[tag.name] = blank.dup
-      tag.media.where('created_time >= ?', 9.days.ago.beginning_of_day).each do |row|
-        @groups[tag.name][row.created_time.strftime('%m/%d')] += 1
+      amount_of_days.times do |i|
+        day = (amount_of_days-i).days.ago
+        @groups[tag.name][day.strftime('%m/%d')] =
+          tag.media.where('created_time >= ?', day.beginning_of_day).where('created_time <= ?', day.end_of_day).size
       end
+
     end
 
     # binding.pry
