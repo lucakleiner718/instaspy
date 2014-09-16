@@ -49,7 +49,7 @@ class User < ActiveRecord::Base
   end
 
   def self.get_info
-    User.where('bio is null').each do |u|
+    User.where('bio is null').order(created_at: :desc).find_each do |u|
       u.update_info!
     end
   end
