@@ -76,7 +76,7 @@ namespace :god do
       within current_path do
         with rack_env: :web do
           # execute 'cd /home/app/instaspy/current'
-          execute :rvm, fetch(:rvm_ruby_version), :do, :god, :terminate
+          execute :rvm, fetch(:rvm_ruby_version), :do, :god
           # execute :bundle, exec, :god, "-c #{current_path}/config/procs.god"
         end
       end
