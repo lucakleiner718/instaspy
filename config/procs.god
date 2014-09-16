@@ -58,16 +58,20 @@ root = File.dirname(__FILE__) + '/..'
 # end
 
 God.watch do |w|
+  w.env = { 'RAILS_ROOT' => root,
+            'RAILS_ENV' => "production" }
   w.dir           = root
   w.name          = "sidekiq"
   w.interval      = 60.seconds
   w.pid_file      = "#{root}/tmp/pids/sidekiq.pid"
-  w.start         = "bundle exec sidekiq -C #{root}/config/sidekiq.yml"
+  w.start         = "~/.rvm/bin/rvm 2.1.1@instaspy do sidekiq -C #{root}/config/sidekiq.yml -r #{root}/config/environment.rb"
   w.stop          = "kill -s TERM $(cat #{w.pid_file})"
   w.restart       = "kill -s USR2 $(cat #{w.pid_file})"
   w.log           = "#{root}/log/sidekiq.log"
   w.start_grace   = 20.seconds
   w.restart_grace = 20.seconds
+
+  # w.start = "/home/app/.rvm/gems/ruby-2.1.1@instaspy/bin/ruby -f #{rails_root}/ sidekiq -c 25 -q worker,15 -q distributor,5"
 
   w.behavior(:clean_pid_file)
 
@@ -113,11 +117,11 @@ God.watch do |w|
     end
   end
 
-  w.transition(:up, :start) do |on|
-    on.condition(:process_exits) do |c|
-      c.notify = 'anton'
-    end
-  end
+  # w.transition(:up, :start) do |on|
+  #   on.condition(:process_exits) do |c|
+  #     c.notify = 'anton'
+  #   end
+  # end
 end
 
 God.contact(:email) do |c|
