@@ -30,7 +30,8 @@ class User < ActiveRecord::Base
   def update_info!
     client = Instagram.client(:access_token => Setting.g('instagram_access_token'))
     begin
-      data = client.user(self.insta_id)
+      info = client.user(self.insta_id)
+      data = info['data']
     rescue
       # binding.pry
       return false

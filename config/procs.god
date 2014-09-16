@@ -112,4 +112,16 @@ God.watch do |w|
       c.retry_within = 2.hours        # and give up if flapping occured five times in two hours
     end
   end
+
+  w.transition(:up, :start) do |on|
+    on.condition(:process_exits) do |c|
+      c.notify = 'anton'
+    end
+  end
+end
+
+God.contact(:email) do |c|
+  c.name = 'anton'
+  c.group = 'developers'
+  c.to_email = 'dev@antonzaytsev.com'
 end
