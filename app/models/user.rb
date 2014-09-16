@@ -3,6 +3,7 @@ class User < ActiveRecord::Base
   has_many :media
 
   scope :not_grabbed, -> { where grabbed_at: nil }
+  scope :not_private, -> { where private: [nil, false] }
 
   before_save do
     if self.full_name_changed?
@@ -32,6 +33,12 @@ class User < ActiveRecord::Base
     begin
       info = client.user(self.insta_id)
       data = info['data']
+    rescue Instagram::BadRequest => e
+      if e.message =~ /you cannot view this resource/
+        self.private = true
+        self.save
+      end
+      return false
     rescue
       # binding.pry
       return false
@@ -55,7 +62,7 @@ class User < ActiveRecord::Base
   end
 
   def self.update_worker
-    User.not_grabbed.limit(1000).each do |u|
+    User.not_grabbed.not_private.limit(1000).each do |u|
       u.update_info!
     end
   end

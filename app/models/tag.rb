@@ -50,12 +50,12 @@ class Tag < ActiveRecord::Base
 
       user = User.where(insta_id: media_item['user']['id']).first_or_initialize
       user.username = media_item['user']['username']
-      user.profile_picture = media_item['user']['profile_picture']
+      # user.profile_picture = media_item['user']['profile_picture']
       user.full_name = media_item['user']['full_name']
       user.save
 
       media.user_id = user.id
-      media.likes_amount = media_item['likes']['count']
+      # media.likes_amount = media_item['likes']['count']
       media.created_time = Time.at media_item['created_time'].to_i
       media.filter = media_item['filter']
       media.insta_type = media_item['type']
