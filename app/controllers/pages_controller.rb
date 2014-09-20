@@ -17,12 +17,12 @@ class PagesController < ApplicationController
     amount_of_days = 10
 
     amount_of_days.times do |i|
-      cat = i.days.ago.strftime('%m/%d')
-      @xcategories << cat
+      d = amount_of_days-i-1
+      cat = d.days.ago.strftime('%m/%d')
       blank[cat] = 0
     end
 
-    @xcategories.reverse!
+    @xcategories = blank.keys
 
     @groups = {}
 
