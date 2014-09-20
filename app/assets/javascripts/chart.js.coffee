@@ -1,17 +1,15 @@
 $(document).on 'ready page:load', ->
   chart_box = $('#chart')
-  data = chart_box.data('chart')
+#  data = chart_box.data('chart')
+  tags = chart_box.data('tags')
   categories = chart_box.data('categories')
 
-  series = []
-  $.each data, (k, v) ->
-    console.log k
-    series.push {
-      name: k,
-      data: $.map(v, (a, b) -> return a )
+  initial_series = []
+  $.each tags, (index, tag) ->
+    initial_series.push {
+      name: tag,
+#      data: $.map(v, (a, b) -> return a )
     }
-
-  console.log series
 
   chart_box.highcharts
     chart:
@@ -53,7 +51,7 @@ $(document).on 'ready page:load', ->
 #        dataLabels:
 #          enabled: true
         enableMouseTracking: true
-    series: series
+    series: initial_series
     legend:
       itemStyle:
         color: '#fff'
@@ -61,3 +59,28 @@ $(document).on 'ready page:load', ->
 #    colors: ['#ffffff', '#434348', '#90ed7d', '#f7a35c', '#8085e9',
 #             '#f15c80', '#e4d354', '#8085e8', '#8d4653', '#91e8e1']
     colors: ['#058DC7', '#5EE63F', '#ED561B', '#DDDF00', '#24CBE5', '#64E572', '#FF9655', '#FFF263', '#6AF9C4']
+
+  window.hc = chart_box.highcharts()
+
+  $('body').on 'tag:update', (e, tag_name) ->
+    $.ajax
+      method: 'get'
+      url: '/chart_tag_data',
+      data:
+        name: tag_name
+      dataType: 'json'
+      success: (resp) ->
+        $.each hc.series, (index, row) ->
+          if row.name == resp.tag
+            row.setData resp.data
+
+  $('body').on 'tags:update', ->
+    $.each tags, (index, tag_name) ->
+      $('body').trigger('tag:update', tag_name)
+
+  $('body').trigger 'tags:update'
+
+  # update graph every 3 minutes
+  setInterval ->
+    $('body').trigger 'tags:update'
+  , 3*60*1000
