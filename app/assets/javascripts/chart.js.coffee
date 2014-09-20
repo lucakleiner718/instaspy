@@ -83,4 +83,4 @@ $(document).on 'ready page:load', ->
   # update graph every 3 minutes
   setInterval ->
     $('body').trigger 'tags:update'
-  , 3*60*1000
+  , 1*60*1000
