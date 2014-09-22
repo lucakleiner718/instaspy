@@ -33,3 +33,7 @@ every :tuesday, at: '4am' do
   # runner 'ReportWorker.perform_async'
   runner 'Media.report'
 end
+
+every :day, at: '5am' do
+  runner 'Media.delete_old'
+end

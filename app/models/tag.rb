@@ -2,8 +2,6 @@ class Tag < ActiveRecord::Base
 
   has_and_belongs_to_many :media, class_name: 'Media'
 
-  before_destroy { media.clear }
-
   scope :observed, -> { where observed: true }
 
   def users limit=1000

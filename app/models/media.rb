@@ -3,8 +3,6 @@ class Media < ActiveRecord::Base
   has_and_belongs_to_many :tags
   belongs_to :user
 
-  before_destroy { tags.clear }
-
   def self.recent_media
     Tag.observed.each do |tag|
       tag.recent_media
@@ -29,6 +27,10 @@ class Media < ActiveRecord::Base
     csv_files
 
     ReportMailer.weekly(csv_files, starts, ends).deliver
+  end
+
+  def self.delete_old
+    Media.where('created_time < ?', 2.weeks.ago).destroy_all
   end
 
 end
