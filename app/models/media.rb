@@ -16,9 +16,12 @@ class Media < ActiveRecord::Base
     header = ['Username', 'Full Name', 'Website', 'Follows', 'Followed By', 'Media Amount']
     csv_files = {}
     Tag.where(grabs_users_csv: true).each do |tag|
+      users_ids = tag.media.where('created_at > ? AND created_at <= ?', starts, ends).pluck(:user_id).uniq
+      users = User.where(id: users_ids).where('website is not null')
+
       csv_string = CSV.generate do |csv|
         csv << header
-        tag.media.where('created_at > ? AND created_at <= ?', starts, ends).to_a.map{|m| m.user}.select{|u| u.present? && u.website.present?}.uniq.each do |user|
+        users.find_each do |user|
           csv << [user.username, user.full_name, user.website, user.follows, user.followed_by, user.media_amount]
         end
       end
