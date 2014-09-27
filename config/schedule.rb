@@ -19,7 +19,7 @@
 
 # Learn more: http://github.com/javan/whenever
 
-every 3.minute do
+every :minute do
   # runner 'MediaWorker.perform_async'
   runner 'Media.recent_media'
 end
