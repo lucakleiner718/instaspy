@@ -11,19 +11,12 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140909061325) do
+ActiveRecord::Schema.define(version: 20140927064934) do
 
   create_table "media", force: true do |t|
     t.string   "insta_id"
-    t.string   "insta_type"
-    t.string   "filter"
-    t.text     "text"
-    t.integer  "likes_amount"
-    t.string   "link"
     t.integer  "user_id"
     t.datetime "created_time"
-    t.text     "images"
-    t.text     "videos"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -48,7 +41,6 @@ ActiveRecord::Schema.define(version: 20140909061325) do
 
   create_table "tags", force: true do |t|
     t.string   "name"
-    t.integer  "media_count"
     t.boolean  "observed"
     t.datetime "created_at"
     t.datetime "updated_at"
@@ -64,18 +56,18 @@ ActiveRecord::Schema.define(version: 20140909061325) do
     t.integer  "insta_id"
     t.string   "username"
     t.string   "full_name"
-    t.string   "profile_picture"
     t.text     "bio"
     t.string   "website"
     t.integer  "follows"
     t.integer  "followed_by"
     t.integer  "media_amount"
-    t.boolean  "private",         default: false
+    t.boolean  "private",      default: false
     t.datetime "grabbed_at"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
 
   add_index "users", ["insta_id"], name: "index_users_on_insta_id", unique: true, using: :btree
+  add_index "users", ["website"], name: "index_users_on_website", using: :btree
 
 end
