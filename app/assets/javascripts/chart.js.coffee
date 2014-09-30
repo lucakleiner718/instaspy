@@ -33,7 +33,7 @@ $(document).on 'ready page:load', ->
         style:
           color: '#fff'
       title:
-        text: 'Date'
+        text: 'Date (time in UTC)'
         style:
           color: '#fff'
     yAxis:
@@ -51,6 +51,8 @@ $(document).on 'ready page:load', ->
 #        dataLabels:
 #          enabled: true
         enableMouseTracking: true
+      series:
+        lineWidth: 4
     series: initial_series
     legend:
       itemStyle:

@@ -3,6 +3,7 @@ class Tag < ActiveRecord::Base
   has_and_belongs_to_many :media, class_name: 'Media'
 
   scope :observed, -> { where observed: true }
+  scope :chartable, -> { where show_graph: true }
 
   def users limit=1000
     self.media.limit(limit).map{|media_item| media_item.user}.uniq
@@ -69,6 +70,27 @@ class Tag < ActiveRecord::Base
     data = client.tag self.name
     # self.media_count = data['media_count']
     self.save
+  end
+
+  def chart_data amount_of_days=10
+    blank = {}
+
+    amount_of_days.times do |i|
+      d = amount_of_days-i
+      cat = d.days.ago.utc.strftime('%m/%d')
+      blank[cat] = 0
+    end
+
+    data = blank.dup
+
+    amount_of_days.times do |i|
+      day = (amount_of_days-i).days.ago.utc
+      p day
+      data[day.strftime('%m/%d')] =
+        self.media.where('created_time >= ?', day.beginning_of_day).where('created_time <= ?', day.end_of_day).size
+    end
+
+    data.reject{|k| !k.in?(blank) }.values
   end
 
 end

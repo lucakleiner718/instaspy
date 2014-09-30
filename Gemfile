@@ -47,3 +47,5 @@ gem 'dotenv', '~> 0.11.1'
 gem 'dotenv-deployment', require: 'dotenv/deployment'       # Automatic Vars in Production/Staging
 gem 'whenever', :require => false
 gem 'god'
+gem 'redis'
+gem 'redis-rails'
