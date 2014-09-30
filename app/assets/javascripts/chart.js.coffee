@@ -3,6 +3,7 @@ $(document).on 'ready page:load', ->
 #  data = chart_box.data('chart')
   tags = chart_box.data('tags')
   categories = chart_box.data('categories')
+  amount_of_days = chart_box.data('amount_of_days')
 
   initial_series = []
   $.each tags, (index, tag) ->
@@ -65,11 +66,13 @@ $(document).on 'ready page:load', ->
   window.hc = chart_box.highcharts()
 
   $('body').on 'tag:update', (e, tag_name) ->
+
     $.ajax
       method: 'get'
       url: '/chart_tag_data',
       data:
         name: tag_name
+        amount_of_days: amount_of_days
       dataType: 'json'
       success: (resp) ->
         $.each hc.series, (index, row) ->

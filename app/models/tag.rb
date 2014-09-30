@@ -5,6 +5,8 @@ class Tag < ActiveRecord::Base
   scope :observed, -> { where observed: true }
   scope :chartable, -> { where show_graph: true }
 
+  CHART_DAYS = 14
+
   def users limit=1000
     self.media.limit(limit).map{|media_item| media_item.user}.uniq
   end
@@ -72,7 +74,7 @@ class Tag < ActiveRecord::Base
     self.save
   end
 
-  def chart_data amount_of_days=10
+  def chart_data amount_of_days=14
     blank = {}
 
     amount_of_days.times do |i|
@@ -85,7 +87,6 @@ class Tag < ActiveRecord::Base
 
     amount_of_days.times do |i|
       day = (amount_of_days-i).days.ago.utc
-      p day
       data[day.strftime('%m/%d')] =
         self.media.where('created_time >= ?', day.beginning_of_day).where('created_time <= ?', day.end_of_day).size
     end

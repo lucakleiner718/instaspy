@@ -14,11 +14,11 @@ class PagesController < ApplicationController
     @xcategories = []
     blank = {}
 
-    amount_of_days = 10
+    @amount_of_days = Tag::CHART_DAYS
 
-    amount_of_days.times do |i|
-      d = amount_of_days-i-1
-      cat = d.days.ago.strftime('%m/%d')
+    @amount_of_days.times do |i|
+      d = @amount_of_days-i-1
+      cat = d.days.ago.utc.strftime('%m/%d')
       blank[cat] = 0
     end
 
@@ -35,7 +35,7 @@ class PagesController < ApplicationController
     cache = true
     values = Rails.cache.read("chart-#{tag_name}")
     unless values
-      values = TagChartWorker.new.perform tag_name
+      values = TagChartWorker.new.perform tag_name, params[:amount_of_days]
       # tag = Tag.find_by_name tag_name
       # values = tag.chart_data
       # Rails.cache.write("chart-#{tag.name}", values, expires_in: 6.hours)
