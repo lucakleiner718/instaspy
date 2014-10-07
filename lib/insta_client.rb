@@ -1,24 +1,23 @@
 class InstaClient
 
-  def initialize index=nil
-    if index
-      @index = index
-    else
-      size = Rails.application.secrets.instagram_client_id.size
-      @index = rand(size)
-    end
+  def initialize account=nil
+    @account = account || InstagramAccount.all.sample
 
     Instagram.configure do |config|
-      config.client_id = Rails.application.secrets.instagram_client_id[index]
-      config.client_secret = Rails.application.secrets.instagram_client_secret[index]
+      config.client_id = @account.client_id
+      config.client_secret = @account.client_secret
       config.no_response_wrapper = true
     end
 
-    @client = Instagram.client(access_token: Setting.g(Rails.application.secrets.instagram_client_id[index]))
+    @client = Instagram.client(access_token: @account.access_token) if @account.access_token.present?
   end
 
   def index
     @index
+  end
+
+  def account
+    @account
   end
 
   def client

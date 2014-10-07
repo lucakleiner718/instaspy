@@ -1,11 +1,17 @@
 <h3>Basic links</h3>
 <p><%= link_to "Get all users from all #{Tag.observed.size} tags", export_path(format: :csv) %></p>
-<% Rails.application.secrets.instagram_client_id.each do |key| %>
-  <p><%= link_to "Login to Instagram with client id #{key}", oauth_connect_path(key: key) %></p>
+<% InstagramAccount.all.each do |account| %>
+  <p><%= link_to "Login to Instagram with client id #{account.client_id}", oauth_connect_path(key: account.client_id) %></p>
 <% end %>
 
 <h3>View API Rate Limit and calls remaining</h3>
 
-<% @response.each do |index, value| %>
-  <p><strong><%= Rails.application.secrets.instagram_client_id[index] %></strong><br>Rate Limit = <%= value.headers[:x_ratelimit_limit] %>.  <br/>Calls Remaining = <%= value.headers[:x_ratelimit_remaining] %></p>
+<% @response.each do |client_id, value| %>
+  <p><strong><%= client_id %></strong><br>
+    <% if value.present? %>
+      Rate Limit = <%= value.headers[:x_ratelimit_limit] %>.  <br/>Calls Remaining = <%= value.headers[:x_ratelimit_remaining] %>
+    <% else %>
+      You have to <%= link_to 'login first', oauth_connect_path(key: client_id) %>
+    <% end %>
+  </p>
 <% end %>

@@ -11,7 +11,19 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140927064934) do
+ActiveRecord::Schema.define(version: 20141007132830) do
+
+  create_table "instagram_accounts", force: true do |t|
+    t.string   "client_id"
+    t.string   "client_secret"
+    t.string   "redirect_uri"
+    t.string   "access_token"
+    t.boolean  "login_process", default: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "instagram_accounts", ["client_id"], name: "index_instagram_accounts_on_client_id", unique: true, using: :btree
 
   create_table "media", force: true do |t|
     t.string   "insta_id"

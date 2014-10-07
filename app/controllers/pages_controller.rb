@@ -2,10 +2,11 @@ class PagesController < ApplicationController
   def home
     # redirect_to oauth_connect_path if Setting.g('instagram_access_token').blank?
     @response = {}
-    Rails.application.secrets.instagram_client_id.each_with_index do |k, index|
+    InstagramAccount.all.each do |account|
+      @response[account.client_id] = ''
       begin
-        client = InstaClient.new(index).client
-        @response[index] = client.utils_raw_response
+        client = InstaClient.new(account).client
+        @response[account.client_id] = client.utils_raw_response
       rescue Exception => e
         next
       end
