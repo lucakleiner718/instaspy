@@ -1,6 +1,6 @@
 class User < ActiveRecord::Base
 
-  has_many :media
+  has_many :media, class_name: 'Media', dependent: :destroy
 
   scope :not_grabbed, -> { where grabbed_at: nil }
   scope :not_private, -> { where private: [nil, false] }
@@ -37,6 +37,8 @@ class User < ActiveRecord::Base
       if e.message =~ /you cannot view this resource/
         self.private = true
         self.save
+      elsif e.message =~ /this user does not exist/
+        self.destroy
       end
       return false
     rescue
@@ -62,9 +64,10 @@ class User < ActiveRecord::Base
   end
 
   def self.update_worker
-    User.not_grabbed.not_private.limit(1000).each do |u|
-      u.update_info!
-    end
+    User.not_grabbed.not_private.order(created_at: :desc).limit(1000).each { |u| u.update_info! }
+    # User.not_grabbed.not_private.limit(1000).each do |u|
+    #   u.update_info!
+    # end
   end
 
 end
