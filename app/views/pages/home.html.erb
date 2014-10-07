@@ -4,7 +4,11 @@
 
 <% if Setting.g('instagram_access_token').present? %>
   <h3>View API Rate Limit and calls remaining</h3>
+  <% begin %>
   <% client = Instagram.client(:access_token => Setting.g('instagram_access_token')) %>
   <% response = client.utils_raw_response %>
   <p>Rate Limit = <%= response.headers[:x_ratelimit_limit] %>.  <br/>Calls Remaining = <%= response.headers[:x_ratelimit_remaining] %></p>
+    <% rescue %>
+    no avaliable request on instagram api
+  <% end %>
 <% end %>
