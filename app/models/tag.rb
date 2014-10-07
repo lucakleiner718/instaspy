@@ -42,7 +42,7 @@ class Tag < ActiveRecord::Base
   def recent_media *args
     options = args.extract_options!
 
-    client = Instagram.client(:access_token => Setting.g('instagram_access_token'))
+    client = InstaClient.new.client
 
     @media_list = client.tag_recent_media(self.name, min_tag_id: options[:min_id], max_tag_id: options[:max_id], count: 1000)
 

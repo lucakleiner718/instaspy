@@ -29,7 +29,7 @@ class User < ActiveRecord::Base
   end
 
   def update_info!
-    client = Instagram.client(:access_token => Setting.g('instagram_access_token'))
+    client = InstaClient.new.client
     begin
       info = client.user(self.insta_id)
       data = info['data']
