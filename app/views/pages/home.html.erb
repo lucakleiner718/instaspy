@@ -6,7 +6,7 @@
   <h3>View API Rate Limit and calls remaining</h3>
 
   <% if @response %>
-    <p>Rate Limit = <%= response.headers[:x_ratelimit_limit] %>.  <br/>Calls Remaining = <%= response.headers[:x_ratelimit_remaining] %></p>
+    <p>Rate Limit = <%= @response.headers[:x_ratelimit_limit] %>.  <br/>Calls Remaining = <%= @response.headers[:x_ratelimit_remaining] %></p>
   <% else %>
     no avaliable request on instagram api
   <% end %>
