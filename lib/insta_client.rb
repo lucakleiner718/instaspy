@@ -1,7 +1,7 @@
 class InstaClient
 
   def initialize account=nil
-    @account = account || InstagramAccount.all.sample
+    @account = account || InstagramAccount.where('access_token is not null').sample
 
     Instagram.configure do |config|
       config.client_id = @account.client_id
@@ -10,10 +10,6 @@ class InstaClient
     end
 
     @client = Instagram.client(access_token: @account.access_token) if @account.access_token.present?
-  end
-
-  def index
-    @index
   end
 
   def account

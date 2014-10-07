@@ -5,6 +5,13 @@ class OauthController < ApplicationController
     else
       account = InstagramAccount.all.sample
     end
+
+    Instagram.configure do |config|
+      config.client_id = account.client_id
+      config.client_secret = account.client_secret
+      config.no_response_wrapper = true
+    end
+
     account.update_attribute :login_process, true
     redirect_to Instagram.authorize_url(redirect_uri: account.redirect_uri)
   end
