@@ -11,7 +11,13 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20141007132830) do
+ActiveRecord::Schema.define(version: 20141025051357) do
+
+  create_table "followers", force: true do |t|
+    t.integer  "user_id"
+    t.integer  "follower_id"
+    t.datetime "created_at"
+  end
 
   create_table "instagram_accounts", force: true do |t|
     t.string   "client_id"

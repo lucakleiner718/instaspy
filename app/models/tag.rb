@@ -68,7 +68,7 @@ class Tag < ActiveRecord::Base
   end
 
   def update_info!
-    client = Instagram.client(:access_token => Setting.g('instagram_access_token'))
+    client = InstaClient.new.client
     data = client.tag self.name
     # self.media_count = data['media_count']
     self.save
