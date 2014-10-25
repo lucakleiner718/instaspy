@@ -39,6 +39,7 @@ class User < ActiveRecord::Base
     rescue Instagram::BadRequest => e
       if e.message =~ /you cannot view this resource/
         self.private = true
+        self.grabbed_at = Time.now
         self.save
       elsif e.message =~ /this user does not exist/
         self.destroy

@@ -6,7 +6,7 @@ class ReportsController < ApplicationController
     user = User.add_by_username params[:name]
     if user
       user.update_followers true
-      FollowersReport.user(user).deliver
+      FollowersReportMailer.user(user).deliver
     end
     redirect_to :back
   end

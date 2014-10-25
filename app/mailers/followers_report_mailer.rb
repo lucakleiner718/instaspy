@@ -1,6 +1,4 @@
-class FollowersReport < ActionMailer::Base
-  default from: "from@example.com"
-
+class FollowersReportMailer < ActionMailer::Base
   def user origin
     csv_string = CSV.generate do |csv|
       csv << ['Name', 'Username', 'Website', 'Follows', 'Followers', 'Media amount', 'Private account']
@@ -10,11 +8,11 @@ class FollowersReport < ActionMailer::Base
     end
     attachments["#{origin.username}-followers.csv"] = csv_string
 
-    # if ENV['insta_debug'] || Rails.env.development?
+    if ENV['insta_debug'] || Rails.env.development?
       mail to: 'me@antonzaytsev.com', subject: "InstaSpy followers report #{origin.username}"
-    # else
-    #   mail to: "rob@ladylux.com", bcc: 'me@antonzaytsev.com', subject: "InstaSpy followers report #{origin.username}"
-    # end
+    else
+      mail to: "rob@ladylux.com", bcc: 'me@antonzaytsev.com', subject: "InstaSpy followers report #{origin.username}"
+    end
 
   end
 end
