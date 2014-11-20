@@ -83,6 +83,8 @@ class User < ActiveRecord::Base
 
     puts "Followed by: #{user_data['counts']['followed_by']}"
 
+    self.follower_ids = []
+
     while true
       resp = client.user_followed_by self.insta_id, cursor: next_cursor, count: 100
       next_cursor = resp.pagination['next_cursor']
@@ -92,13 +94,13 @@ class User < ActiveRecord::Base
 
         user.insta_data user_data
 
-        if !user.private && deep && (user.updated_at.blank? || user.updated_at < 1.month.ago || user.website.nil? || user.follows.blank? || user.followed_by.blank? || user.media_amount.blank?)
+        if deep && !user.private && (user.updated_at.blank? || user.updated_at < 1.month.ago || user.website.nil? || user.follows.blank? || user.followed_by.blank? || user.media_amount.blank?)
           user.update_info!
         end
 
         user.save
 
-        followers_ids << user.id
+        self.follower_ids << user.id
 
         user = nil # trying to save some RAM but nulling variable
       end
@@ -110,7 +112,9 @@ class User < ActiveRecord::Base
       break unless next_cursor
     end
 
-    self.follower_ids = followers_ids
+    self.save
+
+    # self.follower_ids = followers_ids
   end
 
   def insta_data data
