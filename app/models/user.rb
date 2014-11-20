@@ -106,6 +106,8 @@ class User < ActiveRecord::Base
         user = nil # trying to save some RAM but nulling variable
       end
 
+      self.save
+
       resp = nil
 
       puts "#{self.follower_ids.size}/#{user_data['counts']['followed_by']}"
