@@ -81,8 +81,8 @@ class User < ActiveRecord::Base
     next_cursor = nil
 
     user_data = client.user(self.insta_id)['data']
-
-    puts "Followed by: #{user_data['counts']['followed_by']}"
+    followed = user_data['counts']['followed_by']
+    puts "Followed by: #{followed}"
 
     exists = 0
     if options[:reload]
@@ -90,8 +90,10 @@ class User < ActiveRecord::Base
     end
 
     follower_ids = []
+    begining_time = Time.now
 
     while true
+      start = Time.now
       resp = client.user_followed_by self.insta_id, cursor: next_cursor, count: 100
       next_cursor = resp.pagination['next_cursor']
 
@@ -123,7 +125,7 @@ class User < ActiveRecord::Base
 
       resp = nil
 
-      puts "#{follower_ids.size}/#{user_data['counts']['followed_by']}"
+      puts "followers:#{follower_ids.size}/#{followed} request:#{(Time.now-start).to_f}s left:#{((Time.now - begining_time).to_f/follower_ids.size * (followed-follower_ids.size)).to_i}s"
 
       break if !options[:ignore_exists] && exists >= 5
       break unless next_cursor
