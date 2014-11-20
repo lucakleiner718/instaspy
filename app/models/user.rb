@@ -77,10 +77,14 @@ class User < ActiveRecord::Base
   def update_followers deep=false
     client = InstaClient.new.client
     next_cursor = nil
-    followers = []
+    followers_ids = []
+
+    user_data = client.user(self.insta_id)['data']
+
+    puts "Followed by: #{user_data['counts']['followed_by']}"
 
     while true
-      resp = client.user_followed_by self.insta_id, cursor: next_cursor
+      resp = client.user_followed_by self.insta_id, cursor: next_cursor, count: 100
       next_cursor = resp.pagination['next_cursor']
 
       resp.data.each do |user_data|
@@ -94,13 +98,19 @@ class User < ActiveRecord::Base
 
         user.save
 
-        followers << user
+        followers_ids << user.id
+
+        user = nil # trying to save some RAM but nulling variable
       end
+
+      resp = nil
+
+      puts "#{followers_ids.size}/#{user_data['counts']['followed_by']}"
 
       break unless next_cursor
     end
 
-    self.followers = followers
+    self.follower_ids = followers_ids
   end
 
   def insta_data data
@@ -113,20 +123,19 @@ class User < ActiveRecord::Base
 
   def self.add_by_username username
     user = User.where(username: username).first_or_initialize
-    if user.new_record?
-      client = InstaClient.new.client
-      resp = client.user_search(username)
-      if resp.data.first
-        user.insta_data resp.data.first
-        user.save
-      else
-        return false
-      end
-    else
-      user.insta_data resp.data.first
+    client = InstaClient.new.client
+    resp = client.user_search(username)
+
+    data = nil
+    data = resp.data.select{|el| el['username'] == username }.first if resp.data.size > 0
+
+    if data
+      user.insta_data data
       user.save
+      user
+    else
+      false
     end
-    user
   end
 
   def self.get id
