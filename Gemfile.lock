@@ -243,6 +243,7 @@ DEPENDENCIES
   capistrano-sidekiq
   capistrano3-puma
   coffee-rails (~> 4.0.0)
+  daemons
   dotenv (~> 0.11.1)
   dotenv-deployment
   god

@@ -49,3 +49,4 @@ gem 'whenever', :require => false
 gem 'god'
 gem 'redis'
 gem 'redis-rails'
+gem 'daemons'
