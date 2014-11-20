@@ -84,7 +84,12 @@ class User < ActiveRecord::Base
 
     puts "Followed by: #{user_data['counts']['followed_by']}"
 
-    self.follower_ids = []
+    exists = 0
+    if options[:reload]
+      self.follower_ids = []
+    end
+
+    follower_ids = []
 
     while true
       resp = client.user_followed_by self.insta_id, cursor: next_cursor, count: 100
@@ -95,23 +100,32 @@ class User < ActiveRecord::Base
 
         user.insta_data user_data
 
-        if options[:deep].present? && options[:deep] && !user.private && (user.updated_at.blank? || user.updated_at < 1.month.ago || user.website.nil? || user.follows.blank? || user.followed_by.blank? || user.media_amount.blank?)
+        if options[:deep] && !user.private && (user.updated_at.blank? || user.updated_at < 1.month.ago || user.website.nil? || user.follows.blank? || user.followed_by.blank? || user.media_amount.blank?)
           user.update_info!
         end
 
         user.save
 
-        self.follower_ids << user.id
+        fol = Follower.where(user_id: self.id, follower_id: user.id)
+        if options[:reload]
+          fol.first_or_create
+        else
+          if fol.size == 1
+            exists += 1
+          else
+            fol.first_or_create
+          end
+        end
+        follower_ids << user.id
 
         user = nil # trying to save some RAM but nulling variable
       end
 
-      self.save
-
       resp = nil
 
-      puts "#{self.follower_ids.size}/#{user_data['counts']['followed_by']}"
+      puts "#{follower_ids.size}/#{user_data['counts']['followed_by']}"
 
+      break if !options[:ignore_exists] && exists >= 5
       break unless next_cursor
     end
 
