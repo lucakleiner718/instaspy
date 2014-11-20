@@ -74,10 +74,11 @@ class User < ActiveRecord::Base
     # end
   end
 
-  def update_followers deep=false
+  def update_followers *args
+    options = args.extract_options!
+
     client = InstaClient.new.client
     next_cursor = nil
-    followers_ids = []
 
     user_data = client.user(self.insta_id)['data']
 
@@ -94,7 +95,7 @@ class User < ActiveRecord::Base
 
         user.insta_data user_data
 
-        if deep && !user.private && (user.updated_at.blank? || user.updated_at < 1.month.ago || user.website.nil? || user.follows.blank? || user.followed_by.blank? || user.media_amount.blank?)
+        if options[:deep].present? && options[:deep] && !user.private && (user.updated_at.blank? || user.updated_at < 1.month.ago || user.website.nil? || user.follows.blank? || user.followed_by.blank? || user.media_amount.blank?)
           user.update_info!
         end
 
@@ -107,14 +108,12 @@ class User < ActiveRecord::Base
 
       resp = nil
 
-      puts "#{followers_ids.size}/#{user_data['counts']['followed_by']}"
+      puts "#{self.follower_ids.size}/#{user_data['counts']['followed_by']}"
 
       break unless next_cursor
     end
 
     self.save
-
-    # self.follower_ids = followers_ids
   end
 
   def insta_data data
