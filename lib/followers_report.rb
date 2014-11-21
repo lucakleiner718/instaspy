@@ -4,6 +4,7 @@ class FollowersReport
     @user = User.add_by_username username
   end
 
+  # regularly update latest followers of specified account
   def get_new
     @user.update_followers
   end
@@ -12,8 +13,12 @@ class FollowersReport
     @user.update_followers reload: true
   end
 
-  def send_report
-    FollowersReportMailer.user(@user).deliver
+  def send_full_report
+    FollowersReportMailer.full(@user).deliver
+  end
+
+  def send_weekly_report
+    FollowersReportMailer.weekly(@user).deliver
   end
 
 end
