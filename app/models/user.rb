@@ -2,7 +2,7 @@ class User < ActiveRecord::Base
 
   has_many :media, class_name: 'Media', dependent: :destroy
 
-  has_many :user_followers, class_name: 'Follower', foreign_key: :user_id
+  has_many :user_followers, class_name: 'Follower', foreign_key: :user_id, dependent: :destroy
   has_many :followers, through: :user_followers
 
   scope :not_grabbed, -> { where grabbed_at: nil }

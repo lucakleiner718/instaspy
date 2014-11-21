@@ -34,7 +34,7 @@ class FollowersReportMailer < ActionMailer::Base
       end
     end
 
-    if followers.size < 10
+    if followers.size < 10_000
       attachments["#{origin.username}-followers.csv"] = csv_string
     else
       Dir.mkdir('public/reports') unless Dir.exists?('public/reports')
@@ -64,7 +64,14 @@ class FollowersReportMailer < ActionMailer::Base
       csv << ['Name', 'Username', 'Website', 'Follows', 'Followers', 'Media amount', 'Private account']
       followers.find_each do |follower|
         user = follower.follower
-        csv << [user.full_name, user.username, user.website, user.follows, user.followed_by, user.media_amount, (user.private ? 'Yes' : 'No')]
+        begin
+          csv << [user.full_name, user.username, user.website, user.follows, user.followed_by, user.media_amount, (user.private ? 'Yes' : 'No')]
+        rescue Exception => e
+          # somehow we don't have user record, just delete link-follower
+          if user.blank?
+            follower.destroy
+          end
+        end
       end
     end
 
