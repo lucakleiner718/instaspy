@@ -97,8 +97,14 @@ class User < ActiveRecord::Base
       resp = client.user_followed_by self.insta_id, cursor: next_cursor, count: 100
       next_cursor = resp.pagination['next_cursor']
 
+      users = User.where(insta_id: resp.data.map{|el| el['id']})
+      fols = Follower.where(user_id: self.id, follower_id: users.map{|el| el.id})
+
       resp.data.each do |user_data|
-        user = User.where(insta_id: user_data['id']).first_or_initialize
+        user = users.select{|el| el.insta_id == user_data['id'].to_i}.first
+        unless user
+          user = User.new(insta_id: user_data['id'])
+        end
 
         user.insta_data user_data
 
@@ -106,9 +112,20 @@ class User < ActiveRecord::Base
           user.update_info!
         end
 
+        new_record = user.new_record?
+
         user.save
 
+        # fol = nil
+        #
+        # if new_record
+        #   fol = fols.select{|el| el.follower_id == user.id }.first
+        # end
+        #
+        # unless fol
         fol = Follower.where(user_id: self.id, follower_id: user.id)
+        # end
+
         if options[:reload]
           fol.first_or_create
         else
@@ -126,6 +143,8 @@ class User < ActiveRecord::Base
       resp = nil
 
       puts "followers:#{follower_ids.size}/#{followed} request:#{(Time.now-start).to_f}s left:#{((Time.now - begining_time).to_f/follower_ids.size * (followed-follower_ids.size)).to_i}s"
+
+      puts "exists: #{exists}"
 
       break if !options[:ignore_exists] && exists >= 5
       break unless next_cursor
