@@ -17,9 +17,9 @@ every :day, at: '5am' do
   runner 'Media.delete_old'
 end
 
-every 3.hours do
-  runner 'TagChartWorker.spawn'
-end
+# every 3.hours do
+#   runner 'TagChartWorker.spawn'
+# end
 
 every 2.hours do
   runner "FollowersReport.new('shopbop').get_new"
