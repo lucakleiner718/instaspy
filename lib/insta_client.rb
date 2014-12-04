@@ -20,4 +20,14 @@ class InstaClient
     @client
   end
 
+  def self.subscriber
+    account = InstagramAccount.where('access_token is not null').order(created_at: :desc).first
+    client = self.new(account)
+    client.client
+  end
+
+  def self.subscribe_tag tag
+    self.subscriber.create_subscription object: :tag, callback_url: 'http://94.137.22.246:3005/tag_media/added', aspect: :media, object_id: tag, verify_token: 'text1'
+  end
+
 end

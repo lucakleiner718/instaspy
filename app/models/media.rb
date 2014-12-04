@@ -34,6 +34,7 @@ class Media < ActiveRecord::Base
     ReportMailer.weekly(csv_files, starts, ends).deliver
   end
 
+  # delete all media oldest than 2 weeks
   def self.delete_old
     Media.where('created_time < ?', 2.weeks.ago).destroy_all
   end
