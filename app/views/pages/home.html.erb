@@ -1,17 +1,9 @@
 <h3>Basic links</h3>
-<p><%= link_to "Get all users from all #{Tag.observed.size} tags", export_path(format: :csv) %></p>
-<% InstagramAccount.all.each do |account| %>
-  <p><%= link_to "Login to Instagram with client id #{account.client_id}", oauth_connect_path(key: account.client_id) %></p>
-<% end %>
+<p><%#= link_to "Get all users from all #{Tag.observed.size} tags", export_path(format: :csv) %></p>
 
-<h3>View API Rate Limit and calls remaining</h3>
-
-<% @response.each do |client_id, value| %>
-  <p><strong><%= client_id %></strong><br>
-    <% if value.present? %>
-      Rate Limit = <%= value.headers[:x_ratelimit_limit] %>.  <br/>Calls Remaining = <%= value.headers[:x_ratelimit_remaining] %>
-    <% else %>
-      You have to <%= link_to 'login first', oauth_connect_path(key: client_id) %>
-    <% end %>
-  </p>
-<% end %>
+<ul>
+  <li><%= link_to 'API Limits', clients_status_path %></li>
+  <li>Chart <%= link_to 'saksfifthavenue, neimanmarcus, bloomingdales, nordstrom', chart_path(tags: %w(saksfifthavenue neimanmarcus bloomingdales nordstrom)) %></li>
+  <li>Chart <%= link_to 'toryburch, alexanderwang, michaelkors, dkny, marcjacobs', chart_path(tags: %w(toryburch alexanderwang michaelkors dkny marcjacobs)) %></li>
+  <li>Chart <%= link_to 'katespadenewyork, rebeccaminkoff, dvf', chart_path(tags: %w(katespadenewyork rebeccaminkoff dvf)) %></li>
+</ul>

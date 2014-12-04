@@ -77,6 +77,8 @@ class Tag < ActiveRecord::Base
   def chart_data amount_of_days=14
     blank = {}
 
+    amount_of_days = amount_of_days.to_i
+
     amount_of_days.times do |i|
       d = amount_of_days-i
       cat = d.days.ago.utc.strftime('%m/%d')

@@ -1,0 +1,27 @@
+<%= link_to '<< Back', root_path %>
+<h3>Instagram Accounts</h3>
+<table style="width: 450px;">
+  <thead>
+  <tr>
+    <th>Client ID</th>
+    <th>Calls Remaining</th>
+  </tr>
+  </thead>
+  <tbody>
+  <% InstagramAccount.all.each do |account| %>
+    <%
+       resp = nil
+       begin
+         client = InstaClient.new(account).client
+         resp = client.utils_raw_response
+       rescue Exception => e
+
+       end
+    %>
+    <tr>
+      <td><%= account.client_id %></td>
+      <td style="text-align: center;"><%= resp.present? ? "#{resp.headers[:x_ratelimit_remaining]} / #{resp.headers[:x_ratelimit_limit]}" : link_to('Login to Instagram', oauth_connect_path(key: account.client_id)) %></td>
+    </tr>
+  <% end %>
+  </tbody>
+</table>

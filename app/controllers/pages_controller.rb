@@ -1,16 +1,6 @@
 class PagesController < ApplicationController
   def home
-    # redirect_to oauth_connect_path if Setting.g('instagram_access_token').blank?
-    @response = {}
-    InstagramAccount.all.each do |account|
-      @response[account.client_id] = ''
-      begin
-        client = InstaClient.new(account).client
-        @response[account.client_id] = client.utils_raw_response
-      rescue Exception => e
-        next
-      end
-    end
+
   end
 
   def export
@@ -36,7 +26,8 @@ class PagesController < ApplicationController
 
     @groups = {}
 
-    @tags = Tag.where(show_graph: 1).pluck(:name)
+    @tags = params['tags'] && params['tags'].size > 0 ? Tag.where(name: params['tags']) : Tag.where(show_graph: 1)
+    @tags = @tags.pluck(:name)
   end
 
   def chart_tag_data
@@ -53,5 +44,8 @@ class PagesController < ApplicationController
     end
 
     render json: { data: values, tag: tag_name, cache: cache }
+  end
+
+  def clients_status
   end
 end

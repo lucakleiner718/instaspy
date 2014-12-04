@@ -1,5 +1,5 @@
 class TagChartWorker
-  include Sidekiq::Worker
+  # include Sidekiq::Worker
 
   def perform tag_id, amount_of_days=Tag::CHART_DAYS
     tag = Tag.where('id = :tag_id OR name = :tag_id', tag_id: tag_id).first

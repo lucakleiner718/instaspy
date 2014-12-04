@@ -1,5 +1,6 @@
 $(document).on 'ready page:load', ->
   chart_box = $('#chart')
+  return false if chart_box.length == 0
 #  data = chart_box.data('chart')
   tags = chart_box.data('tags')
   categories = chart_box.data('categories')
@@ -23,7 +24,7 @@ $(document).on 'ready page:load', ->
         ]
 #      height: '100%'
     title:
-      text: 'Fashion Week Tags'
+      text: 'Tags Chart ' + tags.join(', ')
     subtitle:
       text: 'Source: Instagram.com'
     xAxis:
@@ -85,7 +86,7 @@ $(document).on 'ready page:load', ->
 
   $('body').trigger 'tags:update'
 
-  # update graph every 3 minutes
+  # update graph every 30 minutes
   setInterval ->
     $('body').trigger 'tags:update'
-  , 1*60*1000
+  , 30*60*1000

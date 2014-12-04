@@ -21,7 +21,7 @@ end
 #   runner 'TagChartWorker.spawn'
 # end
 
-every 2.hours do
+every 12.hours do
   runner "FollowersReport.new('shopbop').get_new"
 end
 

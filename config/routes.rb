@@ -13,6 +13,8 @@ Rails.application.routes.draw do
   get 'reports/followers'
   post 'reports/followers' => 'reports#followers_report'
 
+  get 'clients_status' => 'pages#clients_status'
+
   # require 'sidekiq/web'
   # mount Sidekiq::Web, at: '/sidekiq'
 
