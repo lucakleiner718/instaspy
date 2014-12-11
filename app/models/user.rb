@@ -114,7 +114,7 @@ class User < ActiveRecord::Base
 
     user_data = client.user(self.insta_id)['data']
     followed = user_data['counts']['followed_by']
-    puts "Followed by: #{followed}"
+    puts "#{self.username} followed by: #{followed}"
 
     exists = 0
     if options[:reload]
@@ -196,7 +196,7 @@ class User < ActiveRecord::Base
 
     user_data = client.user(self.insta_id)['data']
     follows = user_data['counts']['follows']
-    puts "Follows: #{follows}"
+    puts "#{self.username} follows: #{follows}"
 
     exists = 0
     if options[:reload]

@@ -88,4 +88,4 @@ Rails.application.configure do
   config.action_mailer.default_url_options = { host: "107.170.110.156" }
 end
 
-ActionMailer::Base.smtp_settings[:enable_starttls_auto] = false
+# ActionMailer::Base.smtp_settings[:enable_starttls_auto] = false

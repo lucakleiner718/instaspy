@@ -179,6 +179,7 @@ GEM
     ref (1.0.5)
     render_csv (2.0.0)
       rails (>= 3.0)
+    rubyzip (1.1.6)
     sass (3.2.19)
     sass-rails (4.0.3)
       railties (>= 4.0.0, < 5.0)
@@ -272,6 +273,7 @@ DEPENDENCIES
   redis
   redis-rails
   render_csv
+  rubyzip
   sass-rails (~> 4.0.3)
   sidekiq
   sidekiq-failures

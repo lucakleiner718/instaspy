@@ -30,6 +30,7 @@ class FolloweesReportMailer < ActionMailer::Base
     end
 
     @file_urls = []
+    files = []
 
     origins.each do |origin|
       followees = origin.followees
@@ -41,16 +42,39 @@ class FolloweesReportMailer < ActionMailer::Base
         end
       end
 
-      if followees.size < 10_000
-        attachments["#{origin.username}-followees.csv"] = csv_string
-      else
-        Dir.mkdir('public/reports') unless Dir.exists?('public/reports')
-        file_path = "reports/#{origin.username}-followees-#{Time.now.to_i}.csv"
-        @file_urls << "#{root_url}#{file_path}"
-        File.open("public/#{file_path}", 'w') do |f|
-          f.puts csv_string
-        end
+      files << [origin.username, csv_string]
+
+      # if followees.size < 10_000
+      #   attachments["#{origin.username}-followees.csv"] = csv_string
+      # else
+      #   Dir.mkdir('public/reports') unless Dir.exists?('public/reports')
+      #   file_path = "reports/#{origin.username}-followees-#{Time.now.to_i}.csv"
+      #   @file_urls << "#{root_url}#{file_path}"
+      #   File.open("public/#{file_path}", 'w') do |f|
+      #     f.puts csv_string
+      #   end
+      # end
+    end
+
+    stringio = Zip::OutputStream.write_buffer do |zio|
+      files.each do |file|
+        zio.put_next_entry("#{file[0]}.csv")
+        zio.write file[1]
       end
+    end
+
+    stringio.rewind
+    binary_data = stringio.sysread
+
+    if binary_data.size > 30#1024*1024*30
+      Dir.mkdir('public/reports') unless Dir.exists?('public/reports')
+      file_path = "reports/followees-archive-#{Time.now.to_i}.zip"
+      @file_urls << "#{root_url}#{file_path}"
+      File.open("public/#{file_path}", 'w') do |f|
+        f.puts binary_data
+      end
+    else
+      attachments['followees.zip'] = binary_data
     end
 
     if ENV['insta_debug'] || Rails.env.development?
