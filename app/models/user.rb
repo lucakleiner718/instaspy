@@ -324,7 +324,11 @@ class User < ActiveRecord::Base
   end
 
   def self.get username
-    User.where('id = :id or insta_id = :id or username = :id', id: username).first_or_create(username: username)
+    if username.numeric?
+      User.where('id = :id or insta_id = :id', id: username).first_or_create
+    else
+      User.where('username = :id', id: username).first_or_create
+    end
   end
 
 end
