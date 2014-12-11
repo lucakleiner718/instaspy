@@ -44,8 +44,7 @@ class User < ActiveRecord::Base
       data = resp.data.select{|el| el['username'].downcase == username.downcase }.first if resp.data.size > 0
 
       if data
-        user.insta_data data
-        user.save
+        self.insta_data data
       else
         return false
       end
