@@ -1,0 +1,8 @@
+<% if @file_urls.size > 0 %>
+  <p>Links to download <strong>full</strong> report:</p>
+  <ul>
+    <% @file_urls.each do |link| %>
+      <li><a href="<%= link %>"><%= link %></a></li>
+    <% end %>
+  </ul>
+<% end %>

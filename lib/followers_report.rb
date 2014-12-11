@@ -21,4 +21,13 @@ class FollowersReport
     FollowersReportMailer.weekly(@user).deliver
   end
 
+
+  def get_new_follows
+    @user.update_followees
+  end
+
+  def reload_follows
+    @user.update_followees reload: true
+  end
+
 end
