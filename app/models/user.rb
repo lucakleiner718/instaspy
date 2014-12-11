@@ -36,6 +36,21 @@ class User < ActiveRecord::Base
 
   def update_info!
     client = InstaClient.new.client
+
+    if self.insta_id.blank? && self.username.present?
+      resp = client.user_search(self.username)
+
+      data = nil
+      data = resp.data.select{|el| el['username'].downcase == username.downcase }.first if resp.data.size > 0
+
+      if data
+        user.insta_data data
+        user.save
+      else
+        return false
+      end
+    end
+
     begin
       info = client.user(self.insta_id)
       data = info.data
@@ -90,6 +105,8 @@ class User < ActiveRecord::Base
   end
 
   def update_followers *args
+    return false if self.insta_id.blank?
+
     options = args.extract_options!
 
     client = InstaClient.new.client
@@ -169,6 +186,9 @@ class User < ActiveRecord::Base
   end
 
   def update_followees *args
+
+    return false if self.insta_id.blank?
+
     options = args.extract_options!
 
     client = InstaClient.new.client
@@ -273,8 +293,8 @@ class User < ActiveRecord::Base
     end
   end
 
-  def self.get id
-    User.where('id = :id or insta_id = :id or username = :id', id: id).first_or_create
+  def self.get username
+    User.where('id = :id or insta_id = :id or username = :id', id: username).first_or_create(username: username)
   end
 
 end
