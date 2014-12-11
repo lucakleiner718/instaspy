@@ -112,6 +112,8 @@ class User < ActiveRecord::Base
   end
 
   def followees_size
+    return false if self.private?
+
     client = InstaClient.new.client
     begin
       user_data = client.user(self.insta_id)['data']
@@ -214,14 +216,29 @@ class User < ActiveRecord::Base
 
   def update_followees *args
 
-    return false if self.insta_id.blank?
+    return false if self.insta_id.blank? || self.private?
 
     options = args.extract_options!
 
     client = InstaClient.new.client
     next_cursor = nil
 
-    user_data = client.user(self.insta_id)['data']
+    begin
+      user_data = client.user(self.insta_id)['data']
+    rescue Instagram::BadRequest => e
+      if e.message =~ /you cannot view this resource/
+        self.private = true
+        self.grabbed_at = Time.now
+        self.save
+      # elsif e.message =~ /this user does not exist/
+      #   self.destroy
+      end
+      return false
+    rescue
+      # binding.pry
+      return false
+    end
+
     follows = user_data['counts']['follows']
     puts "#{self.username} follows: #{follows}"
 
