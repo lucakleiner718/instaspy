@@ -197,6 +197,8 @@ class User < ActiveRecord::Base
     follows = user_data['counts']['follows']
     puts "#{self.username} follows: #{follows}"
 
+    return false if follows == 0
+
     exists = 0
     if options[:reload]
       self.followee_ids = []
