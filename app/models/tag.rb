@@ -96,4 +96,18 @@ class Tag < ActiveRecord::Base
     data.reject{|k| !k.in?(blank) }.values
   end
 
+  def self.add_to_csv tag_name
+    t = Tag.where(name: tag_name).first_or_initialize
+    t.observed = true
+    t.grabs_users_csv = true
+    t.save
+  end
+
+  def self.remove_from_csv tag_name
+    t = Tag.where(name: tag_name).first_or_initialize
+    t.observed = false unless t.show_graph
+    t.grabs_users_csv = false
+    t.save
+  end
+
 end
