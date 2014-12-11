@@ -37,8 +37,7 @@ gem 'pry-rails'
 gem 'instagram'
 gem 'httparty'
 gem 'render_csv'
-gem 'sidekiq' # Delayed jobs processor
-# gem "sidekiq-cron", "~> 0.2.0"
+gem 'sidekiq'
 gem 'sidekiq-failures'
 gem 'sidekiq-unique-jobs'
 gem 'sinatra', require: false # Web interface of Sidekiq processes
@@ -52,3 +51,4 @@ gem 'redis-rails'
 gem 'daemons'
 gem 'mongoid'
 gem 'rubyzip', require: 'zip'
+gem 'clockwork'

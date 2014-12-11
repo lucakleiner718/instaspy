@@ -19,7 +19,7 @@ Rails.application.routes.draw do
   get 'tag_media/added' => 'pages#tag_media_added_check'
   post 'tag_media/added' => 'pages#tag_media_added'
 
-  # require 'sidekiq/web'
-  # mount Sidekiq::Web, at: '/sidekiq'
+  require 'sidekiq/web'
+  mount Sidekiq::Web, at: '/sidekiq'
 
 end

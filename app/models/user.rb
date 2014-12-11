@@ -93,14 +93,42 @@ class User < ActiveRecord::Base
 
   def followers_size
     client = InstaClient.new.client
-    user_data = client.user(self.insta_id)['data']
-    user_data['counts']['followed_by']
+    begin
+      user_data = client.user(self.insta_id)['data']
+      user_data['counts']['followed_by']
+    rescue Instagram::BadRequest => e
+      if e.message =~ /you cannot view this resource/
+        self.private = true
+        self.grabbed_at = Time.now
+        self.save
+      elsif e.message =~ /this user does not exist/
+        self.destroy
+      end
+      return false
+    rescue
+      # binding.pry
+      return false
+    end
   end
 
   def followees_size
     client = InstaClient.new.client
-    user_data = client.user(self.insta_id)['data']
-    user_data['counts']['follows']
+    begin
+      user_data = client.user(self.insta_id)['data']
+      user_data['counts']['follows']
+    rescue Instagram::BadRequest => e
+      if e.message =~ /you cannot view this resource/
+        self.private = true
+        self.grabbed_at = Time.now
+        self.save
+      elsif e.message =~ /this user does not exist/
+        self.destroy
+      end
+      return false
+    rescue
+      # binding.pry
+      return false
+    end
   end
 
   def update_followers *args
@@ -213,7 +241,7 @@ class User < ActiveRecord::Base
       next_cursor = resp.pagination['next_cursor']
 
       users = User.where(insta_id: resp.data.map{|el| el['id']})
-      fols = Follower.where(follower_id: self.id, user_id: users.map{|el| el.id})
+      fols = Follower.where(follower_id: self.id, user_id: users.map{|el| el.id}) unless options[:reload]
 
       resp.data.each do |user_data|
         user = users.select{|el| el.insta_id == user_data['id'].to_i}.first
@@ -227,36 +255,20 @@ class User < ActiveRecord::Base
           user.update_info!
         end
 
-        new_record = user.new_record?
+        user.save if user.changed?
 
-        user.save
+        fol = nil
+        fol = fols.select{|el| el.user_id == user.id }.first unless options[:reload]
+        fol = Follower.where(follower_id: self.id, user_id: user.id).first_or_initialize if fol.blank?
 
-        # fol = nil
-        #
-        # if new_record
-        #   fol = fols.select{|el| el.follower_id == user.id }.first
-        # end
-        #
-        # unless fol
-        # fol = fols.select{|el| el.user_id == user.id }.first
-        fol = Follower.where(follower_id: self.id, user_id: user.id)
-        # end
-
-        if options[:reload]
-          fol.first_or_create
-        else
-          if fol.size == 1
-            exists += 1
-          else
-            fol.first_or_create
-          end
+        if !options[:reload] && !fol.new_record?
+          exists += 1
         end
+
+        fol.save if fol.changed?
+
         followee_ids << user.id
-
-        user = nil # trying to save some RAM but nulling variable
       end
-
-      resp = nil
 
       puts "followers:#{followee_ids.size}/#{follows} request:#{(Time.now-start).to_f}s left:#{((Time.now - begining_time).to_f/followee_ids.size * (follows-followee_ids.size)).to_i}s"
 

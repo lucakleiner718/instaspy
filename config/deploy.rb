@@ -30,7 +30,9 @@ set :puma_conf, "#{shared_path}/puma.rb"
 set :puma_role, :app
 # set :puma_env, fetch(:rack_env, fetch(:rails_env, 'production'))
 # set :puma_threads, [0, 16]
-set :puma_workers, 3
+set :puma_workers, 2
+set :puma_preload_app, false
+set :puma_threads, [0, 4]
 # set :puma_init_active_record, true
 # set :puma_preload_app, true
 
@@ -122,3 +124,41 @@ end
 #     end
 #   end
 # end
+
+
+namespace :god do
+
+  task :restart do
+    on roles(:app), in: :sequence, wait: 5 do
+      within release_path do
+        with rails_env: fetch(:rails_env) do
+          execute :bundle, :exec, 'god terminate'
+          execute :bundle, :exec, 'god -c config/procs.god'
+        end
+      end
+    end
+  end
+
+  task :start do
+    on roles(:app), in: :sequence, wait: 5 do
+      within release_path do
+        with rails_env: fetch(:rails_env) do
+          execute :bundle, :exec, 'god -c config/procs.god'
+        end
+      end
+    end
+  end
+
+  task :stop do
+    on roles(:app), in: :sequence, wait: 5 do
+      within release_path do
+        with rails_env: fetch(:rails_env) do
+          execute :bundle, :exec, 'god terminate'
+        end
+      end
+    end
+  end
+
+end
+
+after 'deploy:publishing', 'god:restart'
