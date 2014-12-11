@@ -66,7 +66,7 @@ class FolloweesReportMailer < ActionMailer::Base
     stringio.rewind
     binary_data = stringio.sysread
 
-    if binary_data.size > 30#1024*1024*30
+    if binary_data.size > 1024*1024*20
       Dir.mkdir('public/reports') unless Dir.exists?('public/reports')
       file_path = "reports/followees-archive-#{Time.now.to_i}.zip"
       @file_urls << "#{root_url}#{file_path}"
