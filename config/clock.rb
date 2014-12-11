@@ -12,7 +12,7 @@ module Clockwork
     config[:tz] = Time.zone
   end
 
-  every(1.minute, 'get.new.media') { MediaWorker.perform_async }
+  every(1.minute, 'get.new.media') { MediaWorker.spawn }
   every(10.minutes, 'update.users') { UserWorker.perform_async }
   every(1.week, 'media.report', at: "Tuesday 16:00") { ReportWorker.perform_async }
   every(1.day, 'media.delete_old', at: '5:00') { Media.delete_old }

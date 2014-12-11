@@ -11,4 +11,4 @@ Sidekiq.configure_client do |config|
   config.redis = { url: 'redis://localhost:6379/12', namespace: "instaspy_#{Rails.env}" }
 end
 
-# SidekiqUniqueJobs.config.unique_args_enabled = true
+SidekiqUniqueJobs.config.unique_args_enabled = true
