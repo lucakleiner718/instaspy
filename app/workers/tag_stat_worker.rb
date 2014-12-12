@@ -5,9 +5,9 @@ class TagStatWorker
   sidekiq_options unqiue: true,
                   unique_args: -> (args) { [ args.first ] }
 
-  def perform tag_id
+  def perform tag_id, beginning=1.day
     tag = Tag.find(tag_id)
-    start = 1.day.ago.utc.beginning_of_day
+    start = beginning.ago.utc.beginning_of_day
     finish = start.utc.end_of_day
 
     return false if TagStat.where(tag: tag, date: start).size > 0
@@ -16,10 +16,10 @@ class TagStatWorker
     TagStat.create tag: tag, amount: media.size, date: start
   end
 
-  def self.spawn
+  def self.spawn beginning=1.day
     Tag.chartable.each do |tag|
       # self.perform_async(tag.id)
-      self.new.perform(tag.id)
+      self.new.perform(tag.id, beginning)
     end
   end
 
