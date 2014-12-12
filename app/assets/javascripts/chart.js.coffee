@@ -16,13 +16,7 @@ $(document).on 'ready page:load', ->
   chart_box.highcharts
     chart:
       type: 'line'
-      backgroundColor:
-        linearGradient: [500, 0, 500, 500]
-        stops: [
-          [0, '#1edbdd'],
-          [1, '#1ca3c8']
-        ]
-#      height: '100%'
+      backgroundColor: 'transparent'
     title:
       text: 'Tags Chart ' + tags.join(', ')
     subtitle:
@@ -79,6 +73,20 @@ $(document).on 'ready page:load', ->
         $.each hc.series, (index, row) ->
           if row.name == resp.tag
             row.setData resp.data
+
+        found = false
+        $('.info-box tr').each ->
+          if $(this).find('h5').text() == '#' + tag_name
+            found = true
+            $(this).find('h5').closest('tr').find('h3').text(resp.last_30_days)
+
+        if !found
+          tr = $('.info-box tr').first().clone()
+          tr.appendTo($('.info-box tbody'))
+          tr.find('h5').text('#' + tag_name)
+          tr.find('h3').text(resp.last_30_days)
+          tr.show()
+
 
   $('body').on 'tags:update', ->
     $.each tags, (index, tag_name) ->

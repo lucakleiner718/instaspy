@@ -1,2 +1,18 @@
-<div id="chart" data-categories="<%= @xcategories.to_json %>" data-tags="<%= @tags.to_json %>" data-amount_of_days="<%= @amount_of_days %>"></div>
-<%= link_to '<< Back', root_path, style: 'position: absolute; top: 20px; left: 20px; z-index: 100; color: #000' %>
+<div class="chart-wrap">
+  <%= link_to '<< Back', root_path, class: 'back-link' %>
+
+  <div class="info-box">
+    <h2>Volume last 30 days</h2>
+    <table class="table-full push-bottom">
+      <tbody>
+      <tr style="display: none;">
+        <td><h5>{{tag_name}}</h5></td>
+        <td><h3>{{media_amount}}</h3></td>
+      </tr>
+      </tbody></table>
+  </div>
+
+  <div class="chart-box">
+    <div id="chart" data-categories="<%= @xcategories.to_json %>" data-tags="<%= @tags.to_json %>" data-amount_of_days="<%= @amount_of_days %>"></div>
+  </div>
+</div>

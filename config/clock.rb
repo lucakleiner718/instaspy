@@ -20,5 +20,6 @@ module Clockwork
   every(12.hours, 'FollowersReport.shopbop') { FollowersReport.new('shopbop').get_new }
   every(1.week, 'FollowersReport.shopbop', at: "Thursday 4:00") { FollowersReport.new('shopbop').send_weekly_report }
   every(1.day, 'StatWorker', at: '0:00') { StatWorker.perform_async }
+  every(1.day, 'TagStat', at: '1:00') { TagStatWorker.spawn }
 
 end

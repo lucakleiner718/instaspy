@@ -1,8 +1,66 @@
+body{
+  font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
 
 #chart{
+//  position: absolute;
+//  top: 0;
+//  left: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.back-link{
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 100;
+  color: #000;
+}
+
+.chart-wrap{
+  background: #1edbdd; /* Old browsers */
+  background: -moz-linear-gradient(-45deg, #1edbdd 0%, #1988bf 100%); /* FF3.6+ */
+  background: -webkit-gradient(linear, left top, right bottom, color-stop(0%,#1edbdd), color-stop(100%,#1988bf)); /* Chrome,Safari4+ */
+  background: -webkit-linear-gradient(-45deg, #1edbdd 0%,#1988bf 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-linear-gradient(-45deg, #1edbdd 0%,#1988bf 100%); /* Opera 11.10+ */
+  background: -ms-linear-gradient(-45deg, #1edbdd 0%,#1988bf 100%); /* IE10+ */
+  background: linear-gradient(135deg, #1edbdd 0%,#1988bf 100%); /* W3C */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#1edbdd', endColorstr='#1988bf',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
+
   position: absolute;
   top: 0;
   left: 0;
-  height: 100%;
   width: 100%;
+  height: 100%;
+}
+
+.chart-box{
+  margin-right: 350px;
+  position: relative;
+  height: 100%;
+}
+.info-box{
+  width: 250px;
+  float: right;
+  color: #fff;
+  margin-right: 50px;
+
+  table{
+    width: 100%;
+  }
+
+  h2{
+  }
+
+  h3{
+    margin: 5px 0;
+    text-align: right;
+  }
+
+  h5{
+    font-size: 13px;
+    font-weight: 600;
+    margin: 5px 0;
+  }
 }
