@@ -14,8 +14,8 @@ module Clockwork
 
   # every(1.minute, 'get.new.media') { MediaWorker.spawn }
   every(10.minutes, 'update.users') { UserWorker.perform_async }
-  every(1.week, 'media.report', at: "Tuesday 16:00") { ReportWorker.perform_async }
-  every(1.day, 'media.delete_old', at: '5:00') { Media.delete_old }
+  every(1.week, 'media.report', at: "Tuesday 7:00") { ReportWorker.perform_async }
+  every(1.day, 'media.delete_old', at: '8:00') { Media.delete_old }
   every(3.hours, 'TagChartWorker') { TagChartWorker.spawn }
   every(12.hours, 'FollowersReport.shopbop') { FollowersReport.new('shopbop').get_new }
   every(1.week, 'FollowersReport.shopbop', at: "Thursday 4:00") { FollowersReport.new('shopbop').send_weekly_report }

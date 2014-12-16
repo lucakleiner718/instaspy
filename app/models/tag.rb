@@ -110,4 +110,10 @@ class Tag < ActiveRecord::Base
     t.save
   end
 
+  def self.observe tag_name
+    t = Tag.where(name: tag_name).first_or_initialize
+    t.observed = true
+    t.save
+  end
+
 end
