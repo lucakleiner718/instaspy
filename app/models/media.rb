@@ -19,7 +19,7 @@ class Media < ActiveRecord::Base
       users_ids = tag.media.where('created_at > ? AND created_at <= ?', starts, ends).pluck(:user_id).uniq
       users = User.where(id: users_ids).where("website is not null AND website != ''")
                 .where('created_at >= ?', starts).where('created_at <= ?', ends)
-                .select([:id, :username, :full_name, :website, :follows, :followed_by, :media_amount, :created_at])
+                .select([:id, :username, :full_name, :website, :bio, :follows, :followed_by, :media_amount, :created_at])
 
       csv_string = CSV.generate do |csv|
         csv << header
