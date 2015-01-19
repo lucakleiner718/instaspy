@@ -45,6 +45,8 @@ body{
   float: right;
   color: #fff;
   margin-right: 50px;
+  max-height: 100%;
+  overflow: auto;
 
   table{
     width: 100%;

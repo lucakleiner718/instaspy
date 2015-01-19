@@ -29,7 +29,10 @@ class PagesController < ApplicationController
 
     @groups = {}
 
-    @tags = params['tags'] && params['tags'].size > 0 ? Tag.where(name: params['tags']) : Tag.where(show_graph: 1)
+    tags = params['tags']
+    tags = tags.split(',') if tags && tags.is_a?(String)
+
+    @tags = tags && tags.size > 0 ? Tag.where(name: tags) : Tag.where(show_graph: 1)
     @tags = @tags.pluck(:name)
   end
 
