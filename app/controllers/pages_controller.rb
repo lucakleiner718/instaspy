@@ -2,6 +2,8 @@ class PagesController < ApplicationController
 
   protect_from_forgery :except => :tag_media_added
 
+  after_action :allow_iframe, only: :chart
+
   def home
 
   end
@@ -119,5 +121,11 @@ class PagesController < ApplicationController
     @xcategories = blank.keys
 
     # Stat.where()
+  end
+
+  private
+
+  def allow_iframe
+    response.headers.except! 'X-Frame-Options'
   end
 end
