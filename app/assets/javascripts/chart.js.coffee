@@ -13,6 +13,17 @@ $(document).on 'ready page:load', ->
 #      data: $.map(v, (a, b) -> return a )
     }
 
+  if window == window.top
+    $('.back-link').hide()
+
+  $('.close-info-box').on 'click', ->
+    $('.chart-wrap').addClass('only-chart')
+    $(window).trigger('resize')
+
+  $('.show-info-box').on 'click', ->
+    $('.chart-wrap').removeClass('only-chart')
+    $(window).trigger('resize')
+
   chart_box.highcharts
     chart:
       type: 'line'

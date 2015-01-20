@@ -1,8 +1,8 @@
-<div class="chart-wrap">
+<div class="chart-wrap<%= params[:embed].present? ? ' embed' : '' %><%= params[:volumes] == '0' ? ' only-chart' : '' %>">
   <%= link_to '<< Back', root_path, class: 'back-link' %>
 
   <div class="info-box">
-    <h2>Volume last 30 days</h2>
+    <h2 style="font-size: 1.4em;">Volume last 30 days <span style="font-size: 10px; vertical-align: top; cursor: pointer;" class="close-info-box">X</span></h2>
     <table class="table-full push-bottom">
       <tbody>
       <tr style="display: none;">
@@ -11,6 +11,8 @@
       </tr>
       </tbody></table>
   </div>
+
+  <a href="#" class="show-info-box">Show volumes</a>
 
   <div class="chart-box">
     <div id="chart" data-categories="<%= @xcategories.to_json %>" data-tags="<%= @tags.to_json %>" data-amount_of_days="<%= @amount_of_days %>"></div>

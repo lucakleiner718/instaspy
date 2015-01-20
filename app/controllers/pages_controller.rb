@@ -53,6 +53,7 @@ class PagesController < ApplicationController
 
     tag = Tag.where(name: tag_name).first
     last_30_days = TagStat.where('date >= ?', 30.days.ago).where(tag: tag).pluck(:amount).sum
+    last_30_days = TagStat.order(date: :desc).first if last_30_days.blank?
 
     render json: { data: values, tag: tag_name, cache: cache, last_30_days: last_30_days }
   end
