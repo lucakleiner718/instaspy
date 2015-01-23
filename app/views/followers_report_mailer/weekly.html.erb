@@ -1,3 +1,10 @@
-<% if @file_url %>
-  Link to download weekly <%= @start.strftime('%m/%d/%y') %> - <%= @finish.strftime('%m/%d/%y') %> report <%= @file_url %>
+<% if @files.size > 0 %>
+  <p>Links to download weekly <%= @start.strftime('%m/%d/%y') %> - <%= @finish.strftime('%m/%d/%y') %> report</p>
+  <ul>
+    <% @files.each do |file| %>
+      <li><strong><%= file[0].username %>:</strong> <%= file[1] %></li>
+    <% end %>
+  </ul>
+<% else %>
+ <p>Check files in attachments</p>
 <% end %>

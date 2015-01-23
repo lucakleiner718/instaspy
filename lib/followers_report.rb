@@ -30,4 +30,15 @@ class FollowersReport
     @user.update_followees reload: true
   end
 
+  def self.track
+    TrackUser.where(followers: true).each do |track_user|
+      report = FollowersReport.new track_user.user.username
+      report.get_new
+    end
+  end
+
+  def self.send_weekly_report
+    FollowersReportMailer.weekly(TrackUser.where(followers: true).map{|tu| tu.user}).deliver
+  end
+
 end

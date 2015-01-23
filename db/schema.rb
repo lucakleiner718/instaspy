@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20141212150134) do
+ActiveRecord::Schema.define(version: 20150123061323) do
 
   create_table "followers", force: true do |t|
     t.integer  "user_id"
@@ -75,6 +75,14 @@ ActiveRecord::Schema.define(version: 20141212150134) do
   add_index "tags", ["grabs_users_csv"], name: "index_tags_on_grabs_users_csv", using: :btree
   add_index "tags", ["name"], name: "index_tags_on_name", unique: true, using: :btree
   add_index "tags", ["observed"], name: "index_tags_on_observed", using: :btree
+
+  create_table "track_users", force: true do |t|
+    t.integer  "user_id"
+    t.boolean  "followees",  default: false
+    t.boolean  "followers",  default: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
 
   create_table "users", force: true do |t|
     t.integer  "insta_id"
