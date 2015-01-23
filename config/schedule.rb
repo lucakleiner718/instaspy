@@ -1,6 +1,9 @@
-every 2.seconds do
+every 1.minute do
 #   # runner 'MediaWorker.perform_async'
-  runner 'Media.recent_media'
+  28.times do |i|
+    runner 'Media.recent_media'
+    sleep(i)
+  end
 end
 
 # every 10.minutes do
