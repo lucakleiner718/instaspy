@@ -2,18 +2,11 @@ class Tag < ActiveRecord::Base
 
   has_and_belongs_to_many :media, class_name: 'Media'
 
-  # scope :observed, -> { where observed: true }
-  # scope :chartable, -> { where show_graph: true }
+  scope :observed, -> { joins(:observed_tag).where('observed_tags.id is not null') }
+  scope :chartable, -> { observed.where('observed_tags.for_chart = ?', true) }
+  scope :exportable, -> { observed.where('observed_tags.export_csv = ?', true) }
 
   has_one :observed_tag
-
-  def self.observed
-    Tag.joins(:observed_tag).where('observed_tags.id is not null')
-  end
-
-  def self.chartable
-    self.observed.where('observed_tags.for_chart = ?', true)
-  end
 
   CHART_DAYS = 14
 

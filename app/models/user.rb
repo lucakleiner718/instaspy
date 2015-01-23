@@ -312,7 +312,7 @@ class User < ActiveRecord::Base
     resp = client.user_search(username)
 
     data = nil
-    data = resp.data.select{|el| el['username'].downcase == username.downcase }.first if resp.data.size > 0
+    data = resp.data.select{|el| el['username'].downcase == username.to_s.downcase }.first if resp.data.size > 0
 
     if data
       user.insta_data data
@@ -332,7 +332,6 @@ class User < ActiveRecord::Base
   end
 
   def self.duplicates
-    # nialayajewelry
     con = ActiveRecord::Base.connection()
     res = con.execute('select id,username from users')
     data = {}
