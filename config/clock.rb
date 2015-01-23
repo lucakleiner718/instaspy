@@ -13,7 +13,7 @@ module Clockwork
   end
 
   # Grab new media for observed tags
-  # every(10.seconds, 'get.new.media') { Media.recent_media }
+  every(5.seconds, 'get.new.media') { MediaWorker.spawn }
   # every(1.minute, 'get.new.media') { MediaWorker.spawn }
 
   # Update users, which doesn't have info
