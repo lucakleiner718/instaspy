@@ -1,5 +1,5 @@
-every 1.minute do
-  # runner 'MediaWorker.perform_async'
+every 2.seconds do
+#   # runner 'MediaWorker.perform_async'
   runner 'Media.recent_media'
 end
 

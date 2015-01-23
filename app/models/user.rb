@@ -331,4 +331,13 @@ class User < ActiveRecord::Base
     end
   end
 
+  def self.duplicates
+    # nialayajewelry
+    con = ActiveRecord::Base.connection()
+    res = con.execute('select id,username from users')
+    data = {}
+    res.each {|el| data[el[1]] ||= 0; data[el[1]] += 1 }
+    data.to_a.select{|el| el[1] > 1 }
+  end
+
 end

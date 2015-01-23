@@ -4,7 +4,6 @@ ruby '2.1.1'
 #ruby-gemset=instaspy
 
 gem 'rails', '4.1.5'                      # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'mysql2'                              # Use mysql as the database for Active Record
 
 gem 'sass-rails', '~> 4.0.3'              # Use SCSS for stylesheets
 gem 'uglifier', '>= 1.3.0'                # Use Uglifier as compressor for JavaScript assets
@@ -52,3 +51,4 @@ gem 'daemons'
 gem 'mongoid'
 gem 'rubyzip', require: 'zip'
 gem 'clockwork'
+gem 'mysql2'                              # Use mysql as the database for Active Record

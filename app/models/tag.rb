@@ -2,8 +2,18 @@ class Tag < ActiveRecord::Base
 
   has_and_belongs_to_many :media, class_name: 'Media'
 
-  scope :observed, -> { where observed: true }
-  scope :chartable, -> { where show_graph: true }
+  # scope :observed, -> { where observed: true }
+  # scope :chartable, -> { where show_graph: true }
+
+  has_one :observed_tag
+
+  def self.observed
+    Tag.joins(:observed_tag).where('observed_tags.id is not null')
+  end
+
+  def self.chartable
+    self.observed.where('observed_tags.for_chart = ?', true)
+  end
 
   CHART_DAYS = 14
 
@@ -34,9 +44,7 @@ class Tag < ActiveRecord::Base
   end
 
   def self.recent_media
-    Tag.observed.each do |tag|
-      tag.recent_media
-    end
+    Media.recent_media
   end
 
   def recent_media *args

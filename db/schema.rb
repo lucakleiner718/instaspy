@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150123061323) do
+ActiveRecord::Schema.define(version: 20150123065107) do
 
   create_table "followers", force: true do |t|
     t.integer  "user_id"
@@ -50,6 +50,15 @@ ActiveRecord::Schema.define(version: 20150123061323) do
   add_index "media_tags", ["media_id"], name: "index_media_tags_on_media_id", using: :btree
   add_index "media_tags", ["tag_id"], name: "index_media_tags_on_tag_id", using: :btree
 
+  create_table "observed_tags", force: true do |t|
+    t.integer  "tag_id"
+    t.boolean  "export_csv",       default: false
+    t.boolean  "for_chart",        default: false
+    t.datetime "media_updated_at"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
   create_table "settings", force: true do |t|
     t.string   "key"
     t.text     "value"
@@ -65,16 +74,10 @@ ActiveRecord::Schema.define(version: 20150123061323) do
 
   create_table "tags", force: true do |t|
     t.string   "name"
-    t.boolean  "observed"
     t.datetime "created_at"
-    t.datetime "updated_at"
-    t.boolean  "grabs_users_csv", default: false
-    t.boolean  "show_graph",      default: false
   end
 
-  add_index "tags", ["grabs_users_csv"], name: "index_tags_on_grabs_users_csv", using: :btree
   add_index "tags", ["name"], name: "index_tags_on_name", unique: true, using: :btree
-  add_index "tags", ["observed"], name: "index_tags_on_observed", using: :btree
 
   create_table "track_users", force: true do |t|
     t.integer  "user_id"
@@ -100,6 +103,7 @@ ActiveRecord::Schema.define(version: 20150123061323) do
   end
 
   add_index "users", ["insta_id"], name: "index_users_on_insta_id", unique: true, using: :btree
+  add_index "users", ["username"], name: "index_users_on_username", unique: true, using: :btree
   add_index "users", ["website"], name: "index_users_on_website", using: :btree
 
 end

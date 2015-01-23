@@ -4,7 +4,9 @@ class Media < ActiveRecord::Base
   belongs_to :user
 
   def self.recent_media
-    Tag.observed.each do |tag|
+    tag = Tag.observed.where('observed_tags.media_updated_at < ? or observed_tags.media_updated_at is null', 1.minute.ago).order('observed_tags.media_updated_at asc').first
+    if tag.present?
+      tag.observed_tag.update_column :media_updated_at, Time.now
       tag.recent_media
     end
   end
@@ -34,9 +36,9 @@ class Media < ActiveRecord::Base
     ReportMailer.weekly(csv_files, starts, ends).deliver
   end
 
-  # delete all media oldest than 2 weeks
+  # delete all media oldest than 4 weeks
   def self.delete_old
-    Media.where('created_time < ?', 2.weeks.ago).destroy_all
+    Media.where('created_time < ?', 4.weeks.ago).destroy_all
   end
 
 end
