@@ -10,7 +10,9 @@ class MediaWorker
   end
 
   def self.spawn
-    tag = Tag.observed.where('observed_tags.media_updated_at < ? or observed_tags.media_updated_at is null', 1.minute.ago).order('observed_tags.media_updated_at asc').first
-    MediaWorker.perform_async tag.id if tag.present?
+    tags = Tag.observed.where('observed_tags.media_updated_at < ? or observed_tags.media_updated_at is null', 1.minute.ago).order('observed_tags.media_updated_at asc')
+    tags.each do |tag|
+      MediaWorker.perform_async tag.id
+    end
   end
 end
