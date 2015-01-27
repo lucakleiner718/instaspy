@@ -32,7 +32,7 @@ module Clockwork
   every(12.hours, 'FollowersReport.update') { FollowersReport.track }
 
   # Send weekly report about followers for specified users
-  every(1.week, 'FollowersReport.report', at: "Thursday 04:00") { FollowersReport.send_weekly_report }
+  every(1.week, 'FollowersReport.report', at: "Thursday 04:00") { FollowersReportWorker.perform_async }
 
   # Save some stat
   every(1.day, 'StatWorker', at: '00:00') { StatWorker.perform_async }

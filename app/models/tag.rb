@@ -6,7 +6,7 @@ class Tag < ActiveRecord::Base
   scope :chartable, -> { observed.where('observed_tags.for_chart = ?', true) }
   scope :exportable, -> { observed.where('observed_tags.export_csv = ?', true) }
 
-  has_one :observed_tag
+  has_one :observed_tag, dependent: :destroy
 
   CHART_DAYS = 14
 
@@ -51,6 +51,13 @@ class Tag < ActiveRecord::Base
       media = Media.where(insta_id: media_item['id']).first_or_initialize
 
       user = User.where(insta_id: media_item['user']['id']).first_or_initialize
+      if user.new_record?
+        user2 = User.where(username: media_item['user']['username']).first_or_initialize
+        unless user2.new_record?
+          user = user2
+          user.insta_id = media_item['user']['id']
+        end
+      end
       user.username = media_item['user']['username']
       user.full_name = media_item['user']['full_name']
       user.save
@@ -98,23 +105,23 @@ class Tag < ActiveRecord::Base
   end
 
   def self.add_to_csv tag_name
-    t = Tag.where(name: tag_name).first_or_initialize
-    t.observed = true
-    t.grabs_users_csv = true
-    t.save
+    t = Tag.where(name: tag_name).first_or_create
+    ot = t.observed_tag.present? ? t.observed_tag : t.build_observed_tag
+    ot.export_csv = true
+    ot.save
   end
 
   def self.remove_from_csv tag_name
     t = Tag.where(name: tag_name).first_or_initialize
-    t.observed = false unless t.show_graph
-    t.grabs_users_csv = false
-    t.save
+    if t.observed_tag.present?
+      t.observed_tag.update_column :export_csv, false
+    end
   end
 
   def self.observe tag_name
-    t = Tag.where(name: tag_name).first_or_initialize
-    t.observed = true
-    t.save
+    t = Tag.where(name: tag_name).first_or_create
+    ot = t.observed_tag.present? ? t.observed_tag : t.build_observed_tag
+    ot.save
   end
 
 end

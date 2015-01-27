@@ -17,7 +17,7 @@ class Media < ActiveRecord::Base
 
     header = ['Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followed By', 'Media Amount', 'Added to Instaspy']
     csv_files = {}
-    Tag.where(grabs_users_csv: true).each do |tag|
+    Tag.exportable.each do |tag|
       users_ids = tag.media.where('created_at > ? AND created_at <= ?', starts, ends).pluck(:user_id).uniq
       users = User.where(id: users_ids).where("website is not null AND website != ''")
                 .where('created_at >= ?', starts).where('created_at <= ?', ends)
