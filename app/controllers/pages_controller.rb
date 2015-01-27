@@ -64,51 +64,6 @@ class PagesController < ApplicationController
 
   end
 
-  # def tag_media_added_check
-  #   if params['hub.mode'] == 'subscribe' && params['hub.challenge'].present?
-  #     render text: Instagram.meet_challenge(params, 'text1')
-  #   else
-  #     render text: ''
-  #   end
-  # end
-  #
-  # def tag_media_added
-  #
-  #   # binding.pry
-  #   client = InstaClient.new.client
-  #
-  #   params['_json'].each do |el|
-  #     if el['changed_aspect'] == 'media'
-  #       if el['object'] == 'tag'
-  #         tag = el['object_id']
-  #       end
-  #     end
-  #   end
-  #
-  #   @media_list = client.tag_recent_media(self.name, min_tag_id: options[:min_id], max_tag_id: options[:max_id], count: 1000)
-  #
-  #   @media_list.data.each do |media_item|
-  #     media = Media.where(insta_id: media_item['id']).first_or_initialize
-  #
-  #     user = User.where(insta_id: media_item['user']['id']).first_or_initialize
-  #     user.username = media_item['user']['username']
-  #     user.full_name = media_item['user']['full_name']
-  #     user.save
-  #
-  #     media.user_id = user.id
-  #     media.created_time = Time.at media_item['created_time'].to_i
-  #
-  #     tags = []
-  #     media_item['tags'].each do |tag_name|
-  #       tags << Tag.where(name: tag_name).first_or_create
-  #     end
-  #     media.tags = tags
-  #
-  #     media.save
-  #   end
-  #
-  # end
-
   def chart_amounts
     @xcategories = []
     blank = {}
