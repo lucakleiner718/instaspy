@@ -82,9 +82,11 @@ class Tag < ActiveRecord::Base
       media.save
     end
 
-    if added.to_f / media_list.size > 0.9
-      self.recent_media self.name, min_id: media_list['pagination']['min_tag_id']
-    end
+    p "added: #{added}"
+
+    # if added.to_f / media_list.size > 0.9
+    #   self.recent_media self.name, min_id: media_list['pagination']['min_tag_id']
+    # end
   end
 
   def update_info!
