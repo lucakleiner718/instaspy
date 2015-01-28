@@ -45,13 +45,15 @@ class Tag < ActiveRecord::Base
 
     client = InstaClient.new.client
 
+    added = 0
+
     begin
-      @media_list = client.tag_recent_media(self.name, min_tag_id: options[:min_id], max_tag_id: options[:max_id], count: 1000)
+      media_list = client.tag_recent_media(self.name, min_tag_id: options[:min_id], max_tag_id: options[:max_id], count: 1000)
     rescue JSON::ParserError, Instagram::ServiceUnavailable => e
       return false
     end
 
-    @media_list.data.each do |media_item|
+    media_list.data.each do |media_item|
       media = Media.where(insta_id: media_item['id']).first_or_initialize
 
       user = User.where(insta_id: media_item['user']['id']).first_or_initialize
@@ -69,6 +71,8 @@ class Tag < ActiveRecord::Base
       media.user_id = user.id
       media.created_time = Time.at media_item['created_time'].to_i
 
+      added += 1 if media.new_record?
+
       tags = []
       media_item['tags'].each do |tag_name|
         tags << Tag.where(name: tag_name).first_or_create
@@ -76,6 +80,10 @@ class Tag < ActiveRecord::Base
       media.tags = tags
 
       media.save
+    end
+
+    if added.to_f / media_list.size > 0.9
+      self.recent_media self.name, min_id: media_list['pagination']['min_tag_id']
     end
   end
 
