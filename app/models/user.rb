@@ -51,7 +51,7 @@ class User < ActiveRecord::Base
       resp = client.user_search(self.username)
 
       data = nil
-      data = resp.data.select{|el| el['username'].downcase == username.downcase }.first if resp.data.size > 0
+      data = resp.data.select{|el| el['username'].downcase == self.username.downcase }.first if resp.data.size > 0
 
       if self.insta_id.blank?
         exists = User.where(insta_id: data['id']).first
@@ -364,14 +364,14 @@ class User < ActiveRecord::Base
     data = nil
     data = resp.data.select{|el| el['username'].downcase == username.to_s.downcase }.first if resp.data.size > 0
 
-    exists = User.where(insta_id: data['id']).first
-    if exists
-      exists.username = data['username']
-      exists.save
-      return exists
-    end
-
     if data
+      exists = User.where(insta_id: data['id']).first
+      if exists
+        exists.username = data['username']
+        exists.save
+        return exists
+      end
+
       user.insta_data data
       user.save
       user
@@ -424,7 +424,7 @@ class User < ActiveRecord::Base
   def self.get_bio_by_usernames usernames
     results = []
 
-    usernames.in_groups_of(1000, false) do |usernames_group|
+    usernames.in_groups_of(2000, false) do |usernames_group|
       users = User.where(username: usernames_group)
 
       (usernames_group - users.pluck(:username)).each do |username|
