@@ -51,33 +51,45 @@ class User < ActiveRecord::Base
     #   client.
     # end
 
-    if self.username.present?
-      resp = client.user_search(self.username)
+    # if self.username.present?
+    #   resp = client.user_search(self.username)
+    #
+    #   data = nil
+    #   data = resp.data.select{|el| el['username'].downcase == self.username.downcase }.first if resp.data.size > 0
+    #
+    #   if self.insta_id.blank?
+    #     exists = User.where(insta_id: data['id']).first
+    #     if exists
+    #       exists.username = self.username
+    #       exists.save
+    #       self.destroy
+    #       return false
+    #     end
+    #   end
+    #
+    #   if data
+    #     self.insta_data data
+    #   else
+    #     self.destroy if self.insta_id.blank?
+    #     return false
+    #   end
+    # end
 
-      data = nil
-      data = resp.data.select{|el| el['username'].downcase == self.username.downcase }.first if resp.data.size > 0
+    # if self.insta_id.present?
 
-      if self.insta_id.blank?
-        exists = User.where(insta_id: data['id']).first
-        if exists
-          exists.username = self.username
-          exists.save
-          self.destroy
-          return false
-        end
-      end
-
-      if data
-        self.insta_data data
-      else
-        self.destroy if self.insta_id.blank?
-        return false
-      end
-    end
+    exists_username = nil
 
     begin
       info = client.user(self.insta_id)
       data = info.data
+
+      if data['username'] != self.username
+        exists_username = User.where(username: data['username']).first
+        if exists_username
+          exists_username.username = nil
+          exists_username.save
+        end
+      end
     rescue Instagram::BadRequest => e
       if e.message =~ /you cannot view this resource/
         self.private = true
@@ -85,32 +97,9 @@ class User < ActiveRecord::Base
 
         # If account private - try to get info from public page via http
         begin
-          if self.username.present? && (self.full_name.blank? || self.bio.blank? || self.website.blank? || self.follows.blank? || self.followed_by.blank?)
-            url = "http://instagram.com/#{self.username}/"
-            resp = Curl::Easy.perform(url) do |curl|
-              curl.headers["User-Agent"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.93 Safari/537.36"
-              curl.verbose = true
-              curl.follow_location = true
-            end
-            html = Nokogiri::HTML(resp.body)
-            # content = html.search('script').select{|script| script.attr('src').blank? }.last.text.sub('window._sharedData = ', '').sub(/;$/, '')
-            content = html.xpath('//script[contains(text(), "_sharedData")]').first.text.sub('window._sharedData = ', '').sub(/;$/, '')
-            json = JSON.parse content
-            user = json['entry_data']['UserProfile'].first['user']
-
-            # self.full_name = resp.body.match(/"full_name":"([^"]+)"/)[1] if self.full_name.blank?
-            self.full_name = user['full_name'] if self.full_name.blank?
-            self.bio = user['bio'] if self.bio.blank?
-            self.website = user['bio'] if self.website.blank?
-            # self.media_amount = resp.body.match(/"media":(\d+)/)[1] if self.media_amount.blank?
-            self.media_amount = user['counts']['media'] if self.media_amount.blank?
-            # self.followed_by = resp.body.match(/"followed_by":(\d+)/)[1] if self.followed_by.blank?
-            self.followed_by = user['counts']['followed_by'] if self.followed_by.blank?
-            # self.follows = resp.body.match(/"follows":(\d+)/)[1] if self.follows.blank?
-            self.follows = user['counts']['follows'] if self.follows.blank?
-          end
+          self.update_private_account
         rescue Exception => e
-          binding.pry
+          # binding.pry
         end
 
         self.save
@@ -132,6 +121,35 @@ class User < ActiveRecord::Base
     self.follows = data['counts']['follows']
     self.media_amount = data['counts']['media']
     self.grabbed_at = Time.now if self.changed?
+    self.save
+
+    exists_username.update_info! if exists_username
+  end
+
+  def update_private_account
+    url = "http://instagram.com/#{self.username}/"
+    resp = Curl::Easy.perform(url) do |curl|
+      curl.headers["User-Agent"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.93 Safari/537.36"
+      curl.verbose = true
+      curl.follow_location = true
+    end
+    html = Nokogiri::HTML(resp.body)
+    # content = html.search('script').select{|script| script.attr('src').blank? }.last.text.sub('window._sharedData = ', '').sub(/;$/, '')
+    content = html.xpath('//script[contains(text(), "_sharedData")]').first.text.sub('window._sharedData = ', '').sub(/;$/, '')
+    json = JSON.parse content
+    user = json['entry_data']['UserProfile'].first['user']
+
+    # self.full_name = resp.body.match(/"full_name":"([^"]+)"/)[1] if self.full_name.blank?
+    self.full_name = user['full_name'] if self.full_name.blank?
+    self.bio = user['bio'] if self.bio.blank?
+    self.website = user['bio'] if self.website.blank?
+    # self.media_amount = resp.body.match(/"media":(\d+)/)[1] if self.media_amount.blank?
+    self.media_amount = user['counts']['media'] if self.media_amount.blank?
+    # self.followed_by = resp.body.match(/"followed_by":(\d+)/)[1] if self.followed_by.blank?
+    self.followed_by = user['counts']['followed_by'] if self.followed_by.blank?
+    # self.follows = resp.body.match(/"follows":(\d+)/)[1] if self.follows.blank?
+    self.follows = user['counts']['follows'] if self.follows.blank?
+
     self.save
   end
 

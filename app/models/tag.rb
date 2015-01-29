@@ -71,6 +71,7 @@ class Tag < ActiveRecord::Base
 
         user = User.where(insta_id: media_item['user']['id']).first_or_initialize
         if user.new_record?
+          # with same username as we want to create
           user2 = User.where(username: media_item['user']['username']).first_or_initialize
           unless user2.new_record?
             user = user2
