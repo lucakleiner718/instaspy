@@ -47,7 +47,7 @@ class User < ActiveRecord::Base
   def update_info!
     client = InstaClient.new.client
 
-    if self.insta_id.blank? && self.username.present?
+    if self.username.present?
       resp = client.user_search(self.username)
 
       data = nil
@@ -56,6 +56,7 @@ class User < ActiveRecord::Base
       if data
         self.insta_data data
       else
+        self.destroy
         return false
       end
     end
@@ -401,6 +402,33 @@ class User < ActiveRecord::Base
     end
 
     GeneralMailer.report_by_emails(emails, results).deliver
+  end
+
+  def self.get_bio_by_usernames usernames
+    results = []
+
+    usernames.in_groups_of(1000, false) do |usernames_group|
+      users = User.where(username: usernames_group)
+
+      (usernames_group - users.pluck(:username)).each do |username|
+        u = User.add_by_username username
+        if u
+          u.update_info!
+          results << [u.username, u.bio]
+        end
+      end
+
+      users.each do |user|
+        results << [user.username, user.bio]
+      end
+    end
+
+    GeneralMailer.get_bio_by_usernames(results).deliver
+  end
+
+  def recent_media
+    client = InstaClient.new.client
+    client.user_recent_media self.insta_id
   end
 
 end

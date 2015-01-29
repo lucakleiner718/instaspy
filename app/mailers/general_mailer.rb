@@ -82,4 +82,26 @@ class GeneralMailer < ActionMailer::Base
     end
   end
 
+  def get_bio_by_usernames results
+    csv_string = CSV.generate do |csv|
+      csv << ['Username', 'Bio']
+      results.each do |username, bio|
+        csv << [username, bio]
+      end
+    end
+
+    Dir.mkdir('public/reports') unless Dir.exists?('public/reports')
+    file_path = "reports/bio-report-by-usernames-#{Time.now.to_i}.csv"
+    @file = "#{root_url}#{file_path}"
+    File.open("public/#{file_path}", 'w') do |f|
+      f.puts csv_string
+    end
+
+    if ENV['insta_debug'] || Rails.env.development?
+      mail to: 'me@antonzaytsev.com', subject: "InstaSpy bio report by usernames", from: 'dev@antonzaytsev.com'
+    else
+      mail to: "rob@ladylux.com", bcc: 'me@antonzaytsev.com', subject: "InstaSpy bio report by usernames"
+    end
+  end
+
 end

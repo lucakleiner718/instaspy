@@ -41,4 +41,9 @@ class Media < ActiveRecord::Base
     Media.where('created_time < ?', 4.weeks.ago).destroy_all
   end
 
+  def open
+    # client = InstaClient.new.client
+    # client.
+  end
+
 end
