@@ -79,7 +79,7 @@ class Tag < ActiveRecord::Base
       end
       media.tags = tags
 
-      media.save
+      media.save unless media.new_record? && Media.where(insta_id: media_item['id']).size == 1
     end
 
     p "added: #{added}"
