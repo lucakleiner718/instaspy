@@ -52,3 +52,5 @@ gem 'mongoid'
 gem 'rubyzip', require: 'zip'
 gem 'clockwork'
 gem 'mysql2'                              # Use mysql as the database for Active Record
+gem 'nokogiri'
+gem 'curb'

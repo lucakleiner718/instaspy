@@ -10,6 +10,7 @@ class User < ActiveRecord::Base
 
   scope :not_grabbed, -> { where grabbed_at: nil }
   scope :not_private, -> { where private: [nil, false] }
+  scope :privates, -> { where private: true }
 
   before_save do
     if self.full_name_changed?
@@ -57,6 +58,35 @@ class User < ActiveRecord::Base
       if e.message =~ /you cannot view this resource/
         self.private = true
         self.grabbed_at = Time.now
+
+        # If account private - try to get info from public page via http
+        begin
+          if self.full_name.blank? || self.bio.blank? || self.website.blank?
+            url = "https://instagram.com/#{self.username}/"
+            resp = Curl::Easy.perform(url) do |curl|
+              curl.headers["User-Agent"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.93 Safari/537.36"
+              curl.verbose = true
+              curl.follow_location = true
+            end
+            html = Nokogiri::HTML(resp.body)
+            content = html.search('script').select{|script| script.attr('src').blank? }.last.text.sub('window._sharedData = ', '').sub(/;$/, '')
+            json = JSON.parse content
+            user = json['entry_data']['UserProfile'].first['user']
+
+            # self.full_name = resp.body.match(/"full_name":"([^"]+)"/)[1] if self.full_name.blank?
+            self.full_name = user['full_name'] if self.full_name.blank?
+            self.bio = user['bio'] if self.bio.blank?
+            self.website = user['bio'] if self.website.blank?
+            # self.media_amount = resp.body.match(/"media":(\d+)/)[1] if self.media_amount.blank?
+            self.media_amount = user['counts']['media'] if self.media_amount.blank?
+            # self.followed_by = resp.body.match(/"followed_by":(\d+)/)[1] if self.followed_by.blank?
+            self.followed_by = user['counts']['followed_by'] if self.followed_by.blank?
+            # self.follows = resp.body.match(/"follows":(\d+)/)[1] if self.follows.blank?
+            self.follows = user['counts']['follows'] if self.follows.blank?
+          end
+        rescue
+        end
+
         self.save
       elsif e.message =~ /this user does not exist/
         self.destroy
