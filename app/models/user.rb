@@ -26,6 +26,7 @@ class User < ActiveRecord::Base
     if self.website_changed?
       self.website = self.website.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
       self.website = self.website.encode(self.website.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
+      self.website = self.website[0, 255]
     end
 
     if self.bio.present?
