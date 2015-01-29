@@ -1,0 +1,1 @@
+require Rails.root.join('lib/insta_client.rb')

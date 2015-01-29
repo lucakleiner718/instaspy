@@ -45,13 +45,13 @@ class Tag < ActiveRecord::Base
 
     client = InstaClient.new.client
 
-    added = 0
-
     begin
       media_list = client.tag_recent_media(self.name, min_tag_id: options[:min_id], max_tag_id: options[:max_id], count: 1000)
-    rescue JSON::ParserError, Instagram::ServiceUnavailable => e
+    rescue JSON::ParserError, Instagram::ServiceUnavailable, Instagram::BadGateway, Instagram::InternalServerError => e
       return false
     end
+
+    added = 0
 
     media_list.data.each do |media_item|
       media = Media.where(insta_id: media_item['id']).first_or_initialize
