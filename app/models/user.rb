@@ -47,6 +47,10 @@ class User < ActiveRecord::Base
   def update_info!
     client = InstaClient.new.client
 
+    # if self.insta_id.present? && self.username.blank?
+    #   client.
+    # end
+
     if self.username.present?
       resp = client.user_search(self.username)
 
@@ -81,15 +85,16 @@ class User < ActiveRecord::Base
 
         # If account private - try to get info from public page via http
         begin
-          if self.full_name.blank? || self.bio.blank? || self.website.blank?
-            url = "https://instagram.com/#{self.username}/"
+          if self.username.present? && (self.full_name.blank? || self.bio.blank? || self.website.blank? || self.follows.blank? || self.followed_by.blank?)
+            url = "http://instagram.com/#{self.username}/"
             resp = Curl::Easy.perform(url) do |curl|
               curl.headers["User-Agent"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.93 Safari/537.36"
               curl.verbose = true
               curl.follow_location = true
             end
             html = Nokogiri::HTML(resp.body)
-            content = html.search('script').select{|script| script.attr('src').blank? }.last.text.sub('window._sharedData = ', '').sub(/;$/, '')
+            # content = html.search('script').select{|script| script.attr('src').blank? }.last.text.sub('window._sharedData = ', '').sub(/;$/, '')
+            content = html.xpath('//script[contains(text(), "_sharedData")]').first.text.sub('window._sharedData = ', '').sub(/;$/, '')
             json = JSON.parse content
             user = json['entry_data']['UserProfile'].first['user']
 
@@ -104,7 +109,8 @@ class User < ActiveRecord::Base
             # self.follows = resp.body.match(/"follows":(\d+)/)[1] if self.follows.blank?
             self.follows = user['counts']['follows'] if self.follows.blank?
           end
-        rescue
+        rescue Exception => e
+          binding.pry
         end
 
         self.save
