@@ -61,7 +61,7 @@ class GeneralMailer < ActionMailer::Base
       emails.each do |em|
         user = results[em]
         if user
-          csv << [em, user.full_name, user.username, user.bio, user.website, user.follows, user.followed_by, user.media_amount, (user.private ? 'Yes' : 'No')]
+          csv << [em].concat(user)
         else
           csv << [em]
         end

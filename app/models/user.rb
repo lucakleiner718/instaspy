@@ -394,9 +394,9 @@ class User < ActiveRecord::Base
   def self.report_by_emails emails
     results = {}
 
-    emails.in_groups_of(100) do |emails_group|
+    emails.in_groups_of(100, false) do |emails_group|
       User.where(email: emails_group).each do |user|
-        results[user.email] = user
+        results[user.email] = [user.full_name, user.username, user.bio, user.website, user.follows, user.followed_by, user.media_amount, (user.private ? 'Yes' : 'No')]
       end
     end
 
