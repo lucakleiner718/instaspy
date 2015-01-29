@@ -70,7 +70,7 @@ class User < ActiveRecord::Base
       if data
         self.insta_data data
       else
-        self.destroy
+        self.destroy if self.insta_id.blank?
         return false
       end
     end
@@ -114,6 +114,7 @@ class User < ActiveRecord::Base
         end
 
         self.save
+        return true
       elsif e.message =~ /this user does not exist/
         self.destroy
       end
@@ -122,10 +123,10 @@ class User < ActiveRecord::Base
       # binding.pry
       return false
     end
+
     self.username = data['username']
     self.bio = data['bio']
     self.website = data['website']
-    # self.profile_picture = data['profile_picture']
     self.full_name = data['full_name']
     self.followed_by = data['counts']['followed_by']
     self.follows = data['counts']['follows']
@@ -392,14 +393,6 @@ class User < ActiveRecord::Base
     else
       User.where('username = :id', id: username).first_or_create
     end
-  end
-
-  def self.duplicates
-    con = ActiveRecord::Base.connection()
-    res = con.execute('select id,username from users')
-    data = {}
-    res.each {|el| data[el[1]] ||= 0; data[el[1]] += 1 }
-    data.to_a.select{|el| el[1] > 1 }
   end
 
   def self.get_emails

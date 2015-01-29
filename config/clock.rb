@@ -17,7 +17,7 @@ module Clockwork
   # every(1.minute, 'get.new.media') { MediaWorker.spawn }
 
   # Update users, which doesn't have info
-  every(10.minutes, 'update.users') { UserWorker.perform_async }
+  every(2.minutes, 'update.users') { UserWorker.perform_async }
 
   # Send weekly report about media
   every(1.week, 'media.report', at: "Tuesday 07:00") { ReportWorker.perform_async }
