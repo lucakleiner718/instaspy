@@ -53,6 +53,16 @@ class User < ActiveRecord::Base
       data = nil
       data = resp.data.select{|el| el['username'].downcase == username.downcase }.first if resp.data.size > 0
 
+      if self.insta_id.blank?
+        exists = User.where(insta_id: data['id']).first
+        if exists
+          exists.username = self.username
+          exists.save
+          self.destroy
+          return false
+        end
+      end
+
       if data
         self.insta_data data
       else
@@ -353,6 +363,13 @@ class User < ActiveRecord::Base
 
     data = nil
     data = resp.data.select{|el| el['username'].downcase == username.to_s.downcase }.first if resp.data.size > 0
+
+    exists = User.where(insta_id: data['id']).first
+    if exists
+      exists.username = data['username']
+      exists.save
+      return exists
+    end
 
     if data
       user.insta_data data
