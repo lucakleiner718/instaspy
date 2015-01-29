@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150129083320) do
+ActiveRecord::Schema.define(version: 20150129093808) do
 
   create_table "followers", force: true do |t|
     t.integer  "user_id"
@@ -103,6 +103,7 @@ ActiveRecord::Schema.define(version: 20150129083320) do
     t.string   "email"
   end
 
+  add_index "users", ["email"], name: "index_users_on_email", using: :btree
   add_index "users", ["insta_id"], name: "index_users_on_insta_id", unique: true, using: :btree
   add_index "users", ["username"], name: "index_users_on_username", unique: true, using: :btree
   add_index "users", ["website"], name: "index_users_on_website", using: :btree
