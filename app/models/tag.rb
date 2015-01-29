@@ -43,50 +43,80 @@ class Tag < ActiveRecord::Base
   def recent_media *args
     options = args.extract_options!
 
-    client = InstaClient.new.client
+    min_tag_id = nil
+    max_tag_id = nil
 
-    begin
-      media_list = client.tag_recent_media(self.name, min_tag_id: options[:min_id], max_tag_id: options[:max_id], count: 1000)
-    rescue JSON::ParserError, Instagram::ServiceUnavailable, Instagram::BadGateway, Instagram::InternalServerError => e
-      return false
-    end
+    total_added = 0
+    options[:total_limit] ||= 2_000
 
-    added = 0
+    while true
+      client = InstaClient.new.client
 
-    media_list.data.each do |media_item|
-      media = Media.where(insta_id: media_item['id']).first_or_initialize
+      begin
+        media_list = client.tag_recent_media(URI.escape(self.name), min_tag_id: min_tag_id, max_tag_id: max_tag_id, count: 100)
+      rescue JSON::ParserError, Instagram::ServiceUnavailable, Instagram::BadGateway, Instagram::InternalServerError, Faraday::ConnectionFailed => e
+        p 'issue'
+        # binding.pry
+        break
+      end
 
-      user = User.where(insta_id: media_item['user']['id']).first_or_initialize
-      if user.new_record?
-        user2 = User.where(username: media_item['user']['username']).first_or_initialize
-        unless user2.new_record?
-          user = user2
-          user.insta_id = media_item['user']['id']
+      added = 0
+
+      # binding.pry
+
+      avg_created_time = 0
+
+      media_list.data.each do |media_item|
+        media = Media.where(insta_id: media_item['id']).first_or_initialize
+
+        user = User.where(insta_id: media_item['user']['id']).first_or_initialize
+        if user.new_record?
+          user2 = User.where(username: media_item['user']['username']).first_or_initialize
+          unless user2.new_record?
+            user = user2
+            user.insta_id = media_item['user']['id']
+          end
         end
+        user.username = media_item['user']['username']
+        user.full_name = media_item['user']['full_name']
+        user.save
+
+        media.user_id = user.id
+        media.created_time = Time.at media_item['created_time'].to_i
+
+        added += 1 if media.new_record?
+
+        tags = []
+        media_item['tags'].each do |tag_name|
+          tags << Tag.where(name: tag_name).first_or_create
+        end
+        media.tags = tags
+
+        media.save unless media.new_record? && Media.where(insta_id: media_item['id']).size == 1
+
+        avg_created_time += media['created_time'].to_i
       end
-      user.username = media_item['user']['username']
-      user.full_name = media_item['user']['full_name']
-      user.save
 
-      media.user_id = user.id
-      media.created_time = Time.at media_item['created_time'].to_i
+      total_added += added
 
-      added += 1 if media.new_record?
+      break if media_list.data.size == 0
 
-      tags = []
-      media_item['tags'].each do |tag_name|
-        tags << Tag.where(name: tag_name).first_or_create
+      avg_created_time = avg_created_time / media_list.data.size
+
+      p "#{avg_created_time} / #{Time.at avg_created_time}"
+      p "added: #{added}"
+      # sleep 2
+
+      if options[:created_from].present? && Time.at(avg_created_time) > options[:created_from]
+        max_tag_id = media_list.pagination.next_max_tag_id
+      elsif options[:ignore_added] || added.to_f / media_list.data.size > 0.9
+        max_tag_id = media_list.pagination.next_max_tag_id
+      elsif total_added >= options[:total_limit]
+        break
+      else
+        break
       end
-      media.tags = tags
-
-      media.save unless media.new_record? && Media.where(insta_id: media_item['id']).size == 1
     end
-
-    p "added: #{added}"
-
-    # if added.to_f / media_list.size > 0.9
-    #   self.recent_media self.name, min_id: media_list['pagination']['min_tag_id']
-    # end
   end
 
   def update_info!
@@ -136,6 +166,10 @@ class Tag < ActiveRecord::Base
     t = Tag.where(name: tag_name).first_or_create
     ot = t.observed_tag.present? ? t.observed_tag : t.build_observed_tag
     ot.save
+  end
+
+  def self.get tag_name
+    Tag.where(name: tag_name).first_or_create
   end
 
 end
