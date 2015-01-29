@@ -3,9 +3,9 @@
 
 <ul>
   <li><%= link_to 'API Limits', clients_status_path %></li>
-  <li>Chart <%= link_to 'saksfifthavenue, neimanmarcus, bloomingdales, nordstrom', chart_path(tags: %w(saksfifthavenue neimanmarcus bloomingdales nordstrom)) %></li>
-  <li>Chart <%= link_to 'toryburch, alexanderwang, michaelkors, dkny, marcjacobs', chart_path(tags: %w(toryburch alexanderwang michaelkors dkny marcjacobs)) %></li>
-  <li>Chart <%= link_to 'katespadenewyork, rebeccaminkoff, dvf', chart_path(tags: %w(katespadenewyork rebeccaminkoff dvf)) %></li>
+  <li>Chart <%= link_to 'saksfifthavenue, neimanmarcus, bloomingdales, nordstrom', chart_path(tags: %w(saksfifthavenue neimanmarcus bloomingdales nordstrom).join(',')) %></li>
+  <li>Chart <%= link_to 'toryburch, alexanderwang, michaelkors, dkny, marcjacobs', chart_path(tags: %w(toryburch alexanderwang michaelkors dkny marcjacobs).join(',')) %></li>
+  <li>Chart <%= link_to 'katespadenewyork, rebeccaminkoff, dvf', chart_path(tags: %w(katespadenewyork rebeccaminkoff dvf).join(',')) %></li>
   <li>Totally tracking tags: <%= Tag.observed.size %></li>
   <li>Tags in csv: <%= Tag.exportable.size %></li>
   <li>Tags in charts: <%= Tag.chartable.size %></li>

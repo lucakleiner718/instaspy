@@ -13,7 +13,7 @@ $(document).on 'ready page:load', ->
 #      data: $.map(v, (a, b) -> return a )
     }
 
-  if window == window.top
+  if inIframe()
     $('.back-link').hide()
 
   $('.close-info-box').on 'click', ->
@@ -109,3 +109,10 @@ $(document).on 'ready page:load', ->
   setInterval ->
     $('body').trigger 'tags:update'
   , 30*60*1000
+
+
+window.inIframe = ->
+  try
+    window.self != window.top
+  catch e
+    return true
