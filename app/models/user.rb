@@ -390,4 +390,16 @@ class User < ActiveRecord::Base
     end
   end
 
+  def self.report_by_emails emails
+    results = {}
+
+    emails.in_groups_of(100) do |emails_group|
+      User.where(email: emails_group).each do |user|
+        results[user.email] = user
+      end
+    end
+
+    GeneralMailer.report_by_emails(emails, results).deliver
+  end
+
 end
