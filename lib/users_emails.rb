@@ -8,7 +8,11 @@ class UsersEmails
       next if user.bio.blank?
       m = user.bio.match(email_regex)
       if m && m[1]
-        emails << { user: user, email: m[1].downcase.sub(/^[\.\-\_]+/, '') }
+        user.email = m[1].downcase.sub(/^[\.\-\_]+/, '')
+        user.save
+        emails << user
+      elsif user.email.present?
+        emails << user
       end
     end
 

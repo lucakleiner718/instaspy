@@ -27,6 +27,14 @@ class User < ActiveRecord::Base
       self.website = self.website.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
       self.website = self.website.encode(self.website.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
     end
+
+    if self.bio.present?
+      email_regex = /([\w+\-.]+@[a-z\d\-]+(\.[a-z]+)*\.[a-z]+)/
+      m = self.bio.match(email_regex)
+      if m && m[1]
+        self.email = m[1].downcase.sub(/^[\.\-\_]+/, '')
+      end
+    end
   end
 
   def self.update_info
