@@ -465,7 +465,7 @@ class User < ActiveRecord::Base
     while true
       begin
         media_list = client.user_recent_media self.insta_id, count: 100
-      rescue JSON::ParserError, Instagram::ServiceUnavailable, Instagram::BadGateway, Instagram::InternalServerError, Faraday::ConnectionFailed => e
+      rescue JSON::ParserError, Instagram::ServiceUnavailable, Instagram::BadGateway, Instagram::InternalServerError, Instagram::BadRequest, Faraday::ConnectionFailed => e
         break
       end
 
