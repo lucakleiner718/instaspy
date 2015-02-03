@@ -17,8 +17,10 @@ class Reporter
         end
       end
 
+      users.uniq!
+
       users.each do |user|
-        user.recent_media(total_limit: 20, ignore_added: true) if user.media.where('likes_amount is not null and comments_amount is not null').size < 20 && !user.private?
+        user.recent_media(total_limit: 50, ignore_added: true, created_from: 5.days.ago) if user.media.where('likes_amount is not null and comments_amount is not null').size < 20 && !user.private?
 
         media = user.media.order(created_time: :desc).where('created_time < ?', 1.day.ago)
         # media.where('likes_amount is not null or comments_amount is not null').limit(100).each{ |m| m.update_info! }

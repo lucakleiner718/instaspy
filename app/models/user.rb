@@ -459,6 +459,9 @@ class User < ActiveRecord::Base
     GeneralMailer.get_bio_by_usernames(results).deliver
   end
 
+  # args:
+  # total_limit (integer) limit after updater will stop anyway
+  # created_from (datetime) time until we diving to update media
   def recent_media *args
     options = args.extract_options!
 
