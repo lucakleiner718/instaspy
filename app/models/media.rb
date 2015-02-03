@@ -38,7 +38,7 @@ class Media < ActiveRecord::Base
 
   # delete all media oldest than 4 weeks
   def self.delete_old
-    Media.where('created_time < ?', 4.weeks.ago).destroy_all
+    Media.where('created_time < ?', 12.weeks.ago).destroy_all
   end
 
   def open

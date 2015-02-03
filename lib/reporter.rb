@@ -5,10 +5,10 @@ class Reporter
     data = []
 
     usernames.in_groups_of(1000, false).each do |usernames_group|
-      users = User.where(username: usernames_group)
+      users = User.where(username: usernames_group).to_a
 
       if users.size < usernames_group.size
-        find_usernames = usernames_group - users.pluck(:username)
+        find_usernames = usernames_group - users.map(&:username)
 
         find_usernames.each do |u|
           user = User.where(username: u).first_or_create
@@ -25,19 +25,21 @@ class Reporter
         media = user.media.order(created_time: :desc).where('created_time < ?', 1.day.ago)
         # media.where('likes_amount is not null or comments_amount is not null').limit(100).each{ |m| m.update_info! }
 
-        avg_likes = media.where('likes_amount is not null').limit(20).pluck(:likes_amount).sum / media.size.to_f
-        avg_comments = media.where('comments_amount is not null').limit(20).pluck(:comments_amount).sum / media.size.to_f
+        likes_amount = media.where('likes_amount is not null').limit(20)
+        comments_amount = media.where('comments_amount is not null').limit(20)
 
-        data << [user, avg_likes, avg_comments]
+        avg_likes = likes_amount.pluck(:likes_amount).sum / likes_amount.size.to_f
+        avg_comments = comments_amount.pluck(:comments_amount).sum / comments_amount.size.to_f
+
+        data << [user.username, avg_likes, avg_comments]
       end
     end
 
     csv_string = CSV.generate do |csv|
-      csv << ['Name', 'Username', 'AVG Likes', 'AVG Comments', 'Bio', 'Website', 'Follows', 'Followers', 'Media amount', 'Private account']
+      csv << ['Username', 'AVG Likes', 'AVG Comments']
       data.each do |row|
-        user = row[0]
         begin
-          csv << [user.full_name, user.username, row[1].round(2), row[2].round(2), user.bio, user.website, user.follows, user.followed_by, user.media_amount, (user.private ? 'Yes' : 'No')]
+          csv << [row[0], row[1].round(2), row[2].round(2)]
         rescue Exception => e
         end
       end

@@ -23,7 +23,7 @@ module Clockwork
   every(1.week, 'media.report', at: "Tuesday 07:00") { ReportWorker.perform_async }
 
   # Delete old media records
-  every(1.day, 'media.delete_old', at: '08:00') { Media.delete_old }
+  # every(1.week, 'media.delete_old', at: '08:00') { Media.delete_old }
 
   # Save data for chart in cache, so charts will work fast
   every(3.hours, 'TagChartWorker') { TagChartWorker.spawn }

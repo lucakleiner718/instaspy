@@ -38,6 +38,7 @@ class Tag < ActiveRecord::Base
     self.recent_media max_id: self.newest_media.insta_id
   end
 
+  # @depricated
   def self.recent_media
     Media.recent_media
   end
