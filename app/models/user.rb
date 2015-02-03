@@ -459,15 +459,26 @@ class User < ActiveRecord::Base
     GeneralMailer.get_bio_by_usernames(results).deliver
   end
 
-  def recent_media
-    client = InstaClient.new.client
+  def recent_media *args
+    options = args.extract_options!
+
+    min_id = nil
+    max_id = nil
+
+    total_added = 0
+    options[:total_limit] ||= 2_000
 
     while true
+      client = InstaClient.new.client
+
       begin
-        media_list = client.user_recent_media self.insta_id, count: 100
+        media_list = client.user_recent_media self.insta_id, count: 100, min_id: min_id, max_id: max_id
       rescue JSON::ParserError, Instagram::ServiceUnavailable, Instagram::BadGateway, Instagram::InternalServerError, Instagram::BadRequest, Faraday::ConnectionFailed => e
         break
       end
+
+      added = 0
+      avg_created_time = 0
 
       media_list.data.each do |media_item|
         media = Media.where(insta_id: media_item['id']).first_or_initialize(user_id: self.id)
@@ -482,13 +493,31 @@ class User < ActiveRecord::Base
         end
         media.tags = tags
 
+        added += 1 if media.new_record?
+
         begin
           media.save unless media.new_record? && Media.where(insta_id: media_item['id']).size == 1
         rescue ActiveRecord::RecordNotUnique => e
         end
+
+        avg_created_time += media['created_time'].to_i
       end
 
-      break
+      break if media_list.data.size == 0
+
+      total_added += added
+
+      avg_created_time = avg_created_time / media_list.data.size
+
+      if media_list.pagination && options[:created_from].present? && Time.at(avg_created_time) > options[:created_from]
+        max_id = media_list.pagination.next_max_id
+      elsif media_list.pagination && (options[:ignore_added] || added.to_f / media_list.data.size > 0.9) && total_added <= options[:total_limit]
+        max_id = media_list.pagination.next_max_id
+      elsif total_added >= options[:total_limit]
+        break
+      else
+        break
+      end
     end
 
     self.media

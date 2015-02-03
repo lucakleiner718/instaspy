@@ -58,14 +58,10 @@ class Tag < ActiveRecord::Base
         media_list = client.tag_recent_media(URI.escape(self.name), min_tag_id: min_tag_id, max_tag_id: max_tag_id, count: 100)
       rescue JSON::ParserError, Instagram::ServiceUnavailable, Instagram::BadGateway, Instagram::InternalServerError, Faraday::ConnectionFailed => e
         p 'issue'
-        # binding.pry
         break
       end
 
       added = 0
-
-      # binding.pry
-
       avg_created_time = 0
 
       media_list.data.each do |media_item|
