@@ -104,4 +104,20 @@ class GeneralMailer < ActionMailer::Base
     end
   end
 
+  def avg_likes_comments csv_string, usernames
+    Dir.mkdir('public/reports') unless Dir.exists?('public/reports')
+    file_path = "reports/avg-likes-comments-#{Time.now.to_i}.csv"
+    @file = "#{root_url}#{file_path}"
+    File.open("public/#{file_path}", 'w') do |f|
+      f.puts csv_string
+    end
+
+    sbj = "InstaSpy avg likes and comments report for #{usernames.size} usernames"
+    if ENV['insta_debug'] || Rails.env.development?
+      mail to: 'me@antonzaytsev.com', from: 'dev@antonzaytsev.com', subject: sbj
+    else
+      mail to: "rob@ladylux.com", bcc: 'me@antonzaytsev.com', subject: sbj
+    end
+  end
+
 end

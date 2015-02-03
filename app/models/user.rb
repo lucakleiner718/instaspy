@@ -51,12 +51,12 @@ class User < ActiveRecord::Base
     #   client.
     # end
 
-    # if self.username.present?
-    #   resp = client.user_search(self.username)
-    #
-    #   data = nil
-    #   data = resp.data.select{|el| el['username'].downcase == self.username.downcase }.first if resp.data.size > 0
-    #
+    if self.insta_id.blank? && self.username.present?
+      resp = client.user_search(self.username)
+
+      data = nil
+      data = resp.data.select{|el| el['username'].downcase == self.username.downcase }.first if resp.data.size > 0
+
     #   if self.insta_id.blank?
     #     exists = User.where(insta_id: data['id']).first
     #     if exists
@@ -67,19 +67,18 @@ class User < ActiveRecord::Base
     #     end
     #   end
     #
-    #   if data
-    #     self.insta_data data
-    #   else
-    #     self.destroy if self.insta_id.blank?
-    #     return false
-    #   end
-    # end
-
-    # if self.insta_id.present?
+      if data
+        self.insta_data data
+      else
+        self.destroy
+        return false
+      end
+    end
 
     exists_username = nil
 
     begin
+      raise if self.insta_id.blank?
       info = client.user(self.insta_id)
       data = info.data
 
@@ -462,7 +461,37 @@ class User < ActiveRecord::Base
 
   def recent_media
     client = InstaClient.new.client
-    client.user_recent_media self.insta_id
+
+    while true
+      begin
+        media_list = client.user_recent_media self.insta_id, count: 100
+      rescue JSON::ParserError, Instagram::ServiceUnavailable, Instagram::BadGateway, Instagram::InternalServerError, Faraday::ConnectionFailed => e
+        break
+      end
+
+      media_list.data.each do |media_item|
+        media = Media.where(insta_id: media_item['id']).first_or_initialize(user_id: self.id)
+        media.likes_amount = media_item['likes']['count']
+        media.comments_amount = media_item['comments']['count']
+        media.link = media_item['link']
+        media.created_time = Time.at media_item['created_time'].to_i
+
+        tags = []
+        media_item['tags'].each do |tag_name|
+          tags << Tag.unscoped.where(name: tag_name).first_or_create
+        end
+        media.tags = tags
+
+        begin
+          media.save unless media.new_record? && Media.where(insta_id: media_item['id']).size == 1
+        rescue ActiveRecord::RecordNotUnique => e
+        end
+      end
+
+      break
+    end
+
+    self.media
   end
 
 end

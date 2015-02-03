@@ -6,6 +6,8 @@ class Tag < ActiveRecord::Base
   scope :chartable, -> { observed.where('observed_tags.for_chart = ?', true) }
   scope :exportable, -> { observed.where('observed_tags.export_csv = ?', true) }
 
+  default_scope -> { }
+
   has_one :observed_tag, dependent: :destroy
 
   CHART_DAYS = 14
@@ -82,6 +84,9 @@ class Tag < ActiveRecord::Base
         user.full_name = media_item['user']['full_name']
         user.save
 
+        media.likes_amount = media_item['likes']['count']
+        media.comments_amount = media_item['comments']['count']
+        media.link = media_item['link']
         media.user_id = user.id
         media.created_time = Time.at media_item['created_time'].to_i
 
@@ -89,11 +94,14 @@ class Tag < ActiveRecord::Base
 
         tags = []
         media_item['tags'].each do |tag_name|
-          tags << Tag.where(name: tag_name).first_or_create
+          tags << Tag.unscoped.where(name: tag_name).first_or_create
         end
         media.tags = tags
 
-        media.save unless media.new_record? && Media.where(insta_id: media_item['id']).size == 1
+        begin
+          media.save unless media.new_record? && Media.where(insta_id: media_item['id']).size == 1
+        rescue ActiveRecord::RecordNotUnique => e
+        end
 
         avg_created_time += media['created_time'].to_i
       end
