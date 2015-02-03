@@ -3,6 +3,7 @@ class Reporter
   def self.avg_likes_comments usernames
 
     data = []
+    processed = 0
 
     usernames.in_groups_of(1000, false).each do |usernames_group|
       users = User.where(username: usernames_group).to_a
@@ -32,6 +33,10 @@ class Reporter
         avg_comments = comments_amount.pluck(:comments_amount).sum / comments_amount.size.to_f
 
         data << [user.username, avg_likes, avg_comments]
+
+        processed += 1
+
+        p "Progress: #{(processed.to_f / usernames.size * 100).to_i}% (#{processed}/#{usernames.size})"
       end
     end
 
