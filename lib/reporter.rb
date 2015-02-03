@@ -5,7 +5,7 @@ class Reporter
     data = []
     processed = 0
 
-    usernames.in_groups_of(1000, false).each do |usernames_group|
+    usernames.in_groups_of(100, false).each do |usernames_group|
       users = User.where(username: usernames_group).to_a
 
       if users.size < usernames_group.size
@@ -20,8 +20,13 @@ class Reporter
 
       users.uniq!
 
+      p "Users size #{users.size}"
+
       users.each do |user|
-        user.recent_media(total_limit: 50, ignore_added: true, created_from: 5.days.ago) if user.media.where('likes_amount is not null and comments_amount is not null').size < 20 && !user.private?
+        if user.media.where('likes_amount is not null and comments_amount is not null').size < 20 && !user.private?
+          p "Get Users media #{user.id}"
+          user.recent_media(total_limit: 50, ignore_added: true, created_from: 5.days.ago)
+        end
 
         media = user.media.order(created_time: :desc).where('created_time < ?', 1.day.ago)
         # media.where('likes_amount is not null or comments_amount is not null').limit(100).each{ |m| m.update_info! }
