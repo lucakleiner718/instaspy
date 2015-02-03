@@ -23,6 +23,10 @@ class Reporter
       p "Users size #{users.size}"
 
       users.each do |user|
+        if user.private? && user.media.where('likes_amount is not null and comments_amount is not null').size < 2
+          next
+        end
+
         if user.media.where('likes_amount is not null and comments_amount is not null').size < 20 && !user.private?
           p "Get Users media #{user.id}"
           user.recent_media(total_limit: 50, ignore_added: true, created_from: 5.days.ago)
@@ -37,7 +41,13 @@ class Reporter
         avg_likes = likes_amount.pluck(:likes_amount).sum / likes_amount.size.to_f
         avg_comments = comments_amount.pluck(:comments_amount).sum / comments_amount.size.to_f
 
-        data << [user.username, avg_likes, avg_comments]
+        freq = media.limit(20)
+        media_freq = 0
+        if freq.size > 0
+          media_freq = freq.size.to_f / (Time.now.to_i - freq.last.created_time.to_i) * 60 * 60 * 24
+        end
+
+        data << [user.username, avg_likes, avg_comments, media_freq]
 
         processed += 1
 
@@ -46,10 +56,10 @@ class Reporter
     end
 
     csv_string = CSV.generate do |csv|
-      csv << ['Username', 'AVG Likes', 'AVG Comments']
+      csv << ['Username', 'AVG Likes', 'AVG Comments', 'Media per day']
       data.each do |row|
         begin
-          csv << [row[0], row[1].round(2), row[2].round(2)]
+          csv << [row[0], row[1].round(2), row[2].round(2), row[3].round(4)]
         rescue Exception => e
         end
       end

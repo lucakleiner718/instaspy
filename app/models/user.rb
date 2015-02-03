@@ -526,4 +526,16 @@ class User < ActiveRecord::Base
     self.media
   end
 
+  def media_frequency last=nil
+    media = self.media.order(created_time: :desc)
+    if last
+      media = media.limit(last)
+    end
+    media_freq = 0
+    if media.size > 0
+      media_freq = media.size.to_f / (Time.now.to_i - media.last.created_time.to_i) * 60 * 60 * 24
+    end
+    media_freq
+  end
+
 end
