@@ -47,7 +47,7 @@ class Reporter
           media_freq = freq.size.to_f / (Time.now.to_i - freq.last.created_time.to_i) * 60 * 60 * 24
         end
 
-        data << [user.username, avg_likes, avg_comments, media_freq]
+        data << { name: user.full_name, username: user.username, likes: avg_likes, comments: avg_comments, freq: media_freq }
 
         processed += 1
 
@@ -56,10 +56,10 @@ class Reporter
     end
 
     csv_string = CSV.generate do |csv|
-      csv << ['Username', 'AVG Likes', 'AVG Comments', 'Media per day']
+      csv << ['Name', 'Username', 'AVG Likes', 'AVG Comments', 'Media per day']
       data.each do |row|
         begin
-          csv << [row[0], row[1].round(2), row[2].round(2), row[3].round(4)]
+          csv << [ row[:name], row[:username], row[:likes].round(2), row[:comments].round(2), row[:freq].round(4) ]
         rescue Exception => e
         end
       end
