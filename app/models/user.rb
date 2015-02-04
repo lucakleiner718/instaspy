@@ -381,6 +381,8 @@ class User < ActiveRecord::Base
   end
 
   def self.add_by_username username
+    return false if username.size > 30 || username !~ /\A[a-zA-Z0-9\._]+\z/
+
     user = User.where(username: username).first_or_initialize
     client = InstaClient.new.client
     resp = client.user_search(username)

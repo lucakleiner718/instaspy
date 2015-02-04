@@ -40,4 +40,7 @@ module Clockwork
   # Save tag stat for chart
   every(1.day, 'TagStat', at: '01:00') { TagStatWorker.spawn }
 
+  # Backup Database
+  every(1.day, 'DB Backup', at: '00:00') { BackupWorker.spawn }
+
 end

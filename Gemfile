@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-ruby '2.1.1'
+ruby '2.2.0'
 #ruby-gemset=instaspy
 
 gem 'rails', '4.1.5'                      # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
@@ -30,6 +30,7 @@ end
 
 group :production do
   gem 'puma', '~> 2.8.2'                                    # Production Web Server
+  gem 's3-mysql-backup', require: false
 end
 
 gem 'pry-rails'
