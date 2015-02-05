@@ -12,36 +12,7 @@ class Media < ActiveRecord::Base
   end
 
   def self.report starts=nil, ends=nil
-    ends ||= 1.day.ago.end_of_day
-    starts ||= 6.days.ago(ends).beginning_of_day
-
-    header = ['Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followed By', 'Media Amount', 'Added to Instaspy', 'Media URL', 'Media likes', 'Media comments']
-    csv_files = {}
-    Tag.exportable.each do |tag|
-      users_ids = tag.media.where('created_at > ? AND created_at <= ?', starts, ends).pluck(:user_id).uniq
-      users = User.where(id: users_ids).where("website is not null AND website != ''")
-                .where('created_at >= ?', starts).where('created_at <= ?', ends)
-                .select([:id, :username, :full_name, :website, :bio, :follows, :followed_by, :media_amount, :created_at])
-
-      csv_string = CSV.generate do |csv|
-        csv << header
-        users.find_each do |user|
-          media = user.media.joins(:tags).where('tags.name = ?', tag.name).order(created_at: :desc).where('created_time < ?', 1.day.ago).first
-          media = user.media.joins(:tags).where('tags.name = ?', tag.name).order(created_at: :desc).first if media.blank?
-          # if somehow we don't have media
-          next unless media
-          media.update! if media.updated_at < 3.days.ago || media.likes_amount.blank? || media.comments_amount.blank? || media.link.blank?
-          csv << [
-            user.username, user.full_name, user.website, user.bio, user.follows, user.followed_by, user.media_amount,
-            user.created_at.strftime('%m/%d/%Y'), media.link, media.likes_amount, media.comments_amount
-          ]
-        end
-      end
-      csv_files[tag.name] = csv_string
-    end
-    csv_files
-
-    ReportMailer.weekly(csv_files, starts, ends).deliver
+    Reporter.media_report starts, ends
   end
 
   # delete all media oldest than 12 weeks
@@ -49,10 +20,36 @@ class Media < ActiveRecord::Base
     Media.where('created_time < ?', frame.ago).destroy_all
   end
 
-  def update!
+  def update_info!
     client = InstaClient.new.client
 
-    response = client.media_item(self.insta_id)
+    return false if self.user.private?
+
+    begin
+      response = client.media_item(self.insta_id)
+    rescue Faraday::ConnectionFailed => e
+      Rails.logger.error('Faraday::ConnectionFailed')
+      return false
+    rescue Instagram::BadRequest => e
+      if e.message =~ /invalid media id/
+        self.destroy
+        return false
+      elsif e.message =~ /you cannot view this resource/
+        self.user.update_info!
+        return false
+      else
+        binding.pry
+        return false
+      end
+    rescue Interrupt
+      raise Interrupt
+    rescue StandardError => e
+      binding.pry
+      return false
+    rescue Exception => e
+      binding.pry
+      return false
+    end
 
     media_item = response.data
 

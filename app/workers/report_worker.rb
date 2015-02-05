@@ -2,6 +2,6 @@ class ReportWorker
   include Sidekiq::Worker
 
   def perform
-    Media.report
+    Reporter.media_report
   end
 end

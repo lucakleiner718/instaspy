@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-ruby '2.2.0'
+ruby '2.1.1'
 #ruby-gemset=instaspy
 
 gem 'rails', '4.1.5'                      # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
@@ -55,3 +55,4 @@ gem 'mysql2'                              # Use mysql as the database for Active
 gem 'nokogiri'
 gem 'curb'
 gem 'mongoid'
+gem 'backup'

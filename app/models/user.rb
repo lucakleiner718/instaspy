@@ -16,11 +16,13 @@ class User < ActiveRecord::Base
     if self.full_name_changed?
       self.full_name = self.full_name.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
       self.full_name = self.full_name.encode(self.full_name.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
+      self.full_name.strip!
     end
 
     if self.bio_changed?
       self.bio = self.bio.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
       self.bio = self.bio.encode(self.bio.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
+      self.bio.strip!
     end
 
     if self.website_changed?
@@ -29,6 +31,7 @@ class User < ActiveRecord::Base
       self.website = self.website[0, 255]
     end
 
+    # Catch email from bio
     if self.bio.present?
       email_regex = /([\w+\-.]+@[a-z\d\-]+(\.[a-z]+)*\.[a-z]+)/
       m = self.bio.match(email_regex)
@@ -540,4 +543,14 @@ class User < ActiveRecord::Base
     media_freq
   end
 
+  before_save do
+    if self.username_changed? && self.insta_id.present?
+      User.fix_exists_username(self.username, self.insta_id)
+    end
+  end
+
+  def self.fix_exists_username username, exists_insta_id
+    user = self.where(username: username).where('insta_id != ?', exists_insta_id).first
+    user.update_info! if user.present?
+  end
 end
