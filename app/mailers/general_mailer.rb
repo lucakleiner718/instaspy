@@ -39,7 +39,7 @@ class GeneralMailer < ActionMailer::Base
     end
 
     Dir.mkdir('public/reports') unless Dir.exists?('public/reports')
-    file_path = "reports/tag-authors-#{Time.now.to_i}.csv"
+    file_path = "reports/tag-#{tag.name}-authors-#{Time.now.to_i}.csv"
     @file = "#{root_url}#{file_path}"
     File.open("public/#{file_path}", 'w') do |f|
       f.puts csv_string
