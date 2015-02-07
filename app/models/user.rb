@@ -142,15 +142,15 @@ class User < ActiveRecord::Base
     user = json['entry_data']['UserProfile'].first['user']
 
     # self.full_name = resp.body.match(/"full_name":"([^"]+)"/)[1] if self.full_name.blank?
-    self.full_name = user['full_name'] if self.full_name.blank?
-    self.bio = user['bio'] if self.bio.blank?
-    self.website = user['bio'] if self.website.blank?
+    self.full_name = user['full_name']
+    self.bio = user['bio']
+    self.website = user['website']
     # self.media_amount = resp.body.match(/"media":(\d+)/)[1] if self.media_amount.blank?
-    self.media_amount = user['counts']['media'] if self.media_amount.blank?
+    self.media_amount = user['counts']['media']
     # self.followed_by = resp.body.match(/"followed_by":(\d+)/)[1] if self.followed_by.blank?
-    self.followed_by = user['counts']['followed_by'] if self.followed_by.blank?
+    self.followed_by = user['counts']['followed_by']
     # self.follows = resp.body.match(/"follows":(\d+)/)[1] if self.follows.blank?
-    self.follows = user['counts']['follows'] if self.follows.blank?
+    self.follows = user['counts']['follows']
 
     self.save
   end
@@ -552,5 +552,23 @@ class User < ActiveRecord::Base
   def self.fix_exists_username username, exists_insta_id
     user = self.where(username: username).where('insta_id != ?', exists_insta_id).first
     user.update_info! if user.present?
+  end
+
+  # urls (array)
+  def self.find_by_urls urls
+    found_users = []
+    urls.in_groups_of(1000, false).each { |group| found_users.concat User.where(website: group) }
+    found_urls = found_users.map{|user| user.website }
+
+    left_urls = urls - found_urls
+
+    users2 = []
+    left_urls[0..1000].each do |url|
+      user = User.where('website like ?', "%#{url}%").first
+      users2 << user if user
+    end
+
+    binding.pry
+
   end
 end
