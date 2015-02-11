@@ -3,6 +3,23 @@ class Media < ActiveRecord::Base
   has_and_belongs_to_many :tags
   belongs_to :user
 
+  scope :with_location, -> { where('location_lng is not null and location_lng != ""') }
+  scope :without_location, -> { where('location_lng is null or location_lng != ""').where('location_present is null') }
+
+  before_save do
+    if self.location_name_changed?
+      self.location_name = self.location_name.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
+      self.location_name = self.location_name.encode(self.location_name.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
+      self.location_name.strip!
+    end
+  end
+
+  before_save do
+    if self.location_present? && self.location_country.blank?
+      self.set_location
+    end
+  end
+
   def self.recent_media
     tag = Tag.observed.where('observed_tags.media_updated_at < ? or observed_tags.media_updated_at is null', 1.minute.ago).order('observed_tags.media_updated_at asc').first
     if tag.present?
@@ -53,19 +70,21 @@ class Media < ActiveRecord::Base
 
     media_item = response.data
 
-    user = User.where(insta_id: media_item['user']['id']).first_or_initialize
-    if user.new_record?
-      # with same username as we want to create
-      user2 = User.where(username: media_item['user']['username']).first_or_initialize
-      unless user2.new_record?
-        user = user2
-        user.insta_id = media_item['user']['id']
-      end
+    self.media_user media_item['user']
+    self.media_data media_item
+
+    self.save
+  end
+
+  def media_data media_item
+    if media_item['location']
+      self.location_present = true
+      self.location_lat = media_item['location']['latitude']
+      self.location_lng = media_item['location']['longitude']
+      self.location_name = media_item['location']['name']
+    else
+      self.location_present = false
     end
-    user.username = media_item['user']['username']
-    user.full_name = media_item['user']['full_name']
-    user.save
-    self.user_id = user.id
 
     self.likes_amount = media_item['likes']['count']
     self.comments_amount = media_item['comments']['count']
@@ -77,7 +96,80 @@ class Media < ActiveRecord::Base
       tags << Tag.unscoped.where(name: tag_name).first_or_create
     end
     self.tags = tags
+  end
 
+  def media_user user
+    user = User.where(insta_id: user['id']).first_or_initialize
+    if user.new_record?
+      # with same username as we want to create
+      user2 = User.where(username: user['username']).first_or_initialize
+      unless user2.new_record?
+        user = user2
+        user.insta_id = user['id']
+      end
+    end
+    user.username = user['username']
+    user.full_name = user['full_name']
+    user.save
+
+    self.user_id = user.id
+  end
+
+  def set_location
+    # can add option [:lookup]
+    resp = Geocoder.search("#{self.location_lat},#{self.location_lng}")
+
+    row = resp.first
+    case row.class.name
+      when 'Geocoder::Result::Here'
+        address = row.data['Location']['Address']
+        self.location_country = Country.find_country_by_alpha3(address['Country']).name
+        self.location_state = address['State']
+        self.location_city = address['City']
+      when 'Geocoder::Result::Google'
+        # binding.pry
+        row.address_components.each do |address_component|
+          self.location_country = address_component['long_name'] if address_component['types'].include?('country')
+          self.location_state = address_component['long_name'] if address_component['types'].include?('administrative_area_level_1')
+          self.location_city = address_component['long_name'] if address_component['types'].include?('locality')
+        end
+      when 'Geocoder::Result::Yandex'
+        address = row.data['GeoObject']['metaDataProperty']['GeocoderMetaData']['AddressDetails']
+
+        self.location_country = address['Country']['CountryName']
+
+        # binding.pry
+
+        begin
+          self.location_state = address['Country']['AdministrativeArea']['AdministrativeAreaName']
+        rescue Exception => e
+          # binding.pry
+        end
+
+        if self.location_state.blank?
+          begin
+            self.location_state = address['Country']['Thoroughfare']['ThoroughfareName']
+          rescue Exception => e
+            # binding.pry
+          end
+        end
+
+        begin
+          self.location_city = address['Country']['AdministrativeArea']['SubAdministrativeArea']['SubAdministrativeAreaName']
+        rescue Exception => e
+        end
+
+        if self.location_city.blank?
+          begin
+            self.location_city = address['Country']['Locality']['LocalityName']
+          rescue Exception => e
+          end
+        end
+    end
+  end
+
+  def update_location!
+    self.set_location
     self.save
   end
 

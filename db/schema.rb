@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150203062857) do
+ActiveRecord::Schema.define(version: 20150211095309) do
 
   create_table "followers", force: true do |t|
     t.integer  "user_id"
@@ -40,6 +40,13 @@ ActiveRecord::Schema.define(version: 20150203062857) do
     t.integer  "likes_amount"
     t.integer  "comments_amount"
     t.string   "link"
+    t.float    "location_lat",     limit: 24
+    t.float    "location_lng",     limit: 24
+    t.string   "location_name"
+    t.string   "location_city"
+    t.string   "location_state"
+    t.string   "location_country"
+    t.boolean  "location_present"
   end
 
   add_index "media", ["insta_id"], name: "index_media_on_insta_id", unique: true, using: :btree

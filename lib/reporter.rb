@@ -132,4 +132,16 @@ class Reporter
     GeneralMailer.tag_authors(tag, users).deliver
   end
 
+  def self.location_report
+    data = []
+    users = User.where('followed_by > ?', 50_000).limit(10)
+    users.each do |user|
+      user.update_info!
+      user.recent_media ignore_added: true, total_limit: 200 if user.media.size < 200
+      data << [user.username, user.popular_location]
+    end
+
+    GeneralMailer.location_report(data).deliver
+  end
+
 end

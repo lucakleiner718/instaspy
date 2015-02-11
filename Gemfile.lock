@@ -34,9 +34,6 @@ GEM
     aws-sdk-v1 (1.61.0)
       json (~> 1.4)
       nokogiri (>= 1.4.4)
-    backup (3.4.0)
-      open4 (~> 1.3.0)
-      thor (>= 0.15.4, < 2)
     better_errors (2.0.0)
       coderay (>= 1.0.0)
       erubis (>= 2.6.6)
@@ -79,7 +76,10 @@ GEM
     coffee-script-source (1.7.1)
     colorize (0.7.3)
     connection_pool (2.0.0)
+    countries (0.10.0)
+      currencies (~> 0.4.2)
     curb (0.8.6)
+    currencies (0.4.2)
     daemons (1.1.9)
     debug_inspector (0.0.2)
     dotenv (0.11.1)
@@ -171,6 +171,7 @@ GEM
       fog-core
       nokogiri (~> 1.5, >= 1.5.11)
     formatador (0.2.5)
+    geocoder (1.2.7)
     god (0.13.4)
     hashie (3.4.0)
     hike (1.2.3)
@@ -221,7 +222,6 @@ GEM
     net-ssh (2.9.1)
     nokogiri (1.6.6.2)
       mini_portile (~> 0.6.0)
-    open4 (1.3.4)
     optionable (0.2.0)
     origin (2.1.1)
     polyglot (0.3.5)
@@ -345,7 +345,6 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  backup
   better_errors
   binding_of_caller
   capistrano (~> 3.2.0)
@@ -356,11 +355,13 @@ DEPENDENCIES
   capistrano3-puma
   clockwork
   coffee-rails (~> 4.0.0)
+  countries
   curb
   daemons
   dotenv (~> 0.11.1)
   dotenv-deployment
   fog
+  geocoder
   god
   httparty
   instagram

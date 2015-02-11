@@ -60,6 +60,8 @@ class Tag < ActiveRecord::Base
       rescue JSON::ParserError, Instagram::ServiceUnavailable, Instagram::BadGateway, Instagram::InternalServerError, Faraday::ConnectionFailed => e
         p 'issue'
         break
+      rescue Interrupt
+        raise Interrupt
       end
 
       added = 0
@@ -68,32 +70,10 @@ class Tag < ActiveRecord::Base
       media_list.data.each do |media_item|
         media = Media.where(insta_id: media_item['id']).first_or_initialize
 
-        user = User.where(insta_id: media_item['user']['id']).first_or_initialize
-        if user.new_record?
-          # with same username as we want to create
-          user2 = User.where(username: media_item['user']['username']).first_or_initialize
-          unless user2.new_record?
-            user = user2
-            user.insta_id = media_item['user']['id']
-          end
-        end
-        user.username = media_item['user']['username']
-        user.full_name = media_item['user']['full_name']
-        user.save
-
-        media.likes_amount = media_item['likes']['count']
-        media.comments_amount = media_item['comments']['count']
-        media.link = media_item['link']
-        media.user_id = user.id
-        media.created_time = Time.at media_item['created_time'].to_i
+        media.media_user media_item['user']
+        media.media_data media_item
 
         added += 1 if media.new_record?
-
-        tags = []
-        media_item['tags'].each do |tag_name|
-          tags << Tag.unscoped.where(name: tag_name).first_or_create
-        end
-        media.tags = tags
 
         begin
           media.save unless media.new_record? && Media.where(insta_id: media_item['id']).size == 1

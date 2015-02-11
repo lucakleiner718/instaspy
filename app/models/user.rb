@@ -490,16 +490,7 @@ class User < ActiveRecord::Base
 
       media_list.data.each do |media_item|
         media = Media.where(insta_id: media_item['id']).first_or_initialize(user_id: self.id)
-        media.likes_amount = media_item['likes']['count']
-        media.comments_amount = media_item['comments']['count']
-        media.link = media_item['link']
-        media.created_time = Time.at media_item['created_time'].to_i
-
-        tags = []
-        media_item['tags'].each do |tag_name|
-          tags << Tag.unscoped.where(name: tag_name).first_or_create
-        end
-        media.tags = tags
+        media.media_data media_item
 
         added += 1 if media.new_record?
 
@@ -571,4 +562,36 @@ class User < ActiveRecord::Base
     binding.pry
 
   end
+
+  def popular_location
+    countries = {}
+    states = {}
+    cities = {}
+    self.media.where('location_country is not null && location_country != "" OR location_state is not null && location_state != "" OR location_city is not null && location_city != ""').each do |media|
+      if media.location_country.present?
+        countries[media.location_country] ||= 0
+        countries[media.location_country] += 1
+
+        if media.location_state.present?
+          states[[media.location_country, media.location_state]] ||= 0
+          states[[media.location_country, media.location_state]] += 1
+
+          if media.location_city.present?
+            cities[[media.location_country, media.location_state, media.location_city]] ||= 0
+            cities[[media.location_country, media.location_state, media.location_city]] += 1
+          end
+        end
+      end
+    end
+
+    country = countries.to_a.sort{|a,b| a[1]<=>b[1]}.last
+    state = states.to_a.sort{|a,b| a[1]<=>b[1]}.last
+    city = cities.to_a.sort{|a,b| a[1]<=>b[1]}.last
+    {
+      country: country && country[0],
+      state: state && state[0].join(', '),
+      city: city && city[0].join(', '),
+    }
+  end
+
 end

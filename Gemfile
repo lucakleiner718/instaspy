@@ -55,6 +55,7 @@ gem 'mysql2'                              # Use mysql as the database for Active
 gem 'nokogiri'
 gem 'curb'
 gem 'mongoid'
-gem 'backup'
 gem 'fog'
 gem 'net-sftp'
+gem 'geocoder'
+gem 'countries'
