@@ -7,7 +7,7 @@ class Media < ActiveRecord::Base
   scope :without_location, -> { where('location_lng is null or location_lng != ""').where('location_present is null') }
 
   before_save do
-    if self.location_name_changed?
+    if self.location_name_changed? && self.location_name.present?
       self.location_name = self.location_name.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
       self.location_name = self.location_name.encode(self.location_name.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
       self.location_name.strip!
@@ -117,9 +117,12 @@ class Media < ActiveRecord::Base
 
   def set_location
     # can add option [:lookup]
+    # Geocoder::Configuration.api_key = 'd5dd99546055d0d5d6be0de04446595dd5bb365'
+    # Geocoder::Configuration.lookup = :yandex
     resp = Geocoder.search("#{self.location_lat},#{self.location_lng}")
 
     row = resp.first
+    # binding.pry
     case row.class.name
       when 'Geocoder::Result::Here'
         address = row.data['Location']['Address']
@@ -155,7 +158,7 @@ class Media < ActiveRecord::Base
         end
 
         begin
-          self.location_city = address['Country']['AdministrativeArea']['SubAdministrativeArea']['SubAdministrativeAreaName']
+          self.location_city = address['Country']['AdministrativeArea']['Locality']['DependentLocality']['DependentLocalityName']
         rescue Exception => e
         end
 
@@ -165,6 +168,19 @@ class Media < ActiveRecord::Base
           rescue Exception => e
           end
         end
+
+        if self.location_city.blank?
+          begin
+            self.location_city = address['Country']['AdministrativeArea']['SubAdministrativeArea']['SubAdministrativeAreaName']
+          rescue Exception => e
+          end
+        end
+
+      when 'Geocoder::Result::Esri'
+        address = row.data['address']
+        self.location_country = Country.find_country_by_alpha3(address['CountryCode']).name
+        self.location_state = address['Region']
+        self.location_city = address['City']
     end
   end
 
