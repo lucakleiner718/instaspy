@@ -157,6 +157,11 @@ class Reporter
       end
     end
 
+    not_processed = usernames - data.map{|el| el[0]}
+    if not_precessed.size > 0
+      p "Not processed: #{not_processed.join(', ')}"
+    end
+
     GeneralMailer.location_report(data).deliver
   end
 
