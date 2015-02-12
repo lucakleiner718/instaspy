@@ -39,7 +39,7 @@ class Media < ActiveRecord::Base
   def update_info!
     client = InstaClient.new.client
 
-    return false if self.user.private?
+    return false if self.user && self.user.private?
 
     begin
       response = client.media_item(self.insta_id)
@@ -120,6 +120,12 @@ class Media < ActiveRecord::Base
     # Geocoder::Configuration.lookup = :yandex
     resp = Geocoder.search("#{self.location_lat},#{self.location_lng}")
 
+    if resp.size == 0
+      Geocoder::Configuration.lookup = :google
+      resp = Geocoder.search("#{self.location_lat},#{self.location_lng}")
+      Geocoder::Configuration.lookup = :yandex
+    end
+
     row = resp.first
     case row.class.name
       when 'Geocoder::Result::Here'
@@ -135,6 +141,7 @@ class Media < ActiveRecord::Base
         end
       when 'Geocoder::Result::Yandex'
         address = row.data['GeoObject']['metaDataProperty']['GeocoderMetaData']['AddressDetails']
+
 
         begin
           self.location_country = address['Country']['CountryName']
