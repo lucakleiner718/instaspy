@@ -151,7 +151,7 @@ class Reporter
         user.update_info! if user.updated_at < 7.days.ago
         user.recent_media ignore_added: true, total_limit: 100 if user.media.size < 100
         data << [user.username, user.popular_location]
-        p "Added #{user.username}"
+        p "Added #{user.username} [#{data.size}/#{usernames.size}]"
       end
     end
 

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150211095309) do
+ActiveRecord::Schema.define(version: 20150212075946) do
 
   create_table "followers", force: true do |t|
     t.integer  "user_id"
@@ -40,8 +40,8 @@ ActiveRecord::Schema.define(version: 20150211095309) do
     t.integer  "likes_amount"
     t.integer  "comments_amount"
     t.string   "link"
-    t.float    "location_lat",     limit: 24
-    t.float    "location_lng",     limit: 24
+    t.float    "location_lat",     limit: 53
+    t.float    "location_lng",     limit: 53
     t.string   "location_name"
     t.string   "location_city"
     t.string   "location_state"
