@@ -135,6 +135,8 @@ class Reporter
   def self.location_report usernames
     # ActiveRecord::Base.logger.level = 1
     data = []
+    media_amount = 50
+
     usernames.in_groups_of(1000, false) do |group|
       users = User.where(username: group).to_a
 
@@ -149,7 +151,7 @@ class Reporter
       users.each do |user|
         p "Start #{user.username}"
         user.update_info! if user.updated_at < 7.days.ago
-        user.recent_media ignore_added: true, total_limit: 100 if user.media.size < 100
+        user.recent_media ignore_added: true, total_limit: media_amount if user.media.size < media_amount
         data << [user.username, user.popular_location]
         p "Added #{user.username} [#{data.size}/#{usernames.size}]"
       end
