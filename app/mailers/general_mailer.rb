@@ -122,11 +122,11 @@ class GeneralMailer < ActionMailer::Base
 
   def location_report data
     csv_string = CSV.generate do |csv|
-      csv << ['Full Name', 'Username', 'Bio', 'Country', 'Country and State', 'Location']
+      csv << ['Full Name', 'Username', 'Bio', 'Private', 'Country', 'Country and State', 'Location', 'Email']
       data.each do |row|
         user = User.get(row[0])
         location = row[1]
-        csv << [user.full_name, user.username, user.bio, location[:country], location[:state], location[:city]]
+        csv << [user.full_name, user.username, user.bio, (user.private? ? 'Private' : 'Public'), location[:country], location[:state], location[:city], user.email]
       end
     end
 

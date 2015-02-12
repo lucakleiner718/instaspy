@@ -132,13 +132,27 @@ class Reporter
     GeneralMailer.tag_authors(tag, users).deliver
   end
 
-  def self.location_report
+  def self.location_report usernames
+    # ActiveRecord::Base.logger.level = 1
     data = []
-    users = User.where('followed_by > ?', 50_000).limit(10)
-    users.each do |user|
-      user.update_info!
-      user.recent_media ignore_added: true, total_limit: 200 if user.media.size < 200
-      data << [user.username, user.popular_location]
+    usernames.in_groups_of(1000, false) do |group|
+      users = User.where(username: group).to_a
+
+      if users.size < group.size
+        not_exists = group - users.map{|el| el.username}
+        not_exists.each do |username|
+          user = User.get(username).update_info!
+          users << user if user
+        end
+      end
+
+      users.each do |user|
+        p "Start #{user.username}"
+        user.update_info! if user.updated_at < 7.days.ago
+        user.recent_media ignore_added: true, total_limit: 100 if user.media.size < 100
+        data << [user.username, user.popular_location]
+        p "Added #{user.username}"
+      end
     end
 
     GeneralMailer.location_report(data).deliver

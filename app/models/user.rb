@@ -50,15 +50,24 @@ class User < ActiveRecord::Base
   def update_info!
     client = InstaClient.new.client
 
-    # if self.insta_id.present? && self.username.blank?
-    #   client.
-    # end
-
     if self.insta_id.blank? && self.username.present?
       resp = client.user_search(self.username)
 
       data = nil
       data = resp.data.select{|el| el['username'].downcase == self.username.downcase }.first if resp.data.size > 0
+
+      if data.nil? && resp.data.size == 1
+        d = resp.data.first
+        u = User.where(username: d['username']).first
+        if u
+          u.update_info!
+          if u.username == d['username']
+            self.destroy
+            return u
+          end
+        end
+        data = d
+      end
 
     #   if self.insta_id.blank?
     #     exists = User.where(insta_id: data['id']).first
@@ -126,6 +135,8 @@ class User < ActiveRecord::Base
     self.save
 
     exists_username.update_info! if exists_username
+
+    self
   end
 
   def update_private_account
@@ -411,9 +422,9 @@ class User < ActiveRecord::Base
 
   def self.get username
     if username.numeric?
-      User.where('id = :id or insta_id = :id', id: username).first_or_create
+      User.where('id = :id or insta_id = :id', id: username).first_or_create(insta_id: username)
     else
-      User.where('username = :id', id: username).first_or_create
+      User.where('username = :id', id: username).first_or_create(username: username)
     end
   end
 
@@ -505,6 +516,8 @@ class User < ActiveRecord::Base
       break if media_list.data.size == 0
 
       total_added += added
+
+      p "total_added: #{total_added}"
 
       avg_created_time = avg_created_time / media_list.data.size
 

@@ -14,10 +14,9 @@ class Media < ActiveRecord::Base
     end
   end
 
-  before_save do
-    if self.location_present? && self.location_country.blank?
-      self.set_location
-    end
+  after_save do
+    # MediaLocationWorker.perform_async self.id if self.location_present? && self.location_lat.present? && self.location_lat_changed?
+    MediaLocationWorker.new.perform self.id if self.location_present? && self.location_lat.present? && self.location_lat_changed?
   end
 
   def self.recent_media
@@ -122,7 +121,6 @@ class Media < ActiveRecord::Base
     resp = Geocoder.search("#{self.location_lat},#{self.location_lng}")
 
     row = resp.first
-    # binding.pry
     case row.class.name
       when 'Geocoder::Result::Here'
         address = row.data['Location']['Address']
@@ -130,7 +128,6 @@ class Media < ActiveRecord::Base
         self.location_state = address['State']
         self.location_city = address['City']
       when 'Geocoder::Result::Google'
-        # binding.pry
         row.address_components.each do |address_component|
           self.location_country = address_component['long_name'] if address_component['types'].include?('country')
           self.location_state = address_component['long_name'] if address_component['types'].include?('administrative_area_level_1')
@@ -139,9 +136,17 @@ class Media < ActiveRecord::Base
       when 'Geocoder::Result::Yandex'
         address = row.data['GeoObject']['metaDataProperty']['GeocoderMetaData']['AddressDetails']
 
-        self.location_country = address['Country']['CountryName']
+        begin
+          self.location_country = address['Country']['CountryName']
+        rescue
+        end
 
-        # binding.pry
+        if self.location_country.blank?
+          begin
+            self.location_country = address['Country']['Locality']['Premise']['PremiseName']
+          rescue
+          end
+        end
 
         begin
           self.location_state = address['Country']['AdministrativeArea']['AdministrativeAreaName']
