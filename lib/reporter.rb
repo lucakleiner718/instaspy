@@ -156,6 +156,7 @@ class Reporter
         p "Start #{user.username}"
         user.update_info! if user.updated_at < 7.days.ago
         user.recent_media ignore_added: true, total_limit: media_amount if user.media.size < media_amount
+        user.update_media_location
         data << [user.username, user.popular_location]
         p "Added #{user.username} [#{data.size}/#{usernames.size}]"
       end

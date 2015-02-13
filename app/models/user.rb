@@ -607,4 +607,10 @@ class User < ActiveRecord::Base
     }
   end
 
+  def update_media_location
+    self.media.with_location.where('location_country is null').each do |media|
+      media.update_location!
+    end
+  end
+
 end
