@@ -114,7 +114,7 @@ class User < ActiveRecord::Base
         end
 
         self.save
-        return true
+        return self
       elsif e.message =~ /this user does not exist/
         self.destroy
       end
