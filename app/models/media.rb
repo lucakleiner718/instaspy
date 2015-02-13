@@ -16,7 +16,7 @@ class Media < ActiveRecord::Base
 
   after_save do
     # MediaLocationWorker.perform_async self.id if self.location_present? && self.location_lat.present? && self.location_lat_changed?
-    MediaLocationWorker.new.perform self.id if self.location_present? && self.location_lat.present? && self.location_lat_changed?
+    # MediaLocationWorker.new.perform self.id if self.location_present? && self.location_lat.present? && self.location_lat_changed?
   end
 
   def self.recent_media
