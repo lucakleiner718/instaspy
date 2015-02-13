@@ -104,7 +104,8 @@ class GeneralMailer < ActionMailer::Base
     end
   end
 
-  def avg_likes_comments csv_string, usernames
+  def avg_likes_comments csv_string, usernames, not_processed
+    @not_processed = not_processed
     Dir.mkdir('public/reports') unless Dir.exists?('public/reports')
     file_path = "reports/avg-likes-comments-#{Time.now.to_i}.csv"
     @file = "#{root_url}#{file_path}"

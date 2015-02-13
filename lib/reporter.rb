@@ -65,7 +65,11 @@ class Reporter
       end
     end
 
-    GeneralMailer.avg_likes_comments(csv_string, usernames).deliver
+    not_processed = usernames - data.map{|el| el[:username]}
+
+    p "Not processed: #{not_processed}"
+
+    GeneralMailer.avg_likes_comments(csv_string, usernames, not_processed).deliver
   end
 
   def self.media_report *args
