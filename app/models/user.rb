@@ -428,16 +428,11 @@ class User < ActiveRecord::Base
     end
   end
 
-  def self.get_emails
-    email_regex = /([\w+\-.]+@[a-z\d\-]+(\.[a-z]+)*\.[a-z]+)/
-
-    User.find_each(batch_size: 5000) do |user|
-      next if user.bio.blank?
-      m = user.bio.match(email_regex)
-      if m && m[1]
-        user.email = m[1].downcase.sub(/^[\.\-\_]+/, '')
-        user.save
-      end
+  def self.get_emails usernames=[]
+    users = User.all
+    users = users.where(username: usernames) if usernames.size > 0
+    users.find_each(batch_size: 5000) do |user|
+      user.update_info! if user.email.blank? || user.bio.blank?
     end
   end
 

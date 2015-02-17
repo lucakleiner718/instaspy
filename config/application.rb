@@ -21,6 +21,7 @@ module Instaspy
     # config.i18n.default_locale = :de
 
     config.autoload_paths += %W(#{config.root}/lib)
+    config.eager_load_paths += %W(#{config.root}/lib)
 
     # config.action_mailer.default_options = { from: 'instaspy@digitallylux.com' }
     config.action_mailer.default_options = { from: 'dev@antonzaytsev.com' }
