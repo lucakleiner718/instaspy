@@ -103,6 +103,11 @@ class User < ActiveRecord::Base
       end
     rescue Instagram::BadRequest => e
       if e.message =~ /you cannot view this resource/
+
+        if self.private && self.grabbed_at > 7.days.ago
+          return self
+        end
+
         self.private = true
         self.grabbed_at = Time.now
 
