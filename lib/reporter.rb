@@ -154,7 +154,7 @@ class Reporter
 
       users.each do |user|
         p "Start #{user.username}"
-        user.update_info! if user.updated_at < 7.days.ago
+        user.update_info! if user.grabbed_at < 7.days.ago
         user.recent_media ignore_added: true, total_limit: media_amount if user.media.size < media_amount
         user.update_media_location
         data << [user.username, user.popular_location]
@@ -168,6 +168,32 @@ class Reporter
     end
 
     GeneralMailer.location_report(data).deliver
+  end
+
+  def self.by_location lat, lng, *args
+    options = args.extract_options!
+    options[:distance] ||= 100
+
+    media_list = Media.near([lat, lng], options[:distance]/1000, units: :km).includes(:user)
+    media_list = media_list.where('created_time >= ?', options[:created_till]) if options[:created_till].present?
+
+    csv_string = CSV.generate do |csv|
+      csv << ['Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followed By', 'Media Amount', 'Email', 'Added to Instaspy', 'Media URL', 'Media likes', 'Media comments', 'Location']
+
+      media_list.find_each do |media|
+        user = media.user
+        user.update_info! if user.grabbed_at.blank? || user.grabbed_at < 7.days.ago || user.bio.blank? || user.website.blank? || user.email.blank?
+        media.update_location! if media.location_present? && media.location_lat.present? && media.location.blank?
+        csv << [
+          user.username, user.full_name, user.website, user.bio, user.follows, user.followed_by, user.media_amount,
+          user.email, user.created_at.strftime('%m/%d/%Y'), media.link, media.likes_amount, media.comments_amount,
+          media.location
+        ]
+      end
+
+    end
+
+    GeneralMailer.by_location(csv_string).deliver
   end
 
 end

@@ -38,6 +38,14 @@ class Media < ActiveRecord::Base
     Media.where('created_time < ?', frame.ago).destroy_all
   end
 
+  def location
+    loc = []
+    loc << self.location_country if self.location_country.present?
+    loc << self.location_state if self.location_state.present?
+    loc << self.location_city if self.location_city.present?
+    loc.join(', ')
+  end
+
   def update_info!
     client = InstaClient.new.client
 
@@ -225,7 +233,7 @@ class Media < ActiveRecord::Base
     self.save
   end
 
-  def self.get_by_location lat, lng, distance=100, *args
+  def self.get_by_location lat, lng, *args
     options = args.extract_options!
 
     min_timestamp = nil
@@ -233,13 +241,14 @@ class Media < ActiveRecord::Base
 
     total_added = 0
     options[:total_limit] ||= 2_000
+    options[:distance] ||= 100
 
     while true
       client = InstaClient.new.client
 
       begin
         client = InstaClient.new.client
-        media_list = client.media_search(lat, lng, distance: distance, min_timestamp: min_timestamp, max_timestamp: max_timestamp, count: 100)
+        media_list = client.media_search(lat, lng, distance: options[:distance], min_timestamp: min_timestamp, max_timestamp: max_timestamp, count: 100)
       rescue JSON::ParserError, Instagram::ServiceUnavailable, Instagram::BadGateway, Instagram::InternalServerError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError => e
         p 'issue'
         break

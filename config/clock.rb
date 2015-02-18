@@ -13,7 +13,7 @@ module Clockwork
   end
 
   # Grab new media for observed tags
-  every(5.minute, 'get.new.media') { MediaWorker.spawn }
+  every(10.minute, 'get.new.media') { MediaWorker.spawn }
   # every(1.minute, 'get.new.media') { MediaWorker.spawn }
 
   # Update users, which doesn't have info
@@ -40,6 +40,7 @@ module Clockwork
   # Save tag stat for chart
   every(1.day, 'TagStat', at: '01:00') { TagStatWorker.spawn }
 
-  every(30.minutes, '')
+  every(30.minutes, 'media.ny.location.1') { Media.get_by_location 40.74226964, -74.007271584 }
+  every(30.minutes, 'media.ny.location.2') { Media.get_by_location 40.772154986, -73.984437991 }
 
 end

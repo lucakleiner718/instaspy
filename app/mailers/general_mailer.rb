@@ -146,4 +146,20 @@ class GeneralMailer < ActionMailer::Base
     end
   end
 
+  def by_location csv_string
+    Dir.mkdir('public/reports') unless Dir.exists?('public/reports')
+    file_path = "reports/media-by-location-report-#{Time.now.to_i}.csv"
+    @file = "#{root_url}#{file_path}"
+    File.open("public/#{file_path}", 'w') do |f|
+      f.puts csv_string
+    end
+
+    sbj = "InstaSpy media by location report #{Time.now.strftime('%m/%d/%Y')}"
+    if ENV['insta_debug'] || Rails.env.development?
+      mail to: 'me@antonzaytsev.com', from: 'dev@antonzaytsev.com', subject: sbj, template_name: 'default'
+    else
+      mail to: "rob@ladylux.com", bcc: 'me@antonzaytsev.com', subject: sbj
+    end
+  end
+
 end
