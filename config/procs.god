@@ -37,12 +37,12 @@ God.watch do |w|
   w.keepalive
 
   w.restart_if do |restart|
-    restart.condition(:cpu_usage) do |c|
-      c.above = 50.percent
-      c.times = 5
-    end
+    # restart.condition(:cpu_usage) do |c|
+    #   c.above = 50.percent
+    #   c.times = 5
+    # end
     restart.condition(:memory_usage) do |c|
-      c.above = 700.megabytes
+      c.above = 1000.megabytes
       c.times = [3, 5] # 3 out of 5 intervals
     end
   end

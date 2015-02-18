@@ -40,7 +40,11 @@ module Clockwork
   # Save tag stat for chart
   every(1.day, 'TagStat', at: '01:00') { TagStatWorker.spawn }
 
-  every(30.minutes, 'media.ny.location.1') { Media.get_by_location 40.74226964, -74.007271584 }
-  every(30.minutes, 'media.ny.location.2') { Media.get_by_location 40.772154986, -73.984437991 }
+  every(30.minutes, 'media.ny.location.1') {
+    Media.get_by_location 40.74226964, -74.007271584 if Time.now < Time.at('2015/02/21 00:00:00 UTC')
+  }
+  every(30.minutes, 'media.ny.location.2') {
+    Media.get_by_location 40.772154986, -73.984437991 if Time.now < Time.at('2015/02/21 00:00:00 UTC')
+  }
 
 end
