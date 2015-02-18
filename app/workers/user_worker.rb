@@ -6,7 +6,8 @@ class UserWorker
   end
 
   def self.spawn
-    User.where(follows: nil).order(created_at: :desc).pluck(:id).in_groups_of(100, false).each do |users|
+    # User.where(follows: nil).order(created_at: :desc).pluck(:id).in_groups_of(100, false).each do |users|
+    User.where(grabbed_at: nil).pluck(:id).in_groups_of(100, false).each do |users|
       self.perform_async users
     end
   end

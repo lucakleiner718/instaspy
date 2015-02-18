@@ -104,6 +104,12 @@ class User < ActiveRecord::Base
     rescue Instagram::BadRequest => e
       if e.message =~ /you cannot view this resource/
 
+        # if user is private and we don't have it's username, than just remove it from db
+        if self.private && self.username.blank?
+          self.destroy
+          return false
+        end
+
         if self.private && self.grabbed_at > 7.days.ago
           return self
         end
