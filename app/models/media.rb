@@ -247,6 +247,7 @@ class Media < ActiveRecord::Base
 
       added = 0
       avg_created_time = 0
+      added_media = []
 
       media_list.data.each do |media_item|
         media = Media.where(insta_id: media_item['id']).first_or_initialize
@@ -261,6 +262,8 @@ class Media < ActiveRecord::Base
         rescue ActiveRecord::RecordNotUnique => e
         end
 
+        added_media << media
+
         avg_created_time += media['created_time'].to_i
       end
 
@@ -273,6 +276,10 @@ class Media < ActiveRecord::Base
       p "#{avg_created_time} / #{Time.at avg_created_time}"
       p "added: #{added}"
       # sleep 2
+
+      if options[:without_location].blank?
+        added_media.each { |media| media.update_location! }
+      end
 
       if options[:created_from].present? && Time.at(avg_created_time) > options[:created_from]
         max_timestamp = media_list.data.last.created_time

@@ -40,4 +40,6 @@ module Clockwork
   # Save tag stat for chart
   every(1.day, 'TagStat', at: '01:00') { TagStatWorker.spawn }
 
+  every(30.minutes, '')
+
 end
