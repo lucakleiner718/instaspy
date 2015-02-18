@@ -136,7 +136,13 @@ class Reporter
     GeneralMailer.tag_authors(tag, users).deliver
   end
 
-  def self.location_report usernames
+  def self.delay_location_report usernames, split=500
+    usernames.in_groups_of(split, false).each do |usernames_group|
+      Reporter.delay.location_report usernames_group, false
+    end
+  end
+
+  def self.location_report usernames, send_email=true
     # ActiveRecord::Base.logger.level = 1
     data = []
     media_amount = 50
@@ -167,7 +173,7 @@ class Reporter
       p "Not processed: #{not_processed.join(', ')}"
     end
 
-    GeneralMailer.location_report(data).deliver
+    GeneralMailer.location_report(data).deliver if send_email
   end
 
   def self.by_location lat, lng, *args
