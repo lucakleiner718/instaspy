@@ -6,6 +6,8 @@ class Media < ActiveRecord::Base
   scope :with_location, -> { where('location_lng is not null and location_lng != ""') }
   scope :without_location, -> { where('location_lng is null or location_lng != ""').where('location_present is null') }
 
+  reverse_geocoded_by :location_lat, :location_lng
+
   before_save do
     if self.location_name_changed? && self.location_name.present?
       self.location_name = self.location_name.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
@@ -113,7 +115,13 @@ class Media < ActiveRecord::Base
     end
     user.username = media_item_user['username']
     user.full_name = media_item_user['full_name']
-    user.save
+
+    begin
+      user.save
+    rescue ActiveRecord::RecordNotUnique => e
+      username = user.username
+      user = User.where(username: username).first_or_create
+    end
 
     self.user_id = user.id
   end
@@ -213,6 +221,69 @@ class Media < ActiveRecord::Base
   def update_location!
     self.set_location
     self.save
+  end
+
+  def self.get_by_location lat, lng, distance=100, *args
+    options = args.extract_options!
+
+    min_timestamp = nil
+    max_timestamp = nil
+
+    total_added = 0
+    options[:total_limit] ||= 2_000
+
+    while true
+      client = InstaClient.new.client
+
+      begin
+        client = InstaClient.new.client
+        media_list = client.media_search(lat, lng, distance: distance, min_timestamp: min_timestamp, max_timestamp: max_timestamp, count: 100)
+      rescue JSON::ParserError, Instagram::ServiceUnavailable, Instagram::BadGateway, Instagram::InternalServerError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError => e
+        p 'issue'
+        break
+      rescue Interrupt
+        raise Interrupt
+      end
+
+      added = 0
+      avg_created_time = 0
+
+      media_list.data.each do |media_item|
+        media = Media.where(insta_id: media_item['id']).first_or_initialize
+
+        media.media_user media_item['user']
+        media.media_data media_item
+
+        added += 1 if media.new_record?
+
+        begin
+          media.save unless media.new_record? && Media.where(insta_id: media_item['id']).size == 1
+        rescue ActiveRecord::RecordNotUnique => e
+        end
+
+        avg_created_time += media['created_time'].to_i
+      end
+
+      total_added += added
+
+      break if media_list.data.size == 0
+
+      avg_created_time = avg_created_time / media_list.data.size
+
+      p "#{avg_created_time} / #{Time.at avg_created_time}"
+      p "added: #{added}"
+      # sleep 2
+
+      if options[:created_from].present? && Time.at(avg_created_time) > options[:created_from]
+        max_timestamp = media_list.data.last.created_time
+      elsif options[:ignore_added] || added.to_f / media_list.data.size > 0.9
+        max_timestamp = media_list.data.last.created_time
+      elsif total_added >= options[:total_limit]
+        break
+      else
+        break
+      end
+    end
   end
 
 end

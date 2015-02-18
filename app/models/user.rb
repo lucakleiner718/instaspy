@@ -142,7 +142,7 @@ class User < ActiveRecord::Base
     self.followed_by = data['counts']['followed_by']
     self.follows = data['counts']['follows']
     self.media_amount = data['counts']['media']
-    self.grabbed_at = Time.now if self.changed?
+    self.grabbed_at = Time.now
     self.save
 
     exists_username.update_info! if exists_username
@@ -441,8 +441,8 @@ class User < ActiveRecord::Base
 
   def self.get_emails usernames=[]
     users = User.all
-    users = users.where(username: usernames) if usernames.size > 0
-    users.find_each(batch_size: 5000) do |user|
+    users = users.where(username: usernames).where('email is null OR email="" OR bio is null OR bio=""').where('grabbed_at < ?', 3.days.ago) if usernames.size > 0
+    users.find_each(batch_size: 1000) do |user|
       user.update_info! if user.email.blank? || user.bio.blank?
     end
   end
