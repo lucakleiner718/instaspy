@@ -130,15 +130,17 @@ class Media < ActiveRecord::Base
     # can add option [:lookup]
     # Geocoder::Configuration.api_key = 'd5dd99546055d0d5d6be0de04446595dd5bb365'
     # Geocoder::Configuration.lookup = :yandex
+    #
+    # proxies = [
+    #
+    # ]
+    # proxy = proxies.sample
+    #
+    # if proxy
+    #   Geocoder::Configuration.http_proxy = ''
+    # end
 
-    proxies = [
-
-    ]
-    proxy = proxies.sample
-
-    if proxy
-      Geocoder::Configuration.http_proxy = ''
-    end
+    return false if self.location_lat.blank? || self.location_lng.blank?
 
     resp = Geocoder.search("#{self.location_lat},#{self.location_lng}")
 
@@ -255,14 +257,15 @@ class Media < ActiveRecord::Base
         media.media_user media_item['user']
         media.media_data media_item
 
-        added += 1 if media.new_record?
+        if media.new_record?
+          added += 1
+          added_media << media
+        end
 
         begin
           media.save unless media.new_record? && Media.where(insta_id: media_item['id']).size == 1
         rescue ActiveRecord::RecordNotUnique => e
         end
-
-        added_media << media
 
         avg_created_time += media['created_time'].to_i
       end
