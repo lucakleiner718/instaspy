@@ -45,13 +45,14 @@ class PagesController < ApplicationController
 
     cache = true
     values = Rails.cache.read("chart-#{tag_name}")
-    unless values
+    last_30_days = Rails.cache.read("tag-last-30-days-#{tag_name}")
+
+    if !values || !last_30_days
       TagChartWorker.new.perform tag_name, params[:amount_of_days]
       values = Rails.cache.read("chart-#{tag_name}")
+      last_30_days = Rails.cache.read("tag-last-30-days-#{tag_name}")
       cache = false
     end
-
-    last_30_days = Rails.cache.read("tag-last-30-days-#{tag.name}")
 
     # tag = Tag.where(name: tag_name).first
     # last_30_days = TagStat.where('date >= ?', 30.days.ago).where(tag: tag).pluck(:amount).sum
