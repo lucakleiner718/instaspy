@@ -101,18 +101,18 @@ class Media < ActiveRecord::Base
     self.tags = tags
   end
 
-  def media_user user
-    user = User.where(insta_id: user['id']).first_or_initialize
+  def media_user media_item_user
+    user = User.where(insta_id: media_item_user['id']).first_or_initialize
     if user.new_record?
       # with same username as we want to create
-      user2 = User.where(username: user['username']).first_or_initialize
+      user2 = User.where(username: media_item_user['username']).first_or_initialize
       unless user2.new_record?
         user = user2
-        user.insta_id = user['id']
+        user.insta_id = media_item_user['id']
       end
     end
-    user.username = user['username']
-    user.full_name = user['full_name']
+    user.username = media_item_user['username']
+    user.full_name = media_item_user['full_name']
     user.save
 
     self.user_id = user.id
