@@ -26,7 +26,7 @@ module Clockwork
   # every(1.week, 'media.delete_old', at: '08:00') { Media.delete_old }
 
   # Save data for chart in cache, so charts will work fast
-  every(3.hours, 'TagChartWorker') { TagChartWorker.spawn }
+  every(6.hours, 'TagChartWorker') { TagChartWorker.spawn }
 
   # Update followers list for specified users
   every(12.hours, 'FollowersReport.update') { FollowersReport.track }

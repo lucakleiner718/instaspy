@@ -138,7 +138,7 @@ class Reporter
 
   def self.delay_location_report usernames, split=500
     usernames.in_groups_of(split, false).each do |usernames_group|
-      Reporter.delay.location_report usernames_group, false
+      Reporter.delay(queue: :critical).location_report usernames_group, false
     end
   end
 
@@ -147,7 +147,7 @@ class Reporter
     data = []
     media_amount = 50
 
-    usernames.in_groups_of(1000, false) do |group|
+    usernames.in_groups_of(100, false) do |group|
       users = User.where(username: group).to_a
 
       if users.size < group.size

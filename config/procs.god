@@ -1,6 +1,17 @@
 God.pid_file_directory = File.expand_path(File.join(File.dirname(__FILE__),'..')) + '/tmp/pids'
 CURRENT_DIR = File.expand_path(File.join(File.dirname(__FILE__),'..'))
 
+God::Contacts::Email.defaults do |d|
+  d.from_email = "dev@antonzaytsev.com"
+  d.from_name = 'God'
+  d.delivery_method = :smtp
+  d.server_host = 'smtp.yandex.ru'
+  d.server_port = 25
+  d.server_user = "dev@antonzaytsev.com"
+  d.server_password = "DEVantonZPassword1"
+  d.server_auth = :plain
+end
+
 God.contact(:email) do |c|
   c.name = 'Anton'
   c.group = 'developers'
@@ -36,14 +47,20 @@ God.watch do |w|
   w.log = File.expand_path(File.join(File.dirname(__FILE__), '..','log',"god-sidekiq.log"))
   w.keepalive
 
-  w.restart_if do |restart|
-    # restart.condition(:cpu_usage) do |c|
-    #   c.above = 50.percent
-    #   c.times = 5
-    # end
-    restart.condition(:memory_usage) do |c|
-      c.above = 1000.megabytes
-      c.times = [3, 5] # 3 out of 5 intervals
+  # w.restart_if do |restart|
+  #   # restart.condition(:cpu_usage) do |c|
+  #   #   c.above = 50.percent
+  #   #   c.times = 5
+  #   # end
+  #   restart.condition(:memory_usage) do |c|
+  #     c.above = 1000.megabytes
+  #     c.times = [3, 5] # 3 out of 5 intervals
+  #   end
+  # end
+
+  w.transition(:up, :start) do |on|
+    on.condition(:process_exits) do |c|
+      c.notify = 'Anton'
     end
   end
 end
