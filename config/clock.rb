@@ -13,11 +13,11 @@ module Clockwork
   end
 
   # Grab new media for observed tags
-  every(30.seconds, 'get.new.media') { MediaWorker.spawn }
+  every(2.minute, 'get.new.media') { MediaWorker.spawn }
   # every(1.minute, 'get.new.media') { MediaWorker.spawn }
 
   # Update users, which doesn't have info
-  every(2.minutes, 'update.users') { UserWorker.perform_async }
+  every(5.minutes, 'update.users') { UserWorker.spawn }
 
   # Send weekly report about media
   every(1.week, 'media.report', at: "Tuesday 07:00") { ReportWorker.perform_async }

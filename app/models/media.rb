@@ -92,7 +92,11 @@ class Media < ActiveRecord::Base
 
     tags = []
     media_item['tags'].each do |tag_name|
-      tags << Tag.unscoped.where(name: tag_name).first_or_create
+      begin
+        tags << Tag.unscoped.where(name: tag_name).first_or_create
+      rescue ActiveRecord::RecordNotUnique => e
+        retry
+      end
     end
     self.tags = tags
   end
