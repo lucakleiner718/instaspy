@@ -110,7 +110,7 @@ class User < ActiveRecord::Base
           return false
         end
 
-        if self.private && self.grabbed_at > 7.days.ago
+        if self.private && self.grabbed_at && self.grabbed_at > 7.days.ago
           return self
         end
 
