@@ -29,8 +29,7 @@ class UserAvgLikesWorker
   end
 
   def self.spawn in_batch=100
-    User.where('followed_by is null OR followed_by > 1000').where('avg_likes_updated_at is null OR avg_likes_updated_at < ?', 1.month.ago)
-      .select(:id).find_in_batches(batch_size: in_batch) do |users_group|
+    User.where('followed_by is null OR followed_by > 1000').where('avg_likes_updated_at is null OR avg_likes_updated_at < ?', 1.month.ago).select(:id).find_in_batches(batch_size: in_batch) do |users_group|
 
       self.perform_async users_group.map(&:id)
     end

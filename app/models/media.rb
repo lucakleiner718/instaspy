@@ -51,6 +51,8 @@ class Media < ActiveRecord::Base
 
     return false if self.user && self.user.private?
 
+    retries = 0
+
     begin
       response = client.media_item(self.insta_id)
     rescue Faraday::ConnectionFailed => e
@@ -67,6 +69,9 @@ class Media < ActiveRecord::Base
         binding.pry
         return false
       end
+    rescue Instagram::ServiceUnavailable
+      retries += 1
+      retry if retries <= 5
     rescue Interrupt
       raise Interrupt
     rescue StandardError => e
