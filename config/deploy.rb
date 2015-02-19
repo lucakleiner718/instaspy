@@ -24,7 +24,7 @@ set :puma_workers, 2
 set :puma_preload_app, false
 set :puma_threads, [0, 4]
 
-set :sidekiq_timeout, 620
+# set :sidekiq_timeout, 620
 # set :sidekiq_run_in_background, true
 
 set :rvm_ruby_version, '2.1.1@instaspy'
