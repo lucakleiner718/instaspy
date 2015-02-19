@@ -602,7 +602,7 @@ class User < ActiveRecord::Base
     end
 
     # get some media, at least latest 50 posts
-    if self.media_amount.present? && self.media_amount < 50 && media_size < media_amount && !self.private?
+    if !self.private? && self.media_amount.present? && media_size < media_amount
       self.recent_media ignore_added: true, total_limit: media_amount
     end
 

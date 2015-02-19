@@ -2,7 +2,7 @@
 :concurrency: 20
 :verbose: true
 :pidfile: ./tmp/pids/sidekiq.pid
-:timeout: 1800 # 10 minutes
+:timeout: 1800
 :queues:
   - [critical, 10]
   - default
