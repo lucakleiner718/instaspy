@@ -138,15 +138,12 @@ class Media < ActiveRecord::Base
     # can add option [:lookup]
     # Geocoder::Configuration.api_key = 'd5dd99546055d0d5d6be0de04446595dd5bb365'
     # Geocoder::Configuration.lookup = :yandex
-    #
-    # proxies = [
-    #
-    # ]
-    # proxy = proxies.sample
-    #
-    # if proxy
-    #   Geocoder::Configuration.http_proxy = ''
-    # end
+
+    proxy = Proxy.get_some
+    if proxy
+      Geocoder::Configuration.http_proxy = proxy.to_s
+      # p "using proxy #{proxy.to_s}"
+    end
 
     return false if self.location_lat.blank? || self.location_lng.blank?
 

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150212075946) do
+ActiveRecord::Schema.define(version: 20150219084141) do
 
   create_table "followers", force: true do |t|
     t.integer  "user_id"
@@ -65,6 +65,16 @@ ActiveRecord::Schema.define(version: 20150212075946) do
     t.boolean  "export_csv",       default: false
     t.boolean  "for_chart",        default: false
     t.datetime "media_updated_at"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "proxies", force: true do |t|
+    t.string   "url"
+    t.string   "login"
+    t.string   "password"
+    t.boolean  "active",     default: true
+    t.string   "provider"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
