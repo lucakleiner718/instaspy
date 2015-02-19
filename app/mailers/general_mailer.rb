@@ -142,7 +142,7 @@ class GeneralMailer < ActionMailer::Base
     if ENV['insta_debug'] || Rails.env.development?
       mail to: 'me@antonzaytsev.com', from: 'dev@antonzaytsev.com', subject: sbj, template_name: 'default'
     else
-      mail to: "rob@ladylux.com", bcc: 'me@antonzaytsev.com', subject: sbj
+      mail to: "rob@ladylux.com", bcc: 'me@antonzaytsev.com', subject: sbj, template_name: 'default'
     end
   end
 
