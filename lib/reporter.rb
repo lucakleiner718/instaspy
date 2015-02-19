@@ -173,7 +173,7 @@ class Reporter
       p "Not processed: #{not_processed.join(', ')}"
     end
 
-    GeneralMailer.location_report(data).deliver if send_email
+    GeneralMailer.location_report(data, not_processed).deliver if send_email
   end
 
   def self.by_location lat, lng, *args
@@ -200,6 +200,10 @@ class Reporter
     end
 
     GeneralMailer.by_location(csv_string).deliver
+  end
+
+  def self.user_locations
+
   end
 
 end

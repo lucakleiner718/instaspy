@@ -121,7 +121,8 @@ class GeneralMailer < ActionMailer::Base
     end
   end
 
-  def location_report data
+  def location_report data, not_processed=[]
+    @not_processed = not_processed
     csv_string = CSV.generate do |csv|
       csv << ['Full Name', 'Username', 'Bio', 'Private', 'Country', 'Country and State', 'Location', 'Email']
       data.each do |row|

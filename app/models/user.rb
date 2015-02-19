@@ -583,10 +583,35 @@ class User < ActiveRecord::Base
   end
 
   def popular_location
+    if self.location_updated_at && self.location_updated_at > 7.days.ago && self.location_country
+      return {
+        country: self.location_country,
+        state: self.location_state,
+        city: self.location_city,
+      }
+    end
+
+    self.update_info! if !self.private? && (self.media_amount.blank? || self.grabbed_at.present? || self.grabbed_at < 7.days.ago)
+
+    media_amount = 50
+    media_size = self.media.size
+
+    # do not waste time on privat
+    if self.private && media_size == 0
+      return false
+    end
+
+    # get some media, at least latest 50 posts
+    if self.media_amount.present? && self.media_amount < 50 && media_size < media_amount && !self.private?
+      self.recent_media ignore_added: true, total_limit: media_amount
+    end
+
+    self.update_media_location
+
     countries = {}
     states = {}
     cities = {}
-    self.media.where('location_country is not null && location_country != "" OR location_state is not null && location_state != "" OR location_city is not null && location_city != ""').each do |media|
+    self.media.with_location.where('location_country is not null && location_country != "" OR location_state is not null && location_state != "" OR location_city is not null && location_city != ""').each do |media|
       if media.location_country.present?
         countries[media.location_country] ||= 0
         countries[media.location_country] += 1
@@ -606,10 +631,16 @@ class User < ActiveRecord::Base
     country = countries.to_a.sort{|a,b| a[1]<=>b[1]}.last
     state = states.to_a.sort{|a,b| a[1]<=>b[1]}.last
     city = cities.to_a.sort{|a,b| a[1]<=>b[1]}.last
+
+    self.location_country = country && country[0]
+    self.location_state = state && state[0].join(', ')
+    self.location_city = city && city[0].join(', ')
+    self.location_updated_at = Time.now
+    self.save
     {
-      country: country && country[0],
-      state: state && state[0].join(', '),
-      city: city && city[0].join(', '),
+      country: self.location_country,
+      state: self.location_state,
+      city: self.location_city,
     }
   end
 
