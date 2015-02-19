@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150219185227) do
+ActiveRecord::Schema.define(version: 20150219201443) do
 
   create_table "followers", force: true do |t|
     t.integer  "user_id"
@@ -129,8 +129,13 @@ ActiveRecord::Schema.define(version: 20150219185227) do
     t.datetime "avg_likes_updated_at"
   end
 
+  add_index "users", ["avg_likes"], name: "index_users_on_avg_likes", using: :btree
+  add_index "users", ["avg_likes_updated_at"], name: "index_users_on_avg_likes_updated_at", using: :btree
   add_index "users", ["email"], name: "index_users_on_email", using: :btree
   add_index "users", ["insta_id"], name: "index_users_on_insta_id", unique: true, using: :btree
+  add_index "users", ["location_city"], name: "index_users_on_location_city", using: :btree
+  add_index "users", ["location_country"], name: "index_users_on_location_country", using: :btree
+  add_index "users", ["location_state"], name: "index_users_on_location_state", using: :btree
   add_index "users", ["username"], name: "index_users_on_username", unique: true, using: :btree
   add_index "users", ["website"], name: "index_users_on_website", using: :btree
 
