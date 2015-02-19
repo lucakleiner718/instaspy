@@ -41,13 +41,13 @@ class Reporter
         avg_likes = likes_amount.pluck(:likes_amount).sum / likes_amount.size.to_f
         avg_comments = comments_amount.pluck(:comments_amount).sum / comments_amount.size.to_f
 
-        freq = media.limit(20)
-        media_freq = 0
-        if freq.size > 0
-          media_freq = freq.size.to_f / (Time.now.to_i - freq.last.created_time.to_i) * 60 * 60 * 24
-        end
+        # freq = media.limit(20)
+        # media_freq = 0
+        # if freq.size > 0
+        #   media_freq = freq.size.to_f / (Time.now.to_i - freq.last.created_time.to_i) * 60 * 60 * 24
+        # end
 
-        data << { name: user.full_name, username: user.username, likes: avg_likes, comments: avg_comments, freq: media_freq }
+        data << { name: user.full_name, username: user.username, likes: avg_likes, comments: avg_comments, media: media.first }
 
         processed += 1
 
@@ -56,10 +56,10 @@ class Reporter
     end
 
     csv_string = CSV.generate do |csv|
-      csv << ['Name', 'Username', 'AVG Likes', 'AVG Comments', 'Media per day']
+      csv << ['Name', 'Username', 'AVG Likes', 'AVG Comments', 'Last Media URL' ]
       data.each do |row|
         begin
-          csv << [ row[:name], row[:username], row[:likes].round(2), row[:comments].round(2), row[:freq].round(4) ]
+          csv << [ row[:name], row[:username], row[:likes].round(2), row[:comments].round(2), row[:media].link ]
         rescue Exception => e
         end
       end

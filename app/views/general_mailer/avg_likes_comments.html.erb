@@ -1,6 +1,6 @@
 <% if @file %>
   <p>Link to download report <%= @file %></p>
 <% end %>
-<% if @not_processed %>
+<% if @not_processed.size > 0 %>
   <p>Not processed usernames (probably couldn't find by username): <%= @not_processed.join(', ') %></p>
 <% end %>
