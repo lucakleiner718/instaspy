@@ -2,6 +2,8 @@ class UserAvgLikesWorker
 
   include Sidekiq::Worker
 
+  sidekiq_options queue: :low
+
   def perform users_ids
     User.where(id: users_ids).each do |user|
       media = user.media
@@ -11,7 +13,7 @@ class UserAvgLikesWorker
         media_amount = 0
 
         media.where('created_time < ?', 1.day.ago).each do |media_item|
-          if media_item.updated_at - media_item.created_time < 3.days
+          if media_item.updated_at - media_item.created_time < 3.days || media_item.likes_amount.blank?
             media_item.update_info!
           end
 
@@ -21,9 +23,11 @@ class UserAvgLikesWorker
           end
         end
 
-        user.avg_likes = likes_total / media_amount if media_amount > 0
-        user.avg_likes_updated_at = Time.now
-        user.save
+        if media_amount > 0
+          user.avg_likes = likes_total / media_amount
+          user.avg_likes_updated_at = Time.now
+          user.save
+        end
       end
     end
   end

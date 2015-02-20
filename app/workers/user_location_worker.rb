@@ -1,6 +1,8 @@
 class UserLocationWorker
   include Sidekiq::Worker
 
+  sidekiq_options queue: :low
+
   def perform users_ids
     User.where(id: users_ids).each do |user|
       user.popular_location

@@ -5,4 +5,5 @@
 :timeout: 1800
 :queues:
   - [critical, 10]
-  - default
+  - [default, 2]
+  - [low, 1]
