@@ -231,7 +231,11 @@ class Media < ActiveRecord::Base
 
       when 'Geocoder::Result::Bing'
         address =  row.data['address']
-        self.location_country = Country.find_country_by_name(address['countryRegion']).alpha2
+        country = address['countryRegion']
+        country = 'KR' if country == 'South Korea'
+        country_lookup = Country.find_country_by_name(country)
+
+        self.location_country = country_lookup ? country_lookup.alpha2 : country
         self.location_state = address['adminDistrict']
         self.location_city = address['locality']
     end
