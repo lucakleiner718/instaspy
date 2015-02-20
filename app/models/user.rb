@@ -593,6 +593,8 @@ class User < ActiveRecord::Base
 
     self.update_info! if !self.private? && (self.media_amount.blank? || self.grabbed_at.present? || self.grabbed_at < 7.days.ago)
 
+    return false if u.destroyed?
+
     media_amount = 50
     media_size = self.media.size
 
