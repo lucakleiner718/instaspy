@@ -225,13 +225,13 @@ class Media < ActiveRecord::Base
 
       when 'Geocoder::Result::Esri'
         address = row.data['address']
-        self.location_country = Country.find_country_by_alpha3(address['CountryCode']).name
+        self.location_country = Country.find_country_by_alpha3(address['CountryCode']).alpha2
         self.location_state = address['Region']
         self.location_city = address['City']
 
       when 'Geocoder::Result::Bing'
         address =  row.data['address']
-        self.location_country = address['countryRegion']
+        self.location_country = Country.find_country_by_name(address['countryRegion']).alpha2
         self.location_state = address['adminDistrict']
         self.location_city = address['locality']
     end
