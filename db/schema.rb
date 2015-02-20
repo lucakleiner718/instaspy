@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150219201443) do
+ActiveRecord::Schema.define(version: 20150220145106) do
 
   create_table "followers", force: true do |t|
     t.integer  "user_id"
@@ -50,6 +50,9 @@ ActiveRecord::Schema.define(version: 20150219201443) do
   end
 
   add_index "media", ["insta_id"], name: "index_media_on_insta_id", unique: true, using: :btree
+  add_index "media", ["location_city"], name: "index_media_on_location_city", using: :btree
+  add_index "media", ["location_country"], name: "index_media_on_location_country", using: :btree
+  add_index "media", ["location_state"], name: "index_media_on_location_state", using: :btree
   add_index "media", ["user_id"], name: "index_media_on_user_id", using: :btree
 
   create_table "media_tags", id: false, force: true do |t|
@@ -116,7 +119,7 @@ ActiveRecord::Schema.define(version: 20150219201443) do
     t.integer  "follows"
     t.integer  "followed_by"
     t.integer  "media_amount"
-    t.boolean  "private",              default: false
+    t.boolean  "private",                 default: false
     t.datetime "grabbed_at"
     t.datetime "created_at"
     t.datetime "updated_at"
@@ -127,8 +130,12 @@ ActiveRecord::Schema.define(version: 20150219201443) do
     t.datetime "location_updated_at"
     t.integer  "avg_likes"
     t.datetime "avg_likes_updated_at"
+    t.integer  "avg_comments"
+    t.datetime "avg_comments_updated_at"
   end
 
+  add_index "users", ["avg_comments"], name: "index_users_on_avg_comments", using: :btree
+  add_index "users", ["avg_comments_updated_at"], name: "index_users_on_avg_comments_updated_at", using: :btree
   add_index "users", ["avg_likes"], name: "index_users_on_avg_likes", using: :btree
   add_index "users", ["avg_likes_updated_at"], name: "index_users_on_avg_likes_updated_at", using: :btree
   add_index "users", ["email"], name: "index_users_on_email", using: :btree

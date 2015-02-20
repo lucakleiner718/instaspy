@@ -10,6 +10,7 @@ class UserAvgLikesWorker
 
       if media.size > 0
         likes_total = 0
+        comments_total = 0
         media_amount = 0
 
         media.where('created_time < ?', 1.day.ago).each do |media_item|
@@ -19,6 +20,7 @@ class UserAvgLikesWorker
 
           if media_item.likes_amount.present?
             likes_total += media_item.likes_amount
+            comments_total += media_item.comments_amount
             media_amount += 1
           end
         end
@@ -26,6 +28,8 @@ class UserAvgLikesWorker
         if media_amount > 0
           user.avg_likes = likes_total / media_amount
           user.avg_likes_updated_at = Time.now
+          user.avg_comments = comments_total / media_amount
+          user.avg_comments_updated_at = Time.now
           user.save
         end
       end
