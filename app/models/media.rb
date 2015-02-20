@@ -156,11 +156,11 @@ class Media < ActiveRecord::Base
 
     resp = Geocoder.search("#{self.location_lat},#{self.location_lng}")
 
-    if resp.size == 0
-      Geocoder::Configuration.lookup = :google
-      resp = Geocoder.search("#{self.location_lat},#{self.location_lng}")
-      Geocoder::Configuration.lookup = :yandex
-    end
+    # if resp.size == 0
+    #   Geocoder::Configuration.lookup = :google
+    #   resp = Geocoder.search("#{self.location_lat},#{self.location_lng}")
+    #   Geocoder::Configuration.lookup = :yandex
+    # end
 
     row = resp.first
     case row.class.name
