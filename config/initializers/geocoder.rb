@@ -1,8 +1,10 @@
 Geocoder.configure(
   # geocoding options
-  # :timeout      => 3,           # geocoding service timeout (secs)
+  :timeout      => 7,           # geocoding service timeout (secs)
   # :lookup       => :google,     # name of geocoding service (symbol)
-  lookup: :yandex,
+  # lookup: :yandex,
+  lookup: :bing,
+  api_key: 'AreNey4-B-i5NhpxcZJg3hPEl_Gta4qp2vTlShk5Bc4qt2FXq9vGlgosts-Dzq1l',
   # api_key: ['XaB0y63AcGfc5ZtIrbde', 'ZrESX_vdjfU-LmMli8zopg'],
   language: :en,         # ISO-639 language code
   # :use_https    => false,       # use HTTPS for lookup requests? (if supported)
@@ -20,6 +22,4 @@ Geocoder.configure(
   # calculation options
   # :units     => :mi,       # :km for kilometers or :mi for miles
   # :distances => :linear    # :spherical or :linear
-
-  timeout: 7,           # geocoding service timeout (secs)
 )

@@ -178,7 +178,6 @@ class Media < ActiveRecord::Base
       when 'Geocoder::Result::Yandex'
         address = row.data['GeoObject']['metaDataProperty']['GeocoderMetaData']['AddressDetails']
 
-
         begin
           self.location_country = address['Country']['CountryName']
         rescue
@@ -229,6 +228,12 @@ class Media < ActiveRecord::Base
         self.location_country = Country.find_country_by_alpha3(address['CountryCode']).name
         self.location_state = address['Region']
         self.location_city = address['City']
+
+      when 'Geocoder::Result::Bing'
+        address =  row.data['address']
+        self.location_country = address['countryRegion']
+        self.location_state = address['adminDistrict']
+        self.location_city = address['locality']
     end
   end
 
