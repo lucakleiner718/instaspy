@@ -1,20 +1,23 @@
 class UserLocationWorker
   include Sidekiq::Worker
 
-  sidekiq_options queue: :low
+  sidekiq_options queue: :low, retry: 3
 
-  def perform users_ids
-    User.where(id: users_ids).each do |user|
-      user.popular_location
-    end
+  def perform users_id
+    User.find(users_id).popular_location
   end
 
-  def self.spawn in_batch=100
+  def self.spawn
+
+    # users = User.where('followed_by is null OR followed_by > 1000').where('location_updated_at is null OR location_updated_at < ?', 3.months.ago).limit(10).pluck(:id)
+
     User.where('followed_by is null OR followed_by > 1000')
       .where('location_updated_at is null OR location_updated_at < ?', 3.months.ago)
-      .select(:id).find_in_batches(batch_size: in_batch) do |users_group|
+      .select(:id).find_in_batches(batch_size: 1000) do |users_group|
 
-      self.perform_async users_group.map(&:id)
+      users_group.each do |user_id|
+        self.perform_async user_id
+      end
     end
   end
 end
