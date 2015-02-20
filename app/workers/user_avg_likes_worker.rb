@@ -10,7 +10,7 @@ class UserAvgLikesWorker
         likes_total = 0
         media_amount = 0
 
-        media.each do |media_item|
+        media.where('created_time < ?', 1.day.ago).each do |media_item|
           if media_item.updated_at - media_item.created_time < 3.days
             media_item.update_info!
           end

@@ -59,3 +59,4 @@ gem 'fog'
 gem 'net-sftp'
 gem 'geocoder'
 gem 'countries'
+gem "airbrake"

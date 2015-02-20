@@ -66,19 +66,21 @@ class Media < ActiveRecord::Base
         self.user.update_info!
         return false
       else
-        binding.pry
-        return false
+        raise Instagram::BadRequest.new(e)
+        # binding.pry
+        # return false
       end
-    rescue Instagram::ServiceUnavailable
+    rescue Instagram::ServiceUnavailable => e
       retries += 1
       retry if retries <= 5
-    rescue Interrupt
-      raise Interrupt
-    rescue StandardError => e
-      binding.pry
-      return false
+      raise Instagram::ServiceUnavailable.new(e)
+    # rescue Interrupt
+    #   raise Interrupt
+    # rescue StandardError => e
+    #   # binding.pry
+    #   return false
     rescue Exception => e
-      binding.pry
+      # binding.pry
       return false
     end
 

@@ -12,3 +12,7 @@ Sidekiq.configure_client do |config|
 end
 
 SidekiqUniqueJobs.config.unique_args_enabled = true
+
+Sidekiq.configure_server do |config|
+  config.error_handlers << Proc.new { |ex, context| Airbrake.notify_or_ignore(ex, parameters: context) }
+end
