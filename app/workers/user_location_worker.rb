@@ -15,8 +15,8 @@ class UserLocationWorker
       .where('location_updated_at is null OR location_updated_at < ?', 3.months.ago)
       .select(:id).find_in_batches(batch_size: 1000) do |users_group|
 
-      users_group.each do |user_id|
-        self.perform_async user_id
+      users_group.each do |user|
+        self.perform_async user.id
       end
     end
   end
