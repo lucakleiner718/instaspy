@@ -1,5 +1,5 @@
 ---
-:concurrency: 20
+:concurrency: 15
 :verbose: true
 :pidfile: ./tmp/pids/sidekiq.pid
 :timeout: 1800
