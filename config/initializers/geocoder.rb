@@ -20,4 +20,6 @@ Geocoder.configure(
   # calculation options
   # :units     => :mi,       # :km for kilometers or :mi for miles
   # :distances => :linear    # :spherical or :linear
+
+  timeout: 7,           # geocoding service timeout (secs)
 )
