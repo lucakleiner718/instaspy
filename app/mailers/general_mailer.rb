@@ -163,4 +163,27 @@ class GeneralMailer < ActionMailer::Base
     end
   end
 
+  def user_locations tag_name, users
+    csv_string = CSV.generate do |csv|
+      csv << ['Username', 'Full Name', 'Bio', 'Website', 'Followes', 'Followers', 'Media amount', 'AVG Likes', 'AVG Comments', 'State', 'City', 'Email']
+      users.each do |user|
+        csv << [user.username, user.full_name, user.bio, user.website, user.followes, user.followed_by, user.media_amount, user.avg_likes, user.avg_comments, location[:state], location[:city], user.email]
+      end
+    end
+
+    Dir.mkdir('public/reports') unless Dir.exists?('public/reports')
+    file_path = "reports/users-location-report-#{tag_name}-#{Time.now.to_i}.csv"
+    @file = "#{root_url}#{file_path}"
+    File.open("public/#{file_path}", 'w') do |f|
+      f.puts csv_string
+    end
+
+    sbj = "InstaSpy users location report by tag #{tag_name} #{Time.now.strftime('%m/%d/%Y')}"
+    # if ENV['insta_debug'] || Rails.env.development?
+      mail to: 'me@antonzaytsev.com', from: 'dev@antonzaytsev.com', subject: sbj, template_name: 'default'
+    # else
+    #   mail to: "rob@ladylux.com", bcc: 'me@antonzaytsev.com', subject: sbj
+    # end
+  end
+
 end

@@ -210,40 +210,43 @@ class Reporter
     start_time = 90.days
 
     # receive media
-    if Time.now - tag.media.order(:created_time).last.created_time > 3.days || Time.now - tag.media.order(:created_time).first.created_time < start_time || tag.media.size < 1_000
+    if Time.now - tag.media.order(:created_time).last.created_time > 3.days || Time.now - tag.media.order(:created_time).first.created_time < start_time #|| tag.media.size < 1_000
       tag.recent_media created_from: start_time.ago
-      if tag.media.size < 1_000
-        tag.recent_media media_atleast: 1000
-      end
+      # if tag.media.size < 1_000
+      #   tag.recent_media media_atleast: 1000
+      # end
     end
 
     results << ['Total media', tag.media.size]
-    p results.map{|el| el.join(' : ')}.join(' / ')
+    p results.map{|el| el.join(' : ')}.last
 
     # dirty list of users how posted media with specified tag
     users_ids = tag.media.where('created_time >= ?', start_time.ago).pluck(:user_id).uniq
     users = User.where(id: users_ids).to_a
 
     results << ['Total users', users.size]
-    p results.map{|el| el.join(' : ')}.join(' / ')
+    p results.map{|el| el.join(' : ')}.last
 
     # binding.pry
 
     # update users from list
     users.each do |user|
       # user.update_info! if user.grabbed_at.blank? || user.grabbed_at < 7.days.ago || user.followed_by.blank?
-      user.update_info! if user.grabbed_at.blank? || user.followed_by.blank?
+      if user.grabbed_at.blank? || user.followed_by.blank?
+        # binding.pry
+        user.update_info!
+      end
     end
 
     blank_followed_amount = users.select{ |user| user.followed_by.blank? }
     results << ['Blank followed amount', blank_followed_amount.size]
-    p results.map{|el| el.join(' : ')}.join(' / ')
+    p results.map{|el| el.join(' : ')}.last
 
     # leave in list users only with 1000 subscribers
     users.select! { |user| user.followed_by >= 500 }
 
     results << ['Over 500 followers', users.size]
-    p results.map{|el| el.join(' : ')}.join(' / ')
+    p results.map{|el| el.join(' : ')}.last
 
     # update user's avg likes and comments
     users.each do |user|
@@ -254,7 +257,7 @@ class Reporter
     users.select! { |user| user.avg_likes && user.avg_likes >= 50 }
 
     results << ['Over 50 avg likes', users.size]
-    p results.map{|el| el.join(' : ')}.join(' / ')
+    p results.map{|el| el.join(' : ')}.last
 
     # update user's location
     users.each do |user|
@@ -264,7 +267,7 @@ class Reporter
     users.select! { |user| user.location_country.blank? || user.location_country.in?(['us', 'united states'])}
 
     results << ['In USA or location is N/A', users.size]
-    p results.map{|el| el.join(' : ')}.join(' / ')
+    p results.map{|el| el.join(' : ')}.last
 
     # get user's bio, email and website
     users.each do |user|
@@ -278,6 +281,8 @@ class Reporter
     p results.map{|el| el.join(' : ')}.join(' / ')
 
     users
+
+    GeneralMailer.user_locations(tag_name, users).deliver
   end
 
 end

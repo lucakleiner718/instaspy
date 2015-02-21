@@ -3,8 +3,8 @@ class Media < ActiveRecord::Base
   has_and_belongs_to_many :tags
   belongs_to :user
 
-  scope :with_location, -> { where('location_lng is not null and location_lng != ""') }
-  scope :without_location, -> { where('location_lng is null or location_lng != ""').where('location_present is null') }
+  scope :with_location, -> { where('location_lat is not null and location_lat != ""') }
+  scope :without_location, -> { where('location_lat is null or location_lat != ""').where('location_present is null') }
 
   reverse_geocoded_by :location_lat, :location_lng
 

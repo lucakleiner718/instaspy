@@ -130,7 +130,9 @@ class User < ActiveRecord::Base
         self.destroy
       end
       return false
-    rescue
+    rescue Interrupt
+      raise Interrupt
+    rescue Exception => e
       # binding.pry
       return false
     end
@@ -602,14 +604,14 @@ class User < ActiveRecord::Base
       }
     end
 
-    self.update_info! if !self.private? && (self.media_amount.blank? || self.grabbed_at.present? || self.grabbed_at < 7.days.ago)
+    self.update_info! if !self.private? && (self.media_amount.blank? || !self.grabbed_at.present? || self.grabbed_at < 7.days.ago)
 
     return false if self.destroyed?
 
     media_amount = 50
     media_size = self.media.size
 
-    # do not waste time on privat
+    # do not waste time on private
     if self.private && media_size == 0
       return false
     end
@@ -658,8 +660,34 @@ class User < ActiveRecord::Base
   end
 
   def update_media_location
-    self.media.with_location.where('location_country is null').each do |media|
+    p "update_media_location: #{self.username}"
+    with_location = self.media.with_location
+    with_location_amount = with_location.size
+
+    with_location.where('location_country is null').each_with_index do |media, index|
+      # if user obviously have lots of media in one place, leave other media
+      if index % 10 == 0
+        resp = Tag.connection.execute("SELECT count(id), location_country FROM `media`  WHERE `media`.`user_id` = #{self.id} AND (location_lat is not null and location_lat != '') GROUP BY location_country").to_a
+
+        # if we don't have media where location_country is blank
+        without_country_amount = resp.select{ |el| el[1].nil? }.first.try(:first)
+
+        break if without_country_amount.blank?
+
+        # if we have at least 10% of same location
+        if with_location_amount > 20 && without_country_amount / with_location_amount.to_f < 0.9
+          binding.pry
+          if resp.size == 2
+            break
+          else
+            binding.pry
+            raise
+          end
+        end
+      end
+
       media.update_location!
+
       sleep(5)
     end
   end
