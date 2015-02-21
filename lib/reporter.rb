@@ -250,14 +250,14 @@ class Reporter
 
     users.select! { |user| user.location_country.blank? || user.location_country.in?(['us', 'united states'])}
 
-    binding.pry
+    # binding.pry
 
     # get user's bio, email and website
     users.each do |user|
       user.update_info! if user.bio.blank? || user.email.blank? || user.website.blank?
     end
 
-    binding.pry
+    # binding.pry
 
     users
   end
