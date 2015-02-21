@@ -101,12 +101,14 @@ class Tag < ActiveRecord::Base
         end
       elsif total_added > options[:total_limit]
         # stopping
-      elsif options[:media_limit] && start_media_amount+total_added > options[:media_limit]
-        # stopping
       elsif options[:ignore_added]
         move_next = true
       # if amount of currently added is voer 90% of grabbed from instagram
       elsif added.to_f / media_list.data.size > 0.9
+        move_next = true
+      end
+
+      if options[:media_atleast] && start_media_amount+total_added < options[:media_atleast]
         move_next = true
       end
 
