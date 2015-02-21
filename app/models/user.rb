@@ -649,7 +649,41 @@ class User < ActiveRecord::Base
   def update_media_location
     self.media.with_location.where('location_country is null').each do |media|
       media.update_location!
+      sleep(5)
     end
+  end
+
+  def update_avg_data
+    media = self.media.order(created_time: :desc).where('created_time < ?', 1.day.ago)
+
+    likes_amount = 0
+    comments_amount = 0
+    media_amount = 0
+
+    if media.size == 0
+      self.recent_media
+    end
+
+    media.each do |media_item|
+      media_item.update_info! if media_item.created_at - media_item.created_time < 2.days || media_item.likes_amount.blank? || media_item.comments_amount.blank?
+
+      next if media_item.destroyed?
+
+      likes_amount += media_item.likes_amount
+      comments_amount += media_item.comments_amount
+      media_amount += 1
+    end
+
+    return false if media_amount == 0
+
+    avg_likes = likes_amount / media_amount
+    avg_comments = comments_amount / media_amount
+
+    self.avg_likes = avg_likes
+    self.avg_likes_updated_at = Time.now
+    self.avg_comments = avg_comments
+    self.avg_comments_updated_at = Time.now
+    self.save
   end
 
 end

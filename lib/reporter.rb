@@ -202,8 +202,64 @@ class Reporter
     GeneralMailer.by_location(csv_string).deliver
   end
 
-  def self.user_locations
+  def self.user_locations tag_name
+    tag = Tag.get(tag_name)
 
+    start_time = 90.days
+
+    # receive media
+    if Time.now - tag.media.order(:created_time).last.created_time > 3.days || Time.now - tag.media.order(:created_time).first.created_time < start_time
+      tag.recent_media created_from: start_time.ago
+    end
+
+    binding.pry
+
+    # dirty list of users how posted media with specified tag
+    users_ids = tag.media.where('created_time >= ?', start_time.ago).pluck(:user_id).uniq
+    users = User.where(id: users_ids).to_a
+
+    binding.pry
+
+    # update users from list
+    users.each do |user|
+      # user.update_info! if user.grabbed_at.blank? || user.grabbed_at < 7.days.ago || user.followed_by.blank?
+      user.update_info! if user.grabbed_at.blank? || user.followed_by.blank?
+    end
+
+    blank_followed_amount = users.select{ |user| user.followed_by.blank? }
+
+    # leave in list users only with 1000 subscribers
+    users.select! { |user| user.followed_by >= 500 }
+
+    binding.pry
+
+    # update user's avg likes and comments
+    users.each do |user|
+      user.update_avg_data
+    end
+
+    # leave in list users only with avg likes amount over or eq to 50
+    users.select! { |user| user.avg_likes >= 50 }
+
+    binding.pry
+
+    # update user's location
+    users.each do |user|
+      user.popular_location
+    end
+
+    users.select! { |user| user.location_country.blank? || user.location_country.in?(['us', 'united states'])}
+
+    binding.pry
+
+    # get user's bio, email and website
+    users.each do |user|
+      user.update_info! if user.bio.blank? || user.email.blank? || user.website.blank?
+    end
+
+    binding.pry
+
+    users
   end
 
 end

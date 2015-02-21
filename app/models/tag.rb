@@ -93,15 +93,25 @@ class Tag < ActiveRecord::Base
       p "added: #{added}"
       # sleep 2
 
-      if options[:created_from].present? && Time.at(avg_created_time) > options[:created_from]
-        max_tag_id = media_list.pagination.next_max_tag_id
+      move_next = false
+
+      if options[:created_from].present?
+        if Time.at(avg_created_time) > options[:created_from]
+          # max_tag_id = media_list.pagination.next_max_tag_id
+          move_next = true
+        # else
+        #   break
+        end
       elsif options[:ignore_added] || added.to_f / media_list.data.size > 0.9
-        max_tag_id = media_list.pagination.next_max_tag_id
-      elsif total_added >= options[:total_limit]
-        break
-      else
-        break
+        # max_tag_id = media_list.pagination.next_max_tag_id
+        move_next = true
+      # elsif total_added >= options[:total_limit]
+      #   break
+      # else
+      #   break
       end
+
+      break unless move_next
     end
   end
 
