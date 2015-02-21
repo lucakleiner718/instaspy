@@ -676,12 +676,12 @@ class User < ActiveRecord::Base
 
         # if we have at least 10% of same location
         if with_location_amount > 20 && without_country_amount / with_location_amount.to_f < 0.9
-          if resp.size == 2
+          # if resp.size == 2
             break
-          else
-            binding.pry
-            raise
-          end
+          # else
+            # binding.pry
+            # raise
+          # end
         end
       end
 
