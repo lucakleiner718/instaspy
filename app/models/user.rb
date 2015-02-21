@@ -710,7 +710,7 @@ class User < ActiveRecord::Base
       end
 
       # if media doesn't exists anymore in instagram
-      next if media_item.destroyed?
+      next if media_item.destroyed? || media_item.likes_amount.blank? || media_item.comments_amount.blank?
 
       likes_amount += media_item.likes_amount
       comments_amount += media_item.comments_amount
