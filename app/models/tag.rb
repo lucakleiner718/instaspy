@@ -46,7 +46,6 @@ class Tag < ActiveRecord::Base
   def recent_media *args
     options = args.extract_options!
 
-    min_tag_id = nil
     max_tag_id = nil
 
     total_added = 0
@@ -56,7 +55,7 @@ class Tag < ActiveRecord::Base
       client = InstaClient.new.client
 
       begin
-        media_list = client.tag_recent_media(URI.escape(self.name), min_tag_id: min_tag_id, max_tag_id: max_tag_id, count: 100)
+        media_list = client.tag_recent_media(URI.escape(self.name), max_tag_id: max_tag_id, count: 100)
       rescue JSON::ParserError, Instagram::ServiceUnavailable, Instagram::BadGateway, Instagram::InternalServerError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError => e
         p 'issue'
         break
@@ -98,15 +97,11 @@ class Tag < ActiveRecord::Base
       if options[:created_from].present?
         if Time.at(avg_created_time) > options[:created_from]
           move_next = true
-        # else
-        #   break
         end
+      elsif total_added > options[:total_limit]
+        # stopping
       elsif options[:ignore_added]
         move_next = true
-      # elsif total_added >= options[:total_limit]
-      #   break
-      # else
-      #   break
       # if amount of currently added is voer 90% of grabbed from instagram
       elsif added.to_f / media_list.data.size > 0.9
         move_next = true

@@ -526,15 +526,27 @@ class User < ActiveRecord::Base
 
       avg_created_time = avg_created_time / media_list.data.size
 
-      if media_list.pagination.next_max_id && options[:created_from].present? && Time.at(avg_created_time) > options[:created_from]
-        max_id = media_list.pagination.next_max_id
-      elsif media_list.pagination.next_max_id && (options[:ignore_added] || added.to_f / media_list.data.size > 0.9) && total_added <= options[:total_limit]
-        max_id = media_list.pagination.next_max_id
+      move_next = false
+
+      break unless media_list.pagination.next_max_id
+
+      if options[:created_from].present?
+        if Time.at(avg_created_time) > options[:created_from]
+          move_next = true
+        end
       elsif total_added >= options[:total_limit]
-        break
+        # stop
+      elsif options[:ignore_added]
+        move_next = true
+      elsif added.to_f / media_list.data.size > 0.9
+        move_next = true
       else
         break
       end
+
+      break unless move_next
+
+      max_id = media_list.pagination.next_max_id
     end
 
     self.media
