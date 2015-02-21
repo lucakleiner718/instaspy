@@ -47,4 +47,8 @@ module Clockwork
     Media.get_by_location 40.772154986, -73.984437991 if Time.now < Time.at('2015/02/21 00:00:00 UTC')
   }
 
+  # every(30.minutes, 'tag.user.location') {
+  #   TagUserLocationWorker.spawn
+  # }
+
 end
