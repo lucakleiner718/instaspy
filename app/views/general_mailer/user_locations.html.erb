@@ -1,0 +1,5 @@
+<% if @file %>
+  Link to download report <%= @file %>
+<% end %>
+
+<%= @results.map{|el| el.join(' : ')}.join(' / ') %>

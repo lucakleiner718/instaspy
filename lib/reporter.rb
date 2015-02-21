@@ -282,7 +282,7 @@ class Reporter
 
     users
 
-    GeneralMailer.user_locations(tag_name, users).deliver
+    GeneralMailer.user_locations(tag_name, users, results).deliver
   end
 
 end
