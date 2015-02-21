@@ -205,6 +205,8 @@ class Reporter
   def self.user_locations tag_name
     tag = Tag.get(tag_name)
 
+    results = []
+
     start_time = 90.days
 
     # receive media
@@ -212,11 +214,13 @@ class Reporter
       tag.recent_media created_from: start_time.ago
     end
 
-    # binding.pry
+    results << ['Total media', tag.media.size]
 
     # dirty list of users how posted media with specified tag
     users_ids = tag.media.where('created_time >= ?', start_time.ago).pluck(:user_id).uniq
     users = User.where(id: users_ids).to_a
+
+    results << ['Total users', users.size]
 
     # binding.pry
 
@@ -227,11 +231,12 @@ class Reporter
     end
 
     blank_followed_amount = users.select{ |user| user.followed_by.blank? }
+    results << ['Blank followed amount', blank_followed_amount.size]
 
     # leave in list users only with 1000 subscribers
     users.select! { |user| user.followed_by >= 500 }
 
-    # binding.pry
+    results << ['Over 500 followers', users.size]
 
     # update user's avg likes and comments
     users.each do |user|
@@ -239,9 +244,9 @@ class Reporter
     end
 
     # leave in list users only with avg likes amount over or eq to 50
-    users.select! { |user| user.avg_likes >= 50 }
+    users.select! { |user| user.avg_likes && user.avg_likes >= 50 }
 
-    # binding.pry
+    results << ['Over 50 avg likes', users.size]
 
     # update user's location
     users.each do |user|
@@ -250,7 +255,7 @@ class Reporter
 
     users.select! { |user| user.location_country.blank? || user.location_country.in?(['us', 'united states'])}
 
-    # binding.pry
+    results << ['In USA or location is N/A', users.size]
 
     # get user's bio, email and website
     users.each do |user|
@@ -258,6 +263,10 @@ class Reporter
     end
 
     # binding.pry
+
+    results << ['Final result', users.size]
+
+    p results.map{|el| el.join(' : ')}.join(' / ')
 
     users
   end
