@@ -215,12 +215,14 @@ class Reporter
     end
 
     results << ['Total media', tag.media.size]
+    p results.map{|el| el.join(' : ')}.join(' / ')
 
     # dirty list of users how posted media with specified tag
     users_ids = tag.media.where('created_time >= ?', start_time.ago).pluck(:user_id).uniq
     users = User.where(id: users_ids).to_a
 
     results << ['Total users', users.size]
+    p results.map{|el| el.join(' : ')}.join(' / ')
 
     # binding.pry
 
@@ -232,11 +234,13 @@ class Reporter
 
     blank_followed_amount = users.select{ |user| user.followed_by.blank? }
     results << ['Blank followed amount', blank_followed_amount.size]
+    p results.map{|el| el.join(' : ')}.join(' / ')
 
     # leave in list users only with 1000 subscribers
     users.select! { |user| user.followed_by >= 500 }
 
     results << ['Over 500 followers', users.size]
+    p results.map{|el| el.join(' : ')}.join(' / ')
 
     # update user's avg likes and comments
     users.each do |user|
@@ -247,6 +251,7 @@ class Reporter
     users.select! { |user| user.avg_likes && user.avg_likes >= 50 }
 
     results << ['Over 50 avg likes', users.size]
+    p results.map{|el| el.join(' : ')}.join(' / ')
 
     # update user's location
     users.each do |user|
@@ -256,6 +261,7 @@ class Reporter
     users.select! { |user| user.location_country.blank? || user.location_country.in?(['us', 'united states'])}
 
     results << ['In USA or location is N/A', users.size]
+    p results.map{|el| el.join(' : ')}.join(' / ')
 
     # get user's bio, email and website
     users.each do |user|

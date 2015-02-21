@@ -50,6 +50,7 @@ class Tag < ActiveRecord::Base
 
     total_added = 0
     options[:total_limit] ||= 2_000
+    start_media_amount = self.media.size
 
     while true
       client = InstaClient.new.client
@@ -99,6 +100,8 @@ class Tag < ActiveRecord::Base
           move_next = true
         end
       elsif total_added > options[:total_limit]
+        # stopping
+      elsif options[:media_limit] && start_media_amount+total_added > options[:media_limit]
         # stopping
       elsif options[:ignore_added]
         move_next = true
