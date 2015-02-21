@@ -208,17 +208,17 @@ class Reporter
     start_time = 90.days
 
     # receive media
-    if Time.now - tag.media.order(:created_time).last.created_time > 3.days || Time.now - tag.media.order(:created_time).first.created_time < start_time
+    if Time.now - tag.media.order(:created_time).last.created_time > 3.days || Time.now - tag.media.order(:created_time).first.created_time < start_time || tag.media.size < 10
       tag.recent_media created_from: start_time.ago
     end
 
-    binding.pry
+    # binding.pry
 
     # dirty list of users how posted media with specified tag
     users_ids = tag.media.where('created_time >= ?', start_time.ago).pluck(:user_id).uniq
     users = User.where(id: users_ids).to_a
 
-    binding.pry
+    # binding.pry
 
     # update users from list
     users.each do |user|
@@ -231,17 +231,17 @@ class Reporter
     # leave in list users only with 1000 subscribers
     users.select! { |user| user.followed_by >= 500 }
 
-    binding.pry
+    # binding.pry
 
     # update user's avg likes and comments
     users.each do |user|
-      user.update_avg_data
+      user.update_avg_data if user.avg_likes_updated_at < 1.month.ago
     end
 
     # leave in list users only with avg likes amount over or eq to 50
     users.select! { |user| user.avg_likes >= 50 }
 
-    binding.pry
+    # binding.pry
 
     # update user's location
     users.each do |user|

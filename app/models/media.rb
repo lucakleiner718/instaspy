@@ -88,6 +88,7 @@ class Media < ActiveRecord::Base
 
     self.media_user media_item['user']
     self.media_data media_item
+    self.updated_at = Time.now
 
     self.save
   end
@@ -237,7 +238,7 @@ class Media < ActiveRecord::Base
 
         self.location_country = country_lookup ? country_lookup.alpha2 : country
         self.location_state = address['adminDistrict']
-        self.location_city = address['locality']
+        self.location_city = address['locality'] || address['adminDistrict2']
     end
   end
 

@@ -25,6 +25,5 @@ Geocoder.configure(
   # :units     => :mi,       # :km for kilometers or :mi for miles
   # :distances => :linear    # :spherical or :linear
 
-  cache: Redis.new,
-  cache_prefix: 'instaspy_geocoder_cache'
+  cache: Redis.new
 )

@@ -97,21 +97,24 @@ class Tag < ActiveRecord::Base
 
       if options[:created_from].present?
         if Time.at(avg_created_time) > options[:created_from]
-          # max_tag_id = media_list.pagination.next_max_tag_id
           move_next = true
         # else
         #   break
         end
-      elsif options[:ignore_added] || added.to_f / media_list.data.size > 0.9
-        # max_tag_id = media_list.pagination.next_max_tag_id
+      elsif options[:ignore_added]
         move_next = true
       # elsif total_added >= options[:total_limit]
       #   break
       # else
       #   break
+      # if amount of currently added is voer 90% of grabbed from instagram
+      elsif added.to_f / media_list.data.size > 0.9
+        move_next = true
       end
 
       break unless move_next
+
+      max_tag_id = media_list.pagination.next_max_tag_id
     end
   end
 

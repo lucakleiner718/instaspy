@@ -487,7 +487,6 @@ class User < ActiveRecord::Base
   def recent_media *args
     options = args.extract_options!
 
-    min_id = nil
     max_id = nil
 
     total_added = 0
@@ -497,7 +496,7 @@ class User < ActiveRecord::Base
       client = InstaClient.new.client
 
       begin
-        media_list = client.user_recent_media self.insta_id, count: 100, min_id: min_id, max_id: max_id
+        media_list = client.user_recent_media self.insta_id, count: 100, max_id: max_id
       rescue JSON::ParserError, Instagram::ServiceUnavailable, Instagram::BadGateway, Instagram::InternalServerError, Instagram::BadRequest, Faraday::ConnectionFailed => e
         break
       end
@@ -512,7 +511,7 @@ class User < ActiveRecord::Base
         added += 1 if media.new_record?
 
         begin
-          media.save unless media.new_record? && Media.where(insta_id: media_item['id']).size == 1
+          media.save
         rescue ActiveRecord::RecordNotUnique => e
         end
 
@@ -660,13 +659,18 @@ class User < ActiveRecord::Base
     comments_amount = 0
     media_amount = 0
 
-    if media.size == 0
-      self.recent_media
+    if media.size < 10
+      self.recent_media total_limit: 100
     end
 
     media.each do |media_item|
-      media_item.update_info! if media_item.created_at - media_item.created_time < 2.days || media_item.likes_amount.blank? || media_item.comments_amount.blank?
+      # if diff between when media added to database and date when it was pasted less than 2 days ago
+      # OR likes/comments amount is blank
+      if media_item.updated_at - media_item.created_time < 2.days || media_item.likes_amount.blank? || media_item.comments_amount.blank?
+        media_item.update_info!
+      end
 
+      # if media doesn't exists anymore in instagram
       next if media_item.destroyed?
 
       likes_amount += media_item.likes_amount
