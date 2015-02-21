@@ -167,7 +167,7 @@ class GeneralMailer < ActionMailer::Base
     csv_string = CSV.generate do |csv|
       csv << ['Username', 'Full Name', 'Bio', 'Website', 'Follows', 'Followers', 'Media amount', 'AVG Likes', 'AVG Comments', 'State', 'City', 'Email']
       users.each do |user|
-        csv << [user.username, user.full_name, user.bio, user.website, user.follows, user.followed_by, user.media_amount, user.avg_likes, user.avg_comments, location[:state], location[:city], user.email]
+        csv << [user.username, user.full_name, user.bio, user.website, user.follows, user.followed_by, user.media_amount, user.avg_likes, user.avg_comments, user.location_state, user.location_city, user.email]
       end
     end
 
