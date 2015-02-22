@@ -202,8 +202,10 @@ class Reporter
     GeneralMailer.by_location(csv_string).deliver
   end
 
-  def self.user_locations tags_names
+  def self.user_locations tags_names, *args
     tags_names = [tags_names] if tags_names.class.name == 'String'
+
+    options = args.extract_options!
 
     data = {}
 
@@ -212,16 +214,16 @@ class Reporter
 
       results = []
 
-      start_time = 90.days
-      at_least = 500
+      start_time = options[:start_time] || 90.days
+      at_least = options[:at_least] == false ? false : 500
 
       # receive media
-      if Time.now - tag.media.order(:created_time).last.created_time > 3.days || Time.now - tag.media.order(:created_time).first.created_time < start_time
+      if Time.now - tag.media.order(:created_time).last.created_time > 2.days || Time.now - tag.media.order(:created_time).first.created_time < start_time
         tag.recent_media created_from: start_time.ago
       end
 
       if at_least && tag.media.size < at_least
-        tag.recent_media media_atleast: 500
+        tag.recent_media media_atleast: at_least
       end
 
       results << ['Total media', tag.media.size]
@@ -236,10 +238,7 @@ class Reporter
 
       # update users from list
       users.each do |user|
-        # user.update_info! if user.grabbed_at.blank? || user.grabbed_at < 7.days.ago || user.followed_by.blank?
-        if user.grabbed_at.blank? || user.followed_by.blank?
-          user.update_info!
-        end
+        user.update_info! if user.grabbed_at.blank? || user.grabbed_at < 1.month.ago || user.followed_by.blank?
       end
 
       blank_followed_amount = users.select{ |user| user.followed_by.blank? }
