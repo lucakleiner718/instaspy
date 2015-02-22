@@ -218,9 +218,9 @@ class Reporter
       # receive media
       if Time.now - tag.media.order(:created_time).last.created_time > 3.days || Time.now - tag.media.order(:created_time).first.created_time < start_time || tag.media.size < 500
         tag.recent_media created_from: start_time.ago
-        # if tag.media.size < 1_000
-        #   tag.recent_media media_atleast: 1000
-        # end
+        if tag.media.size < 500
+          tag.recent_media media_atleast: 500
+        end
       end
 
       results << ['Total media', tag.media.size]

@@ -89,6 +89,7 @@ class Tag < ActiveRecord::Base
 
       avg_created_time = avg_created_time / media_list.data.size
 
+      p "returned #{media_list.data.size}"
       p "#{avg_created_time} / #{Time.at avg_created_time}"
       p "added: #{added}"
       # sleep 2
@@ -115,6 +116,9 @@ class Tag < ActiveRecord::Base
       break unless move_next
 
       max_tag_id = media_list.pagination.next_max_tag_id
+
+      # stop if we don't have next page
+      break unless max_tag_id
     end
   end
 
