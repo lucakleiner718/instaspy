@@ -749,6 +749,8 @@ class User < ActiveRecord::Base
   def self.process_usernames usernames
     processed = 0
     initial = usernames.size
+    added = 0
+
     usernames.each do |row|
       p "Start #{row[0]}"
       user = User.add_by_username row[0]
@@ -757,11 +759,26 @@ class User < ActiveRecord::Base
         user.save
       end
 
-      user.update_info! if user && (user.followed_by.blank? || user.grabbed_at.blank? || user.grabbed_at < 1.week.ago)
+      if user
+        user.update_info! if user.followed_by.blank? || user.grabbed_at.blank? || user.grabbed_at < 1.week.ago
+        added << [(row[0] == user.username ? '' : row[0]), user.username, user.full_name, user.website, user.follows, user.followed_by, user.media_amount, user.email]
+      end
 
       processed += 1
+
       p "Progress #{processed}/#{initial} (#{(processed/initial.to_f * 100).to_i}%)"
     end
+
+    csv_string = CSV.generate do |csv|
+      csv << ['OLD Username', 'Username', 'Full Name', 'Website', 'Follows', 'Followers', 'Media amount', 'Email']
+      added.each do |row|
+        csv << row
+      end
+    end
+
+    p "Added #{added_amount}"
+
+    GeneralMailer.process_usernames_file(csv_string).deliver
   end
 
 end
