@@ -267,7 +267,7 @@ class Reporter
         user.popular_location
       end
 
-      users.select! { |user| user.location_country.blank? || user.location_country.in?(['us', 'united states'])}
+      users.select! { |user| user.location_country.blank? || user.location_country.downcase.in?(['us', 'united states'])}
 
       results << ['In USA or location is N/A', users.size]
       p results.map{|el| el.join(' : ')}.last

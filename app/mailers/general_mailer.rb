@@ -185,7 +185,7 @@ class GeneralMailer < ActionMailer::Base
 
     sbj = "InstaSpy users location report for #{data.size} tags #{Time.now.strftime('%m/%d/%Y')}"
     # if ENV['insta_debug'] || Rails.env.development?
-      mail to: 'me@antonzaytsev.com', from: 'dev@antonzaytsev.com', subject: sbj, template_name: 'default'
+      mail to: 'me@antonzaytsev.com', from: 'dev@antonzaytsev.com', subject: sbj
     # else
     #   mail to: "rob@ladylux.com", bcc: 'me@antonzaytsev.com', subject: sbj
     # end
