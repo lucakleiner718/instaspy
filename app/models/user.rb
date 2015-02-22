@@ -207,7 +207,6 @@ class User < ActiveRecord::Base
       end
       return false
     rescue
-      # binding.pry
       return false
     end
   end
@@ -229,7 +228,6 @@ class User < ActiveRecord::Base
       end
       return false
     rescue
-      # binding.pry
       return false
     end
   end
@@ -336,7 +334,6 @@ class User < ActiveRecord::Base
       end
       return false
     rescue
-      # binding.pry
       return false
     end
 

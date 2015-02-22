@@ -227,13 +227,10 @@ class Reporter
     results << ['Total users', users.size]
     p results.map{|el| el.join(' : ')}.last
 
-    # binding.pry
-
     # update users from list
     users.each do |user|
       # user.update_info! if user.grabbed_at.blank? || user.grabbed_at < 7.days.ago || user.followed_by.blank?
       if user.grabbed_at.blank? || user.followed_by.blank?
-        # binding.pry
         user.update_info!
       end
     end
@@ -243,7 +240,7 @@ class Reporter
     p results.map{|el| el.join(' : ')}.last
 
     # leave in list users only with 1000 subscribers
-    users.select! { |user| user.followed_by >= 500 }
+    users.select! { |user| user.followed_by.present? && user.followed_by >= 500 }
 
     results << ['Over 500 followers', users.size]
     p results.map{|el| el.join(' : ')}.last
@@ -273,8 +270,6 @@ class Reporter
     users.each do |user|
       user.update_info! if user.bio.blank? || user.email.blank? || user.website.blank?
     end
-
-    # binding.pry
 
     results << ['Final result', users.size]
 
