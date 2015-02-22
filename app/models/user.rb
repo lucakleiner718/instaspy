@@ -749,7 +749,7 @@ class User < ActiveRecord::Base
   def self.process_usernames usernames
     processed = 0
     initial = usernames.size
-    added = 0
+    added = []
 
     usernames.each do |row|
       p "Start #{row[0]}"
