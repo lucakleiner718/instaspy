@@ -168,7 +168,6 @@ class GeneralMailer < ActionMailer::Base
 
     @files = {}
     data.each do |tag_name, row|
-      @results = results
       csv_string = CSV.generate do |csv|
         csv << ['Username', 'Full Name', 'Bio', 'Website', 'Follows', 'Followers', 'Media amount', 'AVG Likes', 'AVG Comments', 'Country', 'State', 'City', 'Email']
         row[:users].each do |user|
@@ -178,7 +177,7 @@ class GeneralMailer < ActionMailer::Base
 
       Dir.mkdir('public/reports') unless Dir.exists?('public/reports')
       file_path = "reports/users-location-report-#{tag_name}-#{Time.now.to_i}.csv"
-      @files[tag_name] = { url: "#{root_url}#{file_path}", users_size: row[:users].size }
+      @files[tag_name] = { url: "#{root_url}#{file_path}", users_size: row[:users].size, results: row[:results] }
       File.open("public/#{file_path}", 'w') do |f|
         f.puts csv_string
       end
