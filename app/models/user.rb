@@ -39,6 +39,10 @@ class User < ActiveRecord::Base
         self.email = m[1].downcase.sub(/^[\.\-\_]+/, '')
       end
     end
+
+    if self.username_changed?
+      self.username = self.username.strip.gsub(/\s/, '')
+    end
   end
 
   def self.update_info
@@ -408,11 +412,27 @@ class User < ActiveRecord::Base
     return false if username.size > 30 || username !~ /\A[a-zA-Z0-9\._]+\z/
 
     user = User.where(username: username).first_or_initialize
+
+    return user if !user.new_record? && user.grabbed_at.present? && user.grabbed_at > 1.month.ago
+
     client = InstaClient.new.client
     resp = client.user_search(username)
 
     data = nil
     data = resp.data.select{|el| el['username'].downcase == username.to_s.downcase }.first if resp.data.size > 0
+
+    if data.nil? && resp.data.size == 1
+      d = resp.data.first
+      u = User.where(username: d['username']).first
+      if u
+        u.update_info!
+        if u.username == d['username']
+          self.destroy
+          return u
+        end
+      end
+      data = d
+    end
 
     if data
       exists = User.where(insta_id: data['id']).first
@@ -724,6 +744,22 @@ class User < ActiveRecord::Base
     self.avg_comments = avg_comments
     self.avg_comments_updated_at = Time.now
     self.save
+  end
+
+  def self.process_usernames usernames
+    processed = 0
+    initial = usernames.size
+    usernames.each do |row|
+      user = User.add_by_username row[0]
+      if user && user.email.blank?
+        user.email = row[2]
+        user.save
+      end
+
+      user.update_info! if user.followed_by.blank? || user.grabbed_at.blank? || user.grabbed_at < 1.week.ago
+      processed += 1
+      p "Progress #{processed}/#{initial} (#{processed/initial.to_f * 100}%)"
+    end
   end
 
 end

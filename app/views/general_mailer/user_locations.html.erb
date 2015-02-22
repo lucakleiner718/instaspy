@@ -4,7 +4,7 @@
       <td><%= tag_name %></td>
       <td><%= link_to 'Download', file[:url] %></td>
       <td><%= file[:users_size] %></td>
-      <td><%= file[:results].map{|el| el.join(' : ')}.join(' / ') %></td>
+      <td><%= raw file[:results].map{|el| "<nobr>" + el.join(' : ') + "</nobr>"}.join(' / ') %></td>
     </tr>
   <% end %>
 </table>
