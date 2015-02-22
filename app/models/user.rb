@@ -696,7 +696,7 @@ class User < ActiveRecord::Base
     media_amount = 0
 
     if media.size < 10
-      self.recent_media total_limit: 100
+      self.recent_media total_limit: 50
     end
 
     media.each do |media_item|

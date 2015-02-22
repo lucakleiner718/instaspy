@@ -3,8 +3,8 @@ class TagUserLocationWorker
 
   sidekiq_options unique: true, unique_args: -> (args) { [ args.first ] }
 
-  def perform tag_name
-    Reporter.user_locations tag_name
+  def perform tags_names, *args
+    Reporter.user_locations tags_names, *args
   end
 
   def self.spawn
