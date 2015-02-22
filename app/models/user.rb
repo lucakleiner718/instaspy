@@ -663,7 +663,7 @@ class User < ActiveRecord::Base
 
     with_location.where('location_country is null').each_with_index do |media, index|
       # if user obviously have lots of media in one place, leave other media
-      if index % 10 == 0
+      if index % 5 == 0
         resp = Tag.connection.execute("SELECT count(id), location_country FROM `media`  WHERE `media`.`user_id` = #{self.id} AND (location_lat is not null and location_lat != '') GROUP BY location_country").to_a
 
         # if we don't have media where location_country is blank

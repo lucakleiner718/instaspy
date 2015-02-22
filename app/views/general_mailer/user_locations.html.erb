@@ -1,5 +1,12 @@
-<% if @file %>
-  Link to download report <%= @file %>
-<% end %>
+<table>
+  <% @files.each do |tag_name, file| %>
+    <tr>
+      <td><%= tag_name %></td>
+      <td><%= link_to 'Download', file[:url] %></td>
+      <td><%= file[:users_size] %></td>
+    </tr>
+  <% end %>
+</table>
 
-<%= @results.map{|el| el.join(' : ')}.join(' / ') %>
+<p>Uniq users size: <%= @uniq_users %></p>
+

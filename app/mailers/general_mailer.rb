@@ -163,23 +163,28 @@ class GeneralMailer < ActionMailer::Base
     end
   end
 
-  def user_locations tag_name, users, results
-    @results = results
-    csv_string = CSV.generate do |csv|
-      csv << ['Username', 'Full Name', 'Bio', 'Website', 'Follows', 'Followers', 'Media amount', 'AVG Likes', 'AVG Comments', 'Country', 'State', 'City', 'Email']
-      users.each do |user|
-        csv << [user.username, user.full_name, user.bio, user.website, user.follows, user.followed_by, user.media_amount, user.avg_likes, user.avg_comments, user.location_country, user.location_state, user.location_city, user.email]
+  def user_locations data
+    @uniq_users = data.map{ |k, v| v[:users] }.flatten.uniq.size
+
+    @files = {}
+    data.each do |tag_name, row|
+      @results = results
+      csv_string = CSV.generate do |csv|
+        csv << ['Username', 'Full Name', 'Bio', 'Website', 'Follows', 'Followers', 'Media amount', 'AVG Likes', 'AVG Comments', 'Country', 'State', 'City', 'Email']
+        row[:users].each do |user|
+          csv << [user.username, user.full_name, user.bio, user.website, user.follows, user.followed_by, user.media_amount, user.avg_likes, user.avg_comments, user.location_country, user.location_state, user.location_city, user.email]
+        end
+      end
+
+      Dir.mkdir('public/reports') unless Dir.exists?('public/reports')
+      file_path = "reports/users-location-report-#{tag_name}-#{Time.now.to_i}.csv"
+      @files[tag_name] = { url: "#{root_url}#{file_path}", users_size: row[:users].size }
+      File.open("public/#{file_path}", 'w') do |f|
+        f.puts csv_string
       end
     end
 
-    Dir.mkdir('public/reports') unless Dir.exists?('public/reports')
-    file_path = "reports/users-location-report-#{tag_name}-#{Time.now.to_i}.csv"
-    @file = "#{root_url}#{file_path}"
-    File.open("public/#{file_path}", 'w') do |f|
-      f.puts csv_string
-    end
-
-    sbj = "InstaSpy users location report by tag #{tag_name} #{Time.now.strftime('%m/%d/%Y')}"
+    sbj = "InstaSpy users location report for #{data.size} tags #{Time.now.strftime('%m/%d/%Y')}"
     # if ENV['insta_debug'] || Rails.env.development?
       mail to: 'me@antonzaytsev.com', from: 'dev@antonzaytsev.com', subject: sbj, template_name: 'default'
     # else
