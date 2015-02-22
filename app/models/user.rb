@@ -427,7 +427,7 @@ class User < ActiveRecord::Base
       if u
         u.update_info!
         if u.username == d['username']
-          self.destroy
+          user.destroy unless user.new_record?
           return u
         end
       end
@@ -750,15 +750,17 @@ class User < ActiveRecord::Base
     processed = 0
     initial = usernames.size
     usernames.each do |row|
+      p "Start #{row[0]}"
       user = User.add_by_username row[0]
       if user && user.email.blank?
         user.email = row[2]
         user.save
       end
 
-      user.update_info! if user.followed_by.blank? || user.grabbed_at.blank? || user.grabbed_at < 1.week.ago
+      user.update_info! if user && (user.followed_by.blank? || user.grabbed_at.blank? || user.grabbed_at < 1.week.ago)
+
       processed += 1
-      p "Progress #{processed}/#{initial} (#{processed/initial.to_f * 100}%)"
+      p "Progress #{processed}/#{initial} (#{(processed/initial.to_f * 100).to_i}%)"
     end
   end
 
