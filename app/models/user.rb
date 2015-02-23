@@ -409,7 +409,7 @@ class User < ActiveRecord::Base
   end
 
   def self.add_by_username username
-    return false if username.size > 30 || username !~ /\A[a-zA-Z0-9\._]+\z/
+    return false if username.blank? || username.size > 30 || username !~ /\A[a-zA-Z0-9\._]+\z/
 
     user = User.where(username: username).first_or_initialize
 
@@ -761,7 +761,7 @@ class User < ActiveRecord::Base
 
       if user
         user.update_info! if user.followed_by.blank? || user.grabbed_at.blank? || user.grabbed_at < 1.week.ago
-        added << [(row[0] == user.username ? '' : row[0]), user.username, user.full_name, user.website, user.follows, user.followed_by, user.media_amount, user.email]
+        added << [user.username, user.full_name, user.website, user.follows, user.followed_by, user.media_amount, user.email]
       end
 
       processed += 1
@@ -770,7 +770,7 @@ class User < ActiveRecord::Base
     end
 
     csv_string = CSV.generate do |csv|
-      csv << ['OLD Username', 'Username', 'Full Name', 'Website', 'Follows', 'Followers', 'Media amount', 'Email']
+      csv << ['Username', 'Full Name', 'Website', 'Follows', 'Followers', 'Media amount', 'Email']
       added.each do |row|
         csv << row
       end
