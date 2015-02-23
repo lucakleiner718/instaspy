@@ -416,7 +416,12 @@ class User < ActiveRecord::Base
     return user if !user.new_record? && user.grabbed_at.present? && user.grabbed_at > 1.month.ago
 
     client = InstaClient.new.client
-    resp = client.user_search(username)
+    begin
+      resp = client.user_search(username)
+    rescue Faraday::SSLError => e
+      sleep(10)
+      retry
+    end
 
     data = nil
     data = resp.data.select{|el| el['username'].downcase == username.to_s.downcase }.first if resp.data.size > 0
@@ -776,7 +781,7 @@ class User < ActiveRecord::Base
       end
     end
 
-    p "Added #{added_amount}"
+    p "Added #{added.size}"
 
     GeneralMailer.process_usernames_file(csv_string).deliver
   end
