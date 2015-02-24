@@ -418,8 +418,8 @@ class User < ActiveRecord::Base
     client = InstaClient.new.client
     begin
       resp = client.user_search(username)
-    rescue Faraday::SSLError => e
-      sleep(10)
+    rescue Instagram::BadGateway, Instagram::InternalServerError, Instagram::ServiceUnavailable, JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
+      sleep 20
       retry
     end
 

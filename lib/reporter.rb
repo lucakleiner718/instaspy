@@ -184,16 +184,16 @@ class Reporter
     media_list = media_list.where('created_time >= ?', options[:created_till]) if options[:created_till].present?
 
     csv_string = CSV.generate do |csv|
-      csv << ['Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followed By', 'Media Amount', 'Email', 'Added to Instaspy', 'Media URL', 'Media likes', 'Media comments', 'Location']
+      csv << ['Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followed By', 'Media Amount', 'Email', 'Added to Instaspy', 'Media URL', 'Media likes', 'Media comments', 'Media date posted']
 
       media_list.find_each do |media|
         user = media.user
         user.update_info! if user.grabbed_at.blank? || user.grabbed_at < 7.days.ago || user.bio.blank? || user.website.blank? || user.email.blank?
-        media.update_location! if media.location_present? && media.location_lat.present? && media.location.blank?
+        # media.update_location! if media.location_present? && media.location_lat.present? && media.location.blank?
         csv << [
           user.username, user.full_name, user.website, user.bio, user.follows, user.followed_by, user.media_amount,
           user.email, user.created_at.strftime('%m/%d/%Y'), media.link, media.likes_amount, media.comments_amount,
-          media.location
+          media.created_time.strftime('%m/%d/%Y %H:%M:%S')
         ]
       end
 
@@ -285,6 +285,24 @@ class Reporter
     end
 
     GeneralMailer.user_locations(data).deliver
+  end
+
+  def self.group_csv
+    files = Dir.glob('public/reports/users-from-300k/*')
+    data = []
+    files.each do |file|
+      csv = CSV.read file
+      csv.shift
+      data.concat csv
+    end
+    data.uniq!{|el| el[0]}
+    data.sort!{|a,b| a[0] <=> b[0]}
+    csv_string = CSV.generate do |csv|
+      data.each do |row|
+        csv << row
+      end
+    end
+    File.write 'public/reports/users-from-300k/300k-report.csv', csv_string
   end
 
 end

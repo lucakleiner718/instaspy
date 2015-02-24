@@ -47,13 +47,12 @@ class Media < ActiveRecord::Base
   end
 
   def update_info!
-    client = InstaClient.new.client
-
     return false if self.user && self.user.private?
 
     retries = 0
 
     begin
+      client = InstaClient.new.client
       response = client.media_item(self.insta_id)
     rescue Faraday::ConnectionFailed => e
       Rails.logger.error('Faraday::ConnectionFailed')
@@ -258,14 +257,12 @@ class Media < ActiveRecord::Base
     options[:distance] ||= 100
 
     while true
-      client = InstaClient.new.client
-
       begin
         client = InstaClient.new.client
         media_list = client.media_search(lat, lng, distance: options[:distance], min_timestamp: min_timestamp, max_timestamp: max_timestamp, count: 100)
-      rescue JSON::ParserError, Instagram::ServiceUnavailable, Instagram::BadGateway, Instagram::InternalServerError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError => e
-        p 'issue'
-        break
+      rescue Instagram::BadGateway, Instagram::InternalServerError, Instagram::ServiceUnavailable, JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
+        sleep 20
+        retry
       rescue Interrupt
         raise Interrupt
       end
