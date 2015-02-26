@@ -1,0 +1,20 @@
+<%= link_to '<< back', root_path %>
+<table class="table">
+  <thead>
+  <tr>
+    <th>Tag name</th>
+    <th>Media in db</th>
+    <th>Started tracking</th>
+  </tr>
+  </thead>
+  <tbody>
+  <% @tags.each do |tag| %>
+  <tr>
+    <td><%= tag.name %></td>
+    <td><%= tag.media.size %></td>
+    <td><%= tag.observed_tag.created_at.strftime('%m/%d/%Y') %></td>
+  </tr>
+  <% end %>
+  </tbody>
+</table>
+<%= paginate @tags %>

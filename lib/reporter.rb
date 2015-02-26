@@ -207,6 +207,11 @@ class Reporter
 
     options = args.extract_options!
 
+    options[:followers_min] ||= 500
+    options[:likes_min] ||= 50
+    start_time = options[:start_time] || 90.days
+    at_least = options[:at_least] == false ? false : 500
+
     data = {}
 
     tags_names.each do |tag_name|
@@ -214,12 +219,15 @@ class Reporter
 
       results = []
 
-      start_time = options[:start_time] || 90.days
-      at_least = options[:at_least] == false ? false : 500
+      next if tag.media.size == 0
 
       # receive media
-      if Time.now - tag.media.order(:created_time).last.created_time > 2.days || Time.now - tag.media.order(:created_time).first.created_time < start_time
-        tag.recent_media created_from: start_time.ago
+      if Time.now - tag.media.order(:created_time).last.created_time > 2.days || (start_time != :all && Time.now - tag.media.order(:created_time).first.created_time < start_time)
+        if start_time == :all
+          tag.recent_media
+        else
+          tag.recent_media created_from: start_time.ago
+        end
       end
 
       if at_least && tag.media.size < at_least
@@ -230,8 +238,12 @@ class Reporter
       p results.map{|el| el.join(' : ')}.last
 
       # dirty list of users how posted media with specified tag
-      users_ids = tag.media.where('created_time >= ?', start_time.ago).pluck(:user_id).uniq
-      users = User.where(id: users_ids).to_a
+      if start_time == :all
+        users_ids = tag.media
+      else
+        users_ids = tag.media.where('created_time >= ?', start_time.ago)
+      end
+      users = User.where(id: users_ids.pluck(:user_id).uniq).to_a
 
       results << ['Total users', users.size]
       p results.map{|el| el.join(' : ')}.last
@@ -241,14 +253,10 @@ class Reporter
         user.update_info! if user.grabbed_at.blank? || user.grabbed_at < 1.month.ago || user.followed_by.blank?
       end
 
-      blank_followed_amount = users.select{ |user| user.followed_by.blank? }
-      results << ['Blank followed amount', blank_followed_amount.size]
-      p results.map{|el| el.join(' : ')}.last
-
       # leave in list users only with 1000 subscribers
-      users.select! { |user| user.followed_by.present? && user.followed_by >= 500 }
+      users.select! { |user| user.followed_by.present? && user.followed_by >= options[:followers_min] }
 
-      results << ['Over 500 followers', users.size]
+      results << ["Over #{options[:followers_min]} followers", users.size]
       p results.map{|el| el.join(' : ')}.last
 
       # update user's avg likes and comments
@@ -257,9 +265,9 @@ class Reporter
       end
 
       # leave in list users only with avg likes amount over or eq to 50
-      users.select! { |user| user.avg_likes && user.avg_likes >= 50 }
+      users.select! { |user| user.avg_likes && user.avg_likes >= options[:likes_min] }
 
-      results << ['Over 50 avg likes', users.size]
+      results << ["Over #{options[:likes_min]} avg likes", users.size]
       p results.map{|el| el.join(' : ')}.last
 
       # update user's location

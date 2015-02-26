@@ -60,3 +60,4 @@ gem 'net-sftp'
 gem 'geocoder'
 gem 'countries'
 gem "airbrake"
+gem 'kaminari'

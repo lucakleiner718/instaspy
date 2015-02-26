@@ -6,7 +6,7 @@
   <li>Chart <%= link_to 'saksfifthavenue, neimanmarcus, bloomingdales, nordstrom', chart_path(tags: %w(saksfifthavenue neimanmarcus bloomingdales nordstrom).join(',')) %></li>
   <li>Chart <%= link_to 'toryburch, alexanderwang, michaelkors, dkny, marcjacobs', chart_path(tags: %w(toryburch alexanderwang michaelkors dkny marcjacobs).join(',')) %></li>
   <li>Chart <%= link_to 'katespadenewyork, rebeccaminkoff, dvf', chart_path(tags: %w(katespadenewyork rebeccaminkoff dvf).join(',')) %></li>
-  <li>Totally tracking tags: <%= Tag.observed.size %></li>
+  <li>Totally tracking tags: <%= Tag.observed.size %>. <%= link_to 'List', tags_observed_path %></li>
   <li>Tags in csv: <%= Tag.exportable.size %></li>
   <li>Tags in charts: <%= Tag.chartable.size %></li>
 </ul>

@@ -19,6 +19,8 @@ Rails.application.routes.draw do
   get 'tag_media/added' => 'pages#tag_media_added_check'
   post 'tag_media/added' => 'pages#tag_media_added'
 
+  get 'tags/observed' => 'tags#observed'
+
   require 'sidekiq/web'
   Sidekiq::Web.use Rack::Auth::Basic do |username, password|
     username == 'rob' && password == 'awesomeLA'

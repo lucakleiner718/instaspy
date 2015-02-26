@@ -328,6 +328,9 @@ class User < ActiveRecord::Base
 
     begin
       user_data = client.user(self.insta_id)['data']
+    rescue Instagram::TooManyRequests => e
+      sleep 120
+      retry
     rescue Instagram::BadRequest => e
       if e.message =~ /you cannot view this resource/
         self.private = true
@@ -356,7 +359,12 @@ class User < ActiveRecord::Base
 
     while true
       start = Time.now
-      resp = client.user_follows self.insta_id, cursor: next_cursor, count: 100
+      begin
+        resp = client.user_follows self.insta_id, cursor: next_cursor, count: 100
+      rescue Instagram::TooManyRequests => e
+        sleep 120
+        retry
+      end
       next_cursor = resp.pagination['next_cursor']
 
       users = User.where(insta_id: resp.data.map{|el| el['id']})
@@ -417,7 +425,10 @@ class User < ActiveRecord::Base
 
     client = InstaClient.new.client
     begin
-      resp = client.user_search(username)
+      resp = client.user_search username
+    rescue Instagram::TooManyRequests => e
+      sleep 120
+      retry
     rescue Instagram::BadGateway, Instagram::InternalServerError, Instagram::ServiceUnavailable, JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
       sleep 20
       retry
@@ -521,6 +532,9 @@ class User < ActiveRecord::Base
 
       begin
         media_list = client.user_recent_media self.insta_id, count: 100, max_id: max_id
+      rescue Instagram::TooManyRequests => e
+        sleep 120
+        retry
       rescue JSON::ParserError, Instagram::ServiceUnavailable, Instagram::BadGateway, Instagram::InternalServerError, Instagram::BadRequest, Faraday::ConnectionFailed => e
         break
       end
