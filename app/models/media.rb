@@ -310,7 +310,7 @@ class Media < ActiveRecord::Base
 
       if options[:created_from].present? && Time.at(avg_created_time) > options[:created_from]
         max_timestamp = media_list.data.last.created_time
-      elsif options[:ignore_added] || added.to_f / media_list.data.size > 0.9
+      elsif options[:ignore_added] || added.to_f / media_list.data.size > 0.1
         max_timestamp = media_list.data.last.created_time
       elsif total_added >= options[:total_limit]
         break

@@ -106,7 +106,7 @@ class Tag < ActiveRecord::Base
       elsif options[:ignore_added]
         move_next = true
       # if amount of currently added is voer 90% of grabbed from instagram
-      elsif added.to_f / media_list.data.size > 0.9
+      elsif added.to_f / media_list.data.size > 0.1
         move_next = true
       end
 

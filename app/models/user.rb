@@ -578,7 +578,7 @@ class User < ActiveRecord::Base
         # stop
       elsif options[:ignore_added]
         move_next = true
-      elsif added.to_f / media_list.data.size > 0.9
+      elsif added.to_f / media_list.data.size > 0.1
         move_next = true
       else
         break
