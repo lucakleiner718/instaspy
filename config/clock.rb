@@ -16,8 +16,15 @@ module Clockwork
   every(15.minute, 'get.new.media') { MediaWorker.spawn }
   # every(1.minute, 'get.new.media') { MediaWorker.spawn }
 
+  every(1.month, 'check.media', at: '00:00') {
+    tags = Tag.observed
+    tags.each do |tag|
+      tag.delay.recent_media created_from: 1.month.ago
+    end
+  }
+
   # Update users, which doesn't have info
-  every(5.minutes, 'update.users') { UserWorker.spawn }
+  every(20.minutes, 'update.users') { UserWorker.spawn }
 
   # Send weekly report about media
   every(1.week, 'media.report', at: "Tuesday 07:00") { ReportWorker.perform_async }

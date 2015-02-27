@@ -535,7 +535,9 @@ class User < ActiveRecord::Base
       rescue Instagram::TooManyRequests => e
         sleep 120
         retry
-      rescue JSON::ParserError, Instagram::ServiceUnavailable, Instagram::BadGateway, Instagram::InternalServerError, Instagram::BadRequest, Faraday::ConnectionFailed => e
+      rescue JSON::ParserError, Errno::EPIPE,
+             Instagram::ServiceUnavailable, Instagram::BadGateway, Instagram::InternalServerError, Instagram::BadRequest,
+             Faraday::ConnectionFailed, Faraday::SSLError => e
         break
       end
 
@@ -780,7 +782,7 @@ class User < ActiveRecord::Base
 
       if user
         user.update_info! if user.followed_by.blank? || user.grabbed_at.blank? || user.grabbed_at < 1.week.ago
-        added << [user.username, user.full_name, user.website, user.follows, user.followed_by, user.media_amount, user.email]
+        added << [user.username, user.full_name, user.website, user.bio, user.follows, user.followed_by, user.media_amount, user.email]
       end
 
       processed += 1
@@ -789,7 +791,7 @@ class User < ActiveRecord::Base
     end
 
     csv_string = CSV.generate do |csv|
-      csv << ['Username', 'Full Name', 'Website', 'Follows', 'Followers', 'Media amount', 'Email']
+      csv << ['Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followers', 'Media amount', 'Email']
       added.each do |row|
         csv << row
       end

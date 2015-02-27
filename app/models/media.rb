@@ -154,7 +154,11 @@ class Media < ActiveRecord::Base
 
     return false if self.location_lat.blank? || self.location_lng.blank?
 
-    resp = Geocoder.search("#{self.location_lat},#{self.location_lng}")
+    begin
+      resp = Geocoder.search("#{self.location_lat},#{self.location_lng}")
+    rescue Errno::EHOSTUNREACH, Zlib::BufError => e
+      return false
+    end
 
     # if resp.size == 0
     #   Geocoder::Configuration.lookup = :google
