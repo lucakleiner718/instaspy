@@ -217,9 +217,9 @@ class Reporter
     tags_names.each do |tag_name|
       tag = Tag.get(tag_name)
 
-      results = []
+      p "Process tag #{tag_name}"
 
-      next if tag.media.size == 0
+      results = []
 
       # receive media
       if Time.now - tag.media.order(:created_time).last.created_time > 2.days || (start_time != :all && Time.now - tag.media.order(:created_time).first.created_time < start_time)
@@ -234,7 +234,13 @@ class Reporter
         tag.recent_media media_atleast: at_least
       end
 
-      results << ['Total media', tag.media.size]
+      if tag.media.size == 0
+        data[tag_name] = {users: [], results: []}
+        p "No media for tag #{tag_name}"
+        next
+      end
+
+        results << ['Total media', tag.media.size]
       p results.map{|el| el.join(' : ')}.last
 
       # dirty list of users how posted media with specified tag

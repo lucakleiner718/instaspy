@@ -1,7 +1,8 @@
 class UserWorker
   include Sidekiq::Worker
 
-  sidekiq_options unique: true, unique_args: -> (args) { [ args.first ] }
+  sidekiq_options unique: true, unique_args: -> (args) { [ args.first ] },
+    queue: :middle
 
   def perform users
     User.where(id: users).each do |u|

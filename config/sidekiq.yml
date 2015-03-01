@@ -1,9 +1,10 @@
 ---
-:concurrency: 130
+:concurrency: 95
 :verbose: true
 :pidfile: ./tmp/pids/sidekiq.pid
 :timeout: 900
 :queues:
   - [critical, 10]
+  - [middle, 5]
   - [default, 2]
   - [low, 1]
