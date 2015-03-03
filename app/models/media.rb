@@ -78,7 +78,7 @@ class Media < ActiveRecord::Base
     # rescue StandardError => e
     #   # binding.pry
     #   return false
-    rescue Exception => e
+    rescue => e
       # binding.pry
       return false
     end
@@ -196,34 +196,34 @@ class Media < ActiveRecord::Base
 
         begin
           self.location_state = address['Country']['AdministrativeArea']['AdministrativeAreaName']
-        rescue Exception => e
+        rescue => e
           # binding.pry
         end
 
         if self.location_state.blank?
           begin
             self.location_state = address['Country']['Thoroughfare']['ThoroughfareName']
-          rescue Exception => e
+          rescue => e
             # binding.pry
           end
         end
 
         begin
           self.location_city = address['Country']['AdministrativeArea']['Locality']['DependentLocality']['DependentLocalityName']
-        rescue Exception => e
+        rescue => e
         end
 
         if self.location_city.blank?
           begin
             self.location_city = address['Country']['Locality']['LocalityName']
-          rescue Exception => e
+          rescue => e
           end
         end
 
         if self.location_city.blank?
           begin
             self.location_city = address['Country']['AdministrativeArea']['SubAdministrativeArea']['SubAdministrativeAreaName']
-          rescue Exception => e
+          rescue => e
           end
         end
 

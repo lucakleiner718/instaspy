@@ -60,7 +60,7 @@ class Reporter
       data.each do |row|
         begin
           csv << [ row[:name], row[:username], row[:likes].round(2), row[:comments].round(2), row[:media].link ]
-        rescue Exception => e
+        rescue => e
         end
       end
     end

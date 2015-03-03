@@ -42,6 +42,10 @@ class User < ActiveRecord::Base
 
     if self.username_changed?
       self.username = self.username.strip.gsub(/\s/, '')
+
+      if self.insta_id.present?
+        User.fix_exists_username(self.username, self.insta_id)
+      end
     end
   end
 
@@ -124,7 +128,7 @@ class User < ActiveRecord::Base
         # If account private - try to get info from public page via http
         begin
           self.update_private_account
-        rescue Exception => e
+        rescue => e
           # binding.pry
         end
 
@@ -134,9 +138,7 @@ class User < ActiveRecord::Base
         self.destroy
       end
       return false
-    rescue Interrupt
-      raise Interrupt
-    rescue Exception => e
+    rescue => e
       # binding.pry
       return false
     end
@@ -267,6 +269,7 @@ class User < ActiveRecord::Base
         user = users.select{|el| el.insta_id == user_data['id'].to_i}.first
         unless user
           user = User.new insta_id: user_data['id']
+          new_record = true
         end
 
         user.insta_data user_data
@@ -275,9 +278,22 @@ class User < ActiveRecord::Base
           user.update_info!
         end
 
-        new_record = user.new_record?
-
-        user.save
+        begin
+          user.save
+        rescue ActiveRecord::RecordNotUnique => e
+          if e =~ /index_users_on_insta_id/
+            user = User.where(insta_id: user_data['id']).first
+            new_record = false
+          elsif e.message.match('Duplicate entry') && e.message =~ /index_users_on_username/
+            exists_user = User.where(username: user_data['username']).first
+            if exists_user.insta_id != user_data['id']
+              exists_user.destroy
+              retry
+            end
+          end
+          
+          raise e
+        end
 
         # fol = nil
         #
@@ -601,12 +617,6 @@ class User < ActiveRecord::Base
       media_freq = media.size.to_f / (Time.now.to_i - media.last.created_time.to_i) * 60 * 60 * 24
     end
     media_freq
-  end
-
-  before_save do
-    if self.username_changed? && self.insta_id.present?
-      User.fix_exists_username(self.username, self.insta_id)
-    end
   end
 
   def self.fix_exists_username username, exists_insta_id

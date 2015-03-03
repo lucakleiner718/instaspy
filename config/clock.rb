@@ -23,7 +23,7 @@ module Clockwork
   }
 
   # Update users, which doesn't have info
-  every(20.minutes, 'update.users') { UserWorker.spawn }
+  every(30.minutes, 'update.users') { UserWorker.spawn }
 
   # Send weekly report about media
   every(1.week, 'media.report', at: "Tuesday 07:00") { ReportWorker.perform_async }

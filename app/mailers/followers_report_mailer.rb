@@ -69,7 +69,7 @@ class FollowersReportMailer < ActionMailer::Base
           user = follower.follower
           begin
             csv << [user.full_name, user.username, user.website, user.follows, user.followed_by, user.media_amount, (user.private ? 'Yes' : 'No')]
-          rescue Exception => e
+          rescue => e
             # somehow we don't have user record, just delete link-follower
             if user.blank?
               follower.destroy

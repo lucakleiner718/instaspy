@@ -6,7 +6,7 @@ class GeneralMailer < ActionMailer::Base
       list.each do |user|
         begin
           csv << [user.full_name, user.username, user.email, user.website, user.follows, user.followed_by, user.media_amount, (user.private ? 'Yes' : 'No')]
-        rescue Exception => e
+        rescue => e
         end
       end
     end
@@ -33,7 +33,7 @@ class GeneralMailer < ActionMailer::Base
       users.each do |user|
         begin
           csv << [user.full_name, user.username, user.bio, user.website, user.follows, user.followed_by, user.media_amount, (user.private ? 'Yes' : 'No')]
-        rescue Exception => e
+        rescue => e
         end
       end
     end
