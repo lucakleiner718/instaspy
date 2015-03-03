@@ -2,7 +2,7 @@ class MediaWorker
   include Sidekiq::Worker
 
   sidekiq_options unique: true, unique_args: -> (args) { [ args.first ] },
-    queue: :middle, unique_job_expiration: 2*60*60 # 2 hours
+    queue: :middle, unique_job_expiration: 6*60*60
 
   def perform tag_id
     tag = Tag.find(tag_id)
