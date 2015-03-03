@@ -254,12 +254,11 @@ class User < ActiveRecord::Base
     end
 
     follower_ids = []
-    begining_time = Time.now
+    beginning_time = Time.now
 
     while true
       start = Time.now
       resp = client.user_followed_by self.insta_id, cursor: next_cursor, count: 100
-      next_cursor = resp.pagination['next_cursor']
 
       users = User.where(insta_id: resp.data.map{|el| el['id']})
       fols = Follower.where(user_id: self.id, follower_id: users.map{|el| el.id})
@@ -267,7 +266,7 @@ class User < ActiveRecord::Base
       resp.data.each do |user_data|
         user = users.select{|el| el.insta_id == user_data['id'].to_i}.first
         unless user
-          user = User.new(insta_id: user_data['id'])
+          user = User.new insta_id: user_data['id']
         end
 
         user.insta_data user_data
@@ -304,13 +303,13 @@ class User < ActiveRecord::Base
         user = nil # trying to save some RAM but nulling variable
       end
 
-      resp = nil
-
-      puts "followers:#{follower_ids.size}/#{followed} request:#{(Time.now-start).to_f}s left:#{((Time.now - begining_time).to_f/follower_ids.size * (followed-follower_ids.size)).to_i}s"
-
+      puts "followers:#{follower_ids.size}/#{followed} request:#{(Time.now-start).to_f}s left:#{((Time.now - beginning_time).to_f/follower_ids.size * (followed-follower_ids.size)).to_i}s"
       puts "exists: #{exists}"
 
       break if !options[:ignore_exists] && exists >= 5
+
+      next_cursor = resp.pagination['next_cursor']
+
       break unless next_cursor
     end
 

@@ -11,13 +11,16 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150220145106) do
+ActiveRecord::Schema.define(version: 20150303075207) do
 
   create_table "followers", force: true do |t|
     t.integer  "user_id"
     t.integer  "follower_id"
     t.datetime "created_at"
   end
+
+  add_index "followers", ["follower_id"], name: "index_followers_on_follower_id", using: :btree
+  add_index "followers", ["user_id"], name: "index_followers_on_user_id", using: :btree
 
   create_table "instagram_accounts", force: true do |t|
     t.string   "client_id"
