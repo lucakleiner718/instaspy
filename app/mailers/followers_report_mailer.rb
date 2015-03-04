@@ -30,6 +30,7 @@ class FollowersReportMailer < ActionMailer::Base
     csv_string = CSV.generate do |csv|
       csv << ['Username', 'Name', 'Bio', 'Website', 'Follows', 'Followers', 'Media amount', 'Email']
       followers.find_each do |user|
+        user.update_info! if user.grabbed_at.blank? || user.grabbed_at < 1.month.ago || user.followed_by.blank?
         csv << [user.username, user.full_name, user.bio, user.website, user.follows, user.followed_by, user.media_amount, user.email]
       end
     end

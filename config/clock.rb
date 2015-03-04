@@ -25,23 +25,25 @@ module Clockwork
   # Update users, which doesn't have info
   every(30.minutes, 'update.users') { UserWorker.spawn }
 
-  # Send weekly report about media
-  every(1.week, 'media.report', at: "Tuesday 07:00") { ReportWorker.perform_async }
-
   # Save data for chart in cache, so charts will work fast
   every(6.hours, 'TagChartWorker') { TagChartWorker.spawn }
 
   # Update followers list for specified users
   every(12.hours, 'FollowersReport.update') { FollowersReport.track }
 
-  # Send weekly report about followers for specified users
-  every(1.week, 'FollowersReport.report', at: "Thursday 04:00") { FollowersReportWorker.perform_async }
 
   # Save some stat
   every(1.day, 'StatWorker', at: '00:00') { StatWorker.perform_async }
 
   # Save tag stat for chart
   every(1.day, 'TagStat', at: '01:00') { TagStatWorker.spawn }
+
+
+  # Send weekly report about followers for specified users
+  every(1.week, 'FollowersReport.report', at: "Wednesday 04:00") { FollowersReportWorker.perform_async }
+
+  # Send weekly report about media
+  every(1.week, 'media.report', at: "Wednesday 05:00") { ReportWorker.perform_async }
 
   # every(30.minutes, 'media.ny.location.1') {
   #   Media.get_by_location 40.74226964, -74.007271584 if Time.now < Time.at('2015/02/21 00:00:00 UTC')
