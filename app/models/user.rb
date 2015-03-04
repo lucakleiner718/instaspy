@@ -797,7 +797,7 @@ class User < ActiveRecord::Base
       end
 
       if user
-        user.update_info! if user.followed_by.blank? || user.grabbed_at.blank? || user.grabbed_at < 1.week.ago
+        user.update_info! if user.grabbed_at.blank? || user.grabbed_at < 1.week.ago
         added << [user.username, user.full_name, user.website, user.bio, user.follows, user.followed_by, user.media_amount, user.email]
       end
 
