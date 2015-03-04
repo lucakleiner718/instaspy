@@ -120,7 +120,6 @@ class Reporter
       end
       csv_files[tag.name] = csv_string
     end
-    csv_files
 
     ReportMailer.weekly(csv_files, starts, ends).deliver
   end

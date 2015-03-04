@@ -291,7 +291,7 @@ class User < ActiveRecord::Base
               retry
             end
           end
-          
+
           raise e
         end
 
@@ -444,7 +444,8 @@ class User < ActiveRecord::Base
     rescue Instagram::TooManyRequests => e
       sleep 120
       retry
-    rescue Instagram::BadGateway, Instagram::InternalServerError, Instagram::ServiceUnavailable, JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
+    rescue Instagram::BadGateway, Instagram::InternalServerError, Instagram::ServiceUnavailable, JSON::ParserError,
+           Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
       sleep 20
       retry
     end
@@ -452,6 +453,7 @@ class User < ActiveRecord::Base
     data = nil
     data = resp.data.select{|el| el['username'].downcase == username.to_s.downcase }.first if resp.data.size > 0
 
+    # In case if user changed username, instagram returns record with new data by old username
     if data.nil? && resp.data.size == 1
       d = resp.data.first
       u = User.where(username: d['username']).first
