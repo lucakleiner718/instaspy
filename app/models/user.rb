@@ -238,6 +238,11 @@ class User < ActiveRecord::Base
     end
   end
 
+  # Script stops if found more than 5 exists followers from list in database
+  # Params
+  # reload (boolean) - default: false, if reload is set to true, code will download whole list of followers and replace exists list by new one
+  # deep (boolean) - default: false, if need to updated info for each added user straight in code
+  # ignore_exists (boolean) - default: false, iterates over all followers list
   def update_followers *args
     return false if self.insta_id.blank?
 
@@ -319,8 +324,8 @@ class User < ActiveRecord::Base
         user = nil # trying to save some RAM but nulling variable
       end
 
-      puts "followers:#{follower_ids.size}/#{followed} request:#{(Time.now-start).to_f}s left:#{((Time.now - beginning_time).to_f/follower_ids.size * (followed-follower_ids.size)).to_i}s"
-      puts "exists: #{exists}"
+      p "followers:#{follower_ids.size}/#{followed} request:#{(Time.now-start).to_f}s left:#{((Time.now - beginning_time).to_f/follower_ids.size * (followed-follower_ids.size)).to_i}s"
+      p "exists: #{exists}"
 
       break if !options[:ignore_exists] && exists >= 5
 

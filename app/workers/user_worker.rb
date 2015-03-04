@@ -12,9 +12,9 @@ class UserWorker
     end
   end
 
-  def self.spawn
+  def self.spawn amount=10_000
     # User.where(follows: nil).order(created_at: :desc).pluck(:id).in_groups_of(100, false).each do |users|
-    User.where(grabbed_at: nil).limit(10000).order(updated_at: :desc).pluck(:id).each do |user_id|
+    User.where(grabbed_at: nil).limit(amount).order(updated_at: :desc).pluck(:id).each do |user_id|
       self.perform_async [user_id]
     end
   end
