@@ -135,7 +135,7 @@ class Media < ActiveRecord::Base
       user.save
     rescue ActiveRecord::RecordNotUnique => e
       if e.message =~ /Duplicate entry/ && e.message =~ /index_users_on_username/
-        exists_user = User.where(username: username).first
+        exists_user = User.where(username: user.username).first
         if exists_user.insta_id == user.insta_id
           user = exists_user
         else

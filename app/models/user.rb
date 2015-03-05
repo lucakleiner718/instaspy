@@ -251,8 +251,10 @@ class User < ActiveRecord::Base
     client = InstaClient.new.client
     next_cursor = nil
 
-    user_data = client.user(self.insta_id)['data']
-    followed = user_data['counts']['followed_by']
+    self.update_info!
+
+    return false if self.destroyed?
+    followed = self.followed_by
     puts "#{self.username} followed by: #{followed}"
 
     exists = 0
