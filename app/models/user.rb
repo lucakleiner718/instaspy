@@ -255,14 +255,13 @@ class User < ActiveRecord::Base
 
     return false if self.destroyed?
     followed = self.followed_by
-    puts "#{self.username} followed by: #{followed}"
+    p "#{self.username} followed by: #{followed}"
 
     exists = 0
     if options[:reload]
       self.follower_ids = []
     end
 
-    follower_ids = []
     beginning_time = Time.now
 
     while true
@@ -288,7 +287,7 @@ class User < ActiveRecord::Base
         begin
           user.save
         rescue ActiveRecord::RecordNotUnique => e
-          if e =~ /index_users_on_insta_id/
+          if e.message.match('Duplicate entry') &&  e =~ /index_users_on_insta_id/
             user = User.where(insta_id: user_data['id']).first
             new_record = false
           elsif e.message.match('Duplicate entry') && e.message =~ /index_users_on_username/
@@ -297,9 +296,9 @@ class User < ActiveRecord::Base
               exists_user.destroy
               retry
             end
+          else
+            raise e
           end
-
-          raise e
         end
 
         # fol = nil
@@ -321,12 +320,12 @@ class User < ActiveRecord::Base
             fol.first_or_create
           end
         end
-        follower_ids << user.id
+        self.follower_ids << user.id
 
         user = nil # trying to save some RAM but nulling variable
       end
 
-      p "followers:#{follower_ids.size}/#{followed} request:#{(Time.now-start).to_f}s left:#{((Time.now - beginning_time).to_f/follower_ids.size * (followed-follower_ids.size)).to_i}s"
+      p "followers:#{self.follower_ids.size}/#{followed} request:#{(Time.now-start).to_f}s left:#{((Time.now - beginning_time).to_f/self.follower_ids.size * (followed-self.follower_ids.size)).to_i}s"
       p "exists: #{exists}"
 
       break if !options[:ignore_exists] && exists >= 5

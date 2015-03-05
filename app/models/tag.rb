@@ -106,7 +106,7 @@ class Tag < ActiveRecord::Base
       elsif options[:ignore_added]
         move_next = true
       # if amount of currently added is voer 90% of grabbed from instagram
-      elsif added.to_f / media_list.data.size > 0.1
+      elsif added.to_f / media_list.data.size > 0.3
         move_next = true
       end
 
@@ -121,13 +121,6 @@ class Tag < ActiveRecord::Base
       # stop if we don't have next page
       break unless max_tag_id
     end
-  end
-
-  def update_info!
-    client = InstaClient.new.client
-    data = client.tag self.name
-    # self.media_count = data['media_count']
-    self.save
   end
 
   def chart_data amount_of_days=14
