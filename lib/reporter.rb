@@ -124,7 +124,7 @@ class Reporter
     ReportMailer.weekly(csv_files, starts, ends).deliver
   end
 
-  def self.tag_authors tag, timeframe
+  def self.tag_authors tag, timeframe=1.year.ago
     users = []
     tag.media.where('created_at > ?', timeframe).includes(:user).each do |media|
       users << media.user

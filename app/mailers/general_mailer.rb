@@ -29,10 +29,10 @@ class GeneralMailer < ActionMailer::Base
     @tag = tag
 
     csv_string = CSV.generate do |csv|
-      csv << ['Name', 'Username', 'Bio', 'Website', 'Follows', 'Followers', 'Media amount', 'Private account']
+      csv << ['Username', 'Name', 'Bio', 'Website', 'Follows', 'Followers', 'Media amount', 'Email']
       users.each do |user|
         begin
-          csv << [user.full_name, user.username, user.bio, user.website, user.follows, user.followed_by, user.media_amount, (user.private ? 'Yes' : 'No')]
+          csv << [user.username, user.full_name, user.bio, user.website, user.follows, user.followed_by, user.media_amount, user.email]
         rescue => e
         end
       end
