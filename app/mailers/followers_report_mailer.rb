@@ -30,7 +30,7 @@ class FollowersReportMailer < ActionMailer::Base
     csv_string = CSV.generate do |csv|
       csv << ['Username', 'Name', 'Bio', 'Website', 'Follows', 'Followers', 'Media amount', 'Email']
       followers.find_each do |user|
-        user.update_info! if user.grabbed_at.blank? || user.grabbed_at < 1.month.ago
+        user.update_info! if user.grabbed_at.blank? || user.grabbed_at < 1.month.ago || user.followed_by.blank? || user.follows.blank? || media_amount.blank?
         csv << [user.username, user.full_name, user.bio, user.website, user.follows, user.followed_by, user.media_amount, user.email]
       end
     end
@@ -65,11 +65,12 @@ class FollowersReportMailer < ActionMailer::Base
       followers = followers.includes(:follower).where('followers.created_at >= :start AND followers.created_at <= :finish', start: @start, finish: @finish)
 
       csv_string = CSV.generate do |csv|
-        csv << ['Name', 'Username', 'Website', 'Follows', 'Followers', 'Media amount', 'Private account']
+        csv << ['Username', 'Name', 'Bio', 'Website', 'Follows', 'Followers', 'Media amount', 'Email']
         followers.find_each do |follower|
           user = follower.follower
           begin
-            csv << [user.full_name, user.username, user.website, user.follows, user.followed_by, user.media_amount, (user.private ? 'Yes' : 'No')]
+            user.update_info! if user.grabbed_at.blank? || user.grabbed_at < 7.days.ago || user.followed_by.blank? || user.follows.blank? || media_amount.blank?
+            csv << [user.username, user.full_name, user.bio, user.website, user.follows, user.followed_by, user.media_amount, user.email]
           rescue => e
             # somehow we don't have user record, just delete link-follower
             if user.blank?

@@ -134,8 +134,20 @@ class Media < ActiveRecord::Base
     begin
       user.save
     rescue ActiveRecord::RecordNotUnique => e
-      username = user.username
-      user = User.where(username: username).first_or_create
+      if e.message =~ /Duplicate entry/ && e.message =~ /index_users_on_username/
+        exists_user = User.where(username: username).first
+        if exists_user.insta_id == user.insta_id
+          user = exists_user
+        else
+          exists_user.update_info!
+          if exists_user.private? || exists_user.username == user.username
+            exists_user.destroy
+            retry
+          end
+        end
+      else
+        user = User.where(username: user.username).first
+      end
     end
 
     self.user_id = user.id

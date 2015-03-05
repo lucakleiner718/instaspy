@@ -46,7 +46,7 @@ class Tag < ActiveRecord::Base
   def recent_media *args
     options = args.extract_options!
 
-    max_tag_id = nil
+    max_tag_id = options[:offset].to_i * 1_000_000
 
     total_added = 0
     options[:total_limit] ||= 2_000
@@ -174,6 +174,11 @@ class Tag < ActiveRecord::Base
 
   def self.get tag_name
     Tag.where(name: tag_name).first_or_create
+  end
+
+  def publishers
+    ids = self.media.pluck('distinct user_id')
+    User.where(id: ids)
   end
 
 end
