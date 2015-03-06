@@ -291,7 +291,7 @@ class User < ActiveRecord::Base
         begin
           user.save
         rescue ActiveRecord::RecordNotUnique => e
-          if e.message.match('Duplicate entry') &&  e =~ /index_users_on_insta_id/
+          if e.message.match('Duplicate entry') && e.message =~ /index_users_on_insta_id/
             user = User.where(insta_id: user_data['id']).first
             new_record = false
           elsif e.message.match('Duplicate entry') && e.message =~ /index_users_on_username/
