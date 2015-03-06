@@ -13,19 +13,19 @@ class User < ActiveRecord::Base
   scope :privates, -> { where private: true }
 
   before_save do
-    if self.full_name_changed?
+    if self.full_name_changed? && self.full_name.present?
       self.full_name = self.full_name.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
       self.full_name = self.full_name.encode(self.full_name.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
       self.full_name.strip!
     end
 
-    if self.bio_changed?
+    if self.bio_changed? && self.bio.present?
       self.bio = self.bio.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
       self.bio = self.bio.encode(self.bio.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
       self.bio.strip!
     end
 
-    if self.website_changed?
+    if self.website_changed? && self.website.present?
       self.website = self.website.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
       self.website = self.website.encode(self.website.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
       self.website = self.website[0, 255]
@@ -278,6 +278,10 @@ class User < ActiveRecord::Base
           new_record = true
         end
 
+        if user.insta_id.present? && user_data['id'].present? && user.insta_id != user_data['id'].to_i
+          binding.pry
+          raise Exception
+        end
         user.insta_data user_data
 
         if options[:deep] && !user.private && (user.updated_at.blank? || user.updated_at < 1.month.ago || user.website.nil? || user.follows.blank? || user.followed_by.blank? || user.media_amount.blank?)
@@ -431,10 +435,10 @@ class User < ActiveRecord::Base
 
   def insta_data data
     self.username = data['username']
-    self.bio = data['bio']
-    self.website = data['website']
+    self.bio = data['bio'] if self.bio.present?
+    self.website = data['website'] if self.website.present?
     self.full_name = data['full_name']
-    self.insta_id = data['id']
+    self.insta_id = data['id'] if self.insta_id.blank?
   end
 
   def self.add_by_username username
