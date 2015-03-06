@@ -253,7 +253,8 @@ class User < ActiveRecord::Base
 
     self.update_info!
 
-    return false if self.destroyed?
+    return false if self.destroyed? || self.private?
+
     followed = self.followed_by
     p "#{self.username} followed by: #{followed}"
 

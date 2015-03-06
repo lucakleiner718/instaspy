@@ -37,7 +37,7 @@ gem 'pry-rails'
 gem 'instagram'
 gem 'httparty'
 gem 'render_csv'
-gem 'sidekiq'
+gem 'sidekiq', '~> 3.3.2'
 gem 'sidekiq-failures'
 gem 'sidekiq-unique-jobs'
 gem 'sinatra', require: false # Web interface of Sidekiq processes

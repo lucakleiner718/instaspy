@@ -43,10 +43,13 @@ class Tag < ActiveRecord::Base
     Media.recent_media
   end
 
+  # offset (DateTime) - start point of user grabbing
+  # total_limit (integer) - amount of media, stop grabbing when code receive provided amount
+  # created_from (DateTime) - last point, until code should grab data
   def recent_media *args
     options = args.extract_options!
 
-    max_tag_id = options[:offset].to_i * 1_000_000
+    max_tag_id = options[:offset].present? ? options[:offset].to_i * 1_000_000 : nil
 
     total_added = 0
     options[:total_limit] ||= 2_000
