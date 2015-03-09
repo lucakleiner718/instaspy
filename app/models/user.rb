@@ -267,7 +267,21 @@ class User < ActiveRecord::Base
 
     while true
       start = Time.now
-      resp = client.user_followed_by self.insta_id, cursor: next_cursor, count: 100
+
+      begin
+        resp = client.user_followed_by self.insta_id, cursor: next_cursor, count: 100
+      rescue Instagram::ServiceUnavailable => e
+        if e.message =~ /rate limiting/
+          sleep 60
+          retry
+        else
+          raise e
+        end
+      rescue Instagram::BadGateway, Instagram::InternalServerError, Instagram::ServiceUnavailable, JSON::ParserError,
+             Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
+        sleep 20
+        retry
+      end
 
       users = User.where(insta_id: resp.data.map{|el| el['id']})
       fols = Follower.where(user_id: self.id, follower_id: users.map{|el| el.id})
