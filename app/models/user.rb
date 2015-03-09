@@ -63,7 +63,7 @@ class User < ActiveRecord::Base
   def bio=(value)
     if value.present?
       value = value.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
-      value = value.encode(self.bio.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
+      value = value.encode(value.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
       value.strip!
     end
 
