@@ -661,8 +661,10 @@ class User < ActiveRecord::Base
 
   end
 
-  def popular_location
-    if self.location_updated_at && self.location_updated_at > 7.days.ago && self.location_country
+  def popular_location *args
+    options = args.extract_options!
+
+    if self.location_updated_at && self.location_updated_at > 7.days.ago && self.location_country && !options[:force]
       return {
         country: self.location_country,
         state: self.location_state,

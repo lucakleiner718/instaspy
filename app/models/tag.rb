@@ -54,6 +54,7 @@ class Tag < ActiveRecord::Base
     total_added = 0
     options[:total_limit] ||= 2_000
     start_media_amount = self.media.size
+    created_time_list = []
 
     while true
       client = InstaClient.new.client
@@ -84,6 +85,7 @@ class Tag < ActiveRecord::Base
         end
 
         avg_created_time += media['created_time'].to_i
+        created_time_list << media['created_time'].to_i
       end
 
       total_added += added
@@ -92,15 +94,19 @@ class Tag < ActiveRecord::Base
 
       avg_created_time = avg_created_time / media_list.data.size
 
+      created_time_list = created_time_list.sort
+      median_created_time = created_time_list.size % 2 == 0 ? (created_time_list[(created_time_list.size/2-1)..(created_time_list.size/2+1)].sum / 3) : (created_time_list[(created_time_list.size/2)..(created_time_list.size/2+1)].sum / 2)
+
       p "returned #{media_list.data.size}"
-      p "#{avg_created_time} / #{Time.at avg_created_time}"
+      p "AVG: #{Time.at avg_created_time} / Median: #{Time.at median_created_time}"
       p "added: #{added}"
       # sleep 2
 
       move_next = false
 
       if options[:created_from].present?
-        if Time.at(avg_created_time) > options[:created_from]
+        # if Time.at(avg_created_time) > options[:created_from]
+        if Time.at(median_created_time) > options[:created_from]
           move_next = true
         end
       elsif total_added > options[:total_limit]

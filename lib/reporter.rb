@@ -182,6 +182,9 @@ class Reporter
     media_list = Media.near([lat, lng], options[:distance]/1000, units: :km).includes(:user)
     media_list = media_list.where('created_time >= ?', options[:created_till]) if options[:created_till].present?
 
+    csv << ['Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followed By', 'Media Amount', 'Email', 'AVG likes', 'Country', 'State', 'City']
+    csv << [user.username, user.full_name, user.website, user.bio, user.follows, user.followed_by, user.media_amount, user.email, user.avg_likes, user.location_country, user.location_state, user.location_city]
+
     csv_string = CSV.generate do |csv|
       csv << ['Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followed By', 'Media Amount', 'Email', 'Added to Instaspy', 'Media URL', 'Media likes', 'Media comments', 'Media date posted']
 
