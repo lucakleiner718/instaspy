@@ -13,23 +13,23 @@ class User < ActiveRecord::Base
   scope :privates, -> { where private: true }
 
   before_save do
-    if self.full_name_changed? && self.full_name.present?
-      self.full_name = self.full_name.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
-      self.full_name = self.full_name.encode(self.full_name.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
-      self.full_name.strip!
-    end
+    # if self.full_name_changed? && self.full_name.present?
+    #   self.full_name = self.full_name.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
+    #   self.full_name = self.full_name.encode(self.full_name.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
+    #   self.full_name.strip!
+    # end
 
-    if self.bio_changed? && self.bio.present?
-      self.bio = self.bio.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
-      self.bio = self.bio.encode(self.bio.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
-      self.bio.strip!
-    end
+    # if self.bio_changed? && self.bio.present?
+    #   self.bio = self.bio.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
+    #   self.bio = self.bio.encode(self.bio.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
+    #   self.bio.strip!
+    # end
 
-    if self.website_changed? && self.website.present?
-      self.website = self.website.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
-      self.website = self.website.encode(self.website.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
-      self.website = self.website[0, 255]
-    end
+    # if self.website_changed? && self.website.present?
+    #   self.website = self.website.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
+    #   self.website = self.website.encode(self.website.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
+    #   self.website = self.website[0, 255]
+    # end
 
     # Catch email from bio
     if self.bio.present?
@@ -49,11 +49,37 @@ class User < ActiveRecord::Base
     end
   end
 
-  def self.update_info
-    User.all.each do |u|
-      u.update_info!
+  def full_name=(value)
+    if value.present?
+      value = value.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
+      value = value.encode(value.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
+      value.strip!
     end
+
+    # this is same as self[:attribute_name] = value
+    write_attribute(:full_name, value)
   end
+
+  def bio=(value)
+    if value.present?
+      value = value.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
+      value = value.encode(self.bio.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
+      value.strip!
+    end
+
+    write_attribute(:bio, value)
+  end
+
+  def website=(value)
+    if value.present?
+      value = value.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
+      value = value.encode(value.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
+      value = value[0, 255]
+    end
+
+    write_attribute(:website, value)
+  end
+
 
   def update_info!
     client = InstaClient.new.client
@@ -185,58 +211,6 @@ class User < ActiveRecord::Base
     self.save
   end
 
-  def self.get_info
-    User.where('bio is null').order(created_at: :desc).find_each do |u|
-      u.update_info!
-    end
-  end
-
-  def self.update_worker
-    User.not_grabbed.not_private.order(created_at: :desc).limit(1000).each { |u| u.update_info! }
-    # User.not_grabbed.not_private.limit(1000).each do |u|
-    #   u.update_info!
-    # end
-  end
-
-  def followers_size
-    client = InstaClient.new.client
-    begin
-      user_data = client.user(self.insta_id)['data']
-      user_data['counts']['followed_by']
-    rescue Instagram::BadRequest => e
-      if e.message =~ /you cannot view this resource/
-        self.private = true
-        self.grabbed_at = Time.now
-        self.save
-      elsif e.message =~ /this user does not exist/
-        self.destroy
-      end
-      return false
-    rescue
-      return false
-    end
-  end
-
-  def followees_size
-    return false if self.private?
-
-    client = InstaClient.new.client
-    begin
-      user_data = client.user(self.insta_id)['data']
-      user_data['counts']['follows']
-    rescue Instagram::BadRequest => e
-      if e.message =~ /you cannot view this resource/
-        self.private = true
-        self.grabbed_at = Time.now
-        self.save
-      elsif e.message =~ /this user does not exist/
-        self.destroy
-      end
-      return false
-    rescue
-      return false
-    end
-  end
 
   # Script stops if found more than 5 exists followers from list in database
   # Params
@@ -283,8 +257,12 @@ class User < ActiveRecord::Base
         retry
       end
 
+      eng_ig = Time.now
+
       users = User.where(insta_id: resp.data.map{|el| el['id']})
       fols = Follower.where(user_id: self.id, follower_id: users.map{|el| el.id})
+
+      follower_ids_list = self.follower_ids
 
       resp.data.each do |user_data|
         user = users.select{|el| el.insta_id == user_data['id'].to_i}.first
@@ -294,7 +272,6 @@ class User < ActiveRecord::Base
         end
 
         if user.insta_id.present? && user_data['id'].present? && user.insta_id != user_data['id'].to_i
-          binding.pry
           raise Exception
         end
         user.insta_data user_data
@@ -304,7 +281,7 @@ class User < ActiveRecord::Base
         end
 
         begin
-          user.save
+          user.save if user.changed?
         rescue ActiveRecord::RecordNotUnique => e
           if e.message.match('Duplicate entry') && e.message =~ /index_users_on_insta_id/
             user = User.where(insta_id: user_data['id']).first
@@ -333,18 +310,32 @@ class User < ActiveRecord::Base
         if options[:reload]
           fol.first_or_create
         else
-          if fol.size == 1
+          fol_exists = fols.select{|el| el.follower_id == user.id }.first
+          # if fol.size == 1
+          #   exists += 1
+          # else
+          if fol_exists
             exists += 1
           else
-            fol.first_or_create
+            fol.first_or_initialize
+            if fol.new_record?
+              exists += 1
+              fol.save
+            end
           end
+            # binding.pry
+          # end
         end
-        self.follower_ids << user.id
+        unless follower_ids_list.include?(user.id)
+          self.follower_ids << user.id
+          follower_ids_list << user.id
+        end
 
         user = nil # trying to save some RAM but nulling variable
       end
 
-      p "followers:#{self.follower_ids.size}/#{followed} request:#{(Time.now-start).to_f}s left:#{((Time.now - beginning_time).to_f/self.follower_ids.size * (followed-self.follower_ids.size)).to_i}s"
+      finish = Time.now
+      p "followers:#{follower_ids_list.size}/#{followed} request:#{(finish-start).to_f}s :: IG request:#{(eng_ig-start).to_f} :: left:#{((finish - beginning_time).to_f/self.follower_ids.size * (followed-follower_ids_list.size)).to_i}s"
       p "exists: #{exists}"
 
       break if !options[:ignore_exists] && exists >= 5
@@ -356,6 +347,7 @@ class User < ActiveRecord::Base
 
     self.save
   end
+
 
   def update_followees *args
 
@@ -380,7 +372,7 @@ class User < ActiveRecord::Base
       #   self.destroy
       end
       return false
-    rescue
+    rescue => e
       return false
     end
 
