@@ -317,7 +317,7 @@ class User < ActiveRecord::Base
           if fol_exists
             exists += 1
           else
-            fol.first_or_initialize
+            fol = fol.first_or_initialize
             if fol.new_record?
               exists += 1
               fol.save
