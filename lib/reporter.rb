@@ -29,7 +29,7 @@ class Reporter
 
         if user.media.where('likes_amount is not null and comments_amount is not null').size < 20 && !user.private?
           p "Get Users media #{user.id}"
-          user.recent_media(total_limit: 50, ignore_added: true, created_from: 5.days.ago)
+          user.recent_media(total_limit: 50, ignore_exists: true, created_from: 5.days.ago)
         end
 
         media = user.media.order(created_time: :desc).where('created_time < ?', 1.day.ago)
@@ -160,7 +160,7 @@ class Reporter
       users.each do |user|
         p "Start #{user.username}"
         user.update_info! if user.grabbed_at < 7.days.ago
-        user.recent_media ignore_added: true, total_limit: media_amount if user.media.size < media_amount
+        user.recent_media ignore_exists: true, total_limit: media_amount if user.media.size < media_amount
         user.update_media_location
         data << [user.username, user.popular_location]
         p "Added #{user.username} [#{data.size}/#{usernames.size}]"

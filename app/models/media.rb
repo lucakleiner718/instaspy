@@ -9,11 +9,11 @@ class Media < ActiveRecord::Base
   reverse_geocoded_by :location_lat, :location_lng
 
   before_save do
-    if self.location_name_changed? && self.location_name.present?
-      self.location_name = self.location_name.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
-      self.location_name = self.location_name.encode(self.location_name.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
-      self.location_name.strip!
-    end
+    # if self.location_name_changed? && self.location_name.present?
+    #   self.location_name = self.location_name.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
+    #   self.location_name = self.location_name.encode(self.location_name.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
+    #   self.location_name.strip!
+    # end
   end
 
   after_save do
@@ -21,13 +21,24 @@ class Media < ActiveRecord::Base
     # MediaLocationWorker.new.perform self.id if self.location_present? && self.location_lat.present? && self.location_lat_changed?
   end
 
-  def self.recent_media
-    tag = Tag.observed.where('observed_tags.media_updated_at < ? or observed_tags.media_updated_at is null', 1.minute.ago).order('observed_tags.media_updated_at asc').first
-    if tag.present?
-      tag.observed_tag.update_column :media_updated_at, Time.now
-      tag.recent_media
+  def location_name=(value)
+    if value.present?
+      value = value.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
+      value = value.encode(value.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
+      value.strip!
     end
+
+    # this is same as self[:attribute_name] = value
+    write_attribute(:location_name, value)
   end
+
+  # def self.recent_media
+  #   tag = Tag.observed.where('observed_tags.media_updated_at < ? or observed_tags.media_updated_at is null', 1.minute.ago).order('observed_tags.media_updated_at asc').first
+  #   if tag.present?
+  #     tag.observed_tag.update_column :media_updated_at, Time.now
+  #     tag.recent_media
+  #   end
+  # end
 
   def self.report starts=nil, ends=nil
     Reporter.media_report starts, ends
@@ -322,7 +333,7 @@ class Media < ActiveRecord::Base
 
       if options[:created_from].present? && Time.at(avg_created_time) > options[:created_from]
         max_timestamp = media_list.data.last.created_time
-      elsif options[:ignore_added] || added.to_f / media_list.data.size > 0.1
+      elsif options[:ignore_exists] || added.to_f / media_list.data.size > 0.1
         max_timestamp = media_list.data.last.created_time
       elsif total_added >= options[:total_limit]
         break

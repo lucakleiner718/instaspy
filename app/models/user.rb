@@ -335,7 +335,7 @@ class User < ActiveRecord::Base
       end
 
       finish = Time.now
-      p "followers:#{follower_ids_list.size}/#{followed} request:#{(finish-start).to_f}s :: IG request:#{(eng_ig-start).to_f} :: left:#{((finish - beginning_time).to_f/self.follower_ids.size * (followed-follower_ids_list.size)).to_i}s"
+      p "#{self.username }followers:#{follower_ids_list.size}/#{followed} request:#{(finish-start).to_f}s :: IG request:#{(eng_ig-start).to_f} :: left:#{((finish - beginning_time).to_f/self.follower_ids.size * (followed-follower_ids_list.size)).to_i}s"
       p "exists: #{exists}"
 
       break if !options[:ignore_exists] && exists >= 5
@@ -358,25 +358,9 @@ class User < ActiveRecord::Base
     client = InstaClient.new.client
     next_cursor = nil
 
-    begin
-      user_data = client.user(self.insta_id)['data']
-    rescue Instagram::TooManyRequests => e
-      sleep 120
-      retry
-    rescue Instagram::BadRequest => e
-      if e.message =~ /you cannot view this resource/
-        self.private = true
-        self.grabbed_at = Time.now
-        self.save
-      # elsif e.message =~ /this user does not exist/
-      #   self.destroy
-      end
-      return false
-    rescue => e
-      return false
-    end
+    self.update_info!
 
-    follows = user_data['counts']['follows']
+    follows = self.followed_by
     puts "#{self.username} follows: #{follows}"
 
     return false if follows == 0
@@ -610,7 +594,7 @@ class User < ActiveRecord::Base
         end
       elsif total_added >= options[:total_limit]
         # stop
-      elsif options[:ignore_added]
+      elsif options[:ignore_exists]
         move_next = true
       elsif added.to_f / media_list.data.size > 0.1
         move_next = true
@@ -686,7 +670,7 @@ class User < ActiveRecord::Base
 
     # get some media, at least latest 50 posts
     if !self.private? && self.media_amount.present? && media_size < media_amount
-      self.recent_media ignore_added: true, total_limit: media_amount
+      self.recent_media ignore_exists: true, total_limit: media_amount
     end
 
     self.update_media_location

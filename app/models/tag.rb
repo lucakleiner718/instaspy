@@ -39,9 +39,9 @@ class Tag < ActiveRecord::Base
   end
 
   # @depricated
-  def self.recent_media
-    Media.recent_media
-  end
+  # def self.recent_media
+  #   Media.recent_media
+  # end
 
   # offset (DateTime) - start point of user grabbing
   # total_limit (integer) - amount of media, stop grabbing when code receive provided amount
@@ -56,16 +56,18 @@ class Tag < ActiveRecord::Base
     start_media_amount = self.media.size
     created_time_list = []
 
+    retries = 0
+
     while true
       client = InstaClient.new.client
 
       begin
         media_list = client.tag_recent_media(URI.escape(self.name), max_tag_id: max_tag_id, count: 100)
       rescue JSON::ParserError, Instagram::ServiceUnavailable, Instagram::BadGateway, Instagram::InternalServerError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
-        p 'issue'
-        break
-      rescue Interrupt
-        raise Interrupt
+        break if retries > 10
+        sleep 30
+        retries += 1
+        retry
       end
 
       added = 0
@@ -112,7 +114,7 @@ class Tag < ActiveRecord::Base
       elsif total_added > options[:total_limit]
         p "#{total_added} total added is over limit #{options[:total_limit]}"
         # stopping
-      elsif options[:ignore_added]
+      elsif options[:ignore_exists]
         move_next = true
       # if amount of currently added is voer 90% of grabbed from instagram
       elsif added.to_f / media_list.data.size > 0.3
