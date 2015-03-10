@@ -13,24 +13,6 @@ class User < ActiveRecord::Base
   scope :privates, -> { where private: true }
 
   before_save do
-    # if self.full_name_changed? && self.full_name.present?
-    #   self.full_name = self.full_name.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
-    #   self.full_name = self.full_name.encode(self.full_name.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
-    #   self.full_name.strip!
-    # end
-
-    # if self.bio_changed? && self.bio.present?
-    #   self.bio = self.bio.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
-    #   self.bio = self.bio.encode(self.bio.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
-    #   self.bio.strip!
-    # end
-
-    # if self.website_changed? && self.website.present?
-    #   self.website = self.website.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
-    #   self.website = self.website.encode(self.website.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
-    #   self.website = self.website[0, 255]
-    # end
-
     # Catch email from bio
     if self.bio.present?
       email_regex = /([\w+\-.]+@[a-z\d\-]+(\.[a-z]+)*\.[a-z]+)/
@@ -54,6 +36,7 @@ class User < ActiveRecord::Base
       value = value.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
       value = value.encode(value.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
       value.strip!
+      value = value[0, 255]
     end
 
     # this is same as self[:attribute_name] = value
@@ -266,7 +249,7 @@ class User < ActiveRecord::Base
       follower_ids_list = self.follower_ids.to_a
 
       resp.data.each do |user_data|
-        p "Row #{user_data['username']} start"
+        # p "Row #{user_data['username']} start"
 
         new_record = false
 
@@ -333,11 +316,11 @@ class User < ActiveRecord::Base
         end
 
         user = nil # trying to save some RAM but nulling variable
-        p "Row #{user_data['username']} end"
+        # p "Row #{user_data['username']} end"
       end
 
       finish = Time.now
-      p "#{self.username} followers:#{follower_ids_list.size}/#{followed} request:#{(finish-start).to_f}s :: IG request:#{(eng_ig-start).to_f} :: left:#{((finish - beginning_time).to_f/follower_ids_list.size * (followed-follower_ids_list.size)).to_i}s / exists: #{exists} / added: #{added}"
+      p "#{self.username} followers:#{follower_ids_list.size}/#{followed} request:#{(finish-start).to_f}s :: IG request:#{(eng_ig-start).to_f} / exists: #{exists} / added: #{added}"
 
       break if !options[:ignore_exists] && exists >= 5
 
