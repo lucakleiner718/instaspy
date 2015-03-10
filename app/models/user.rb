@@ -233,6 +233,7 @@ class User < ActiveRecord::Base
     p "#{self.username} followed by: #{followed}"
 
     exists = 0
+    added = 0
     if options[:reload]
       self.follower_ids = []
     end
@@ -262,9 +263,13 @@ class User < ActiveRecord::Base
       users = User.where(insta_id: resp.data.map{|el| el['id']})
       fols = Follower.where(user_id: self.id, follower_id: users.map{|el| el.id})
 
-      follower_ids_list = self.follower_ids
+      follower_ids_list = self.follower_ids.to_a
 
       resp.data.each do |user_data|
+        p "Row #{user_data['username']} start"
+
+        new_record = false
+
         user = users.select{|el| el.insta_id == user_data['id'].to_i}.first
         unless user
           user = User.new insta_id: user_data['id']
@@ -297,46 +302,42 @@ class User < ActiveRecord::Base
           end
         end
 
-        # fol = nil
-        #
-        # if new_record
-        #   fol = fols.select{|el| el.follower_id == user.id }.first
-        # end
-        #
-        # unless fol
-        fol = Follower.where(user_id: self.id, follower_id: user.id)
-        # end
-
-        if options[:reload]
-          fol.first_or_create
+        if new_record
+          Follower.create(user_id: self.id, follower_id: user.id)
+          added += 1
         else
-          fol_exists = fols.select{|el| el.follower_id == user.id }.first
-          # if fol.size == 1
-          #   exists += 1
-          # else
-          if fol_exists
-            exists += 1
+          fol = Follower.where(user_id: self.id, follower_id: user.id)
+
+          if options[:reload]
+            fol.first_or_create
+            added += 1
           else
-            fol = fol.first_or_initialize
-            if fol.new_record?
+            fol_exists = fols.select{|el| el.follower_id == user.id }.first
+
+            if fol_exists
               exists += 1
-              fol.save
+            else
+              fol = fol.first_or_initialize
+              if fol.new_record?
+                fol.save
+                added += 1
+              else
+                exists += 1
+              end
             end
           end
-            # binding.pry
-          # end
         end
+
         unless follower_ids_list.include?(user.id)
-          self.follower_ids << user.id
           follower_ids_list << user.id
         end
 
         user = nil # trying to save some RAM but nulling variable
+        p "Row #{user_data['username']} end"
       end
 
       finish = Time.now
-      p "#{self.username }followers:#{follower_ids_list.size}/#{followed} request:#{(finish-start).to_f}s :: IG request:#{(eng_ig-start).to_f} :: left:#{((finish - beginning_time).to_f/self.follower_ids.size * (followed-follower_ids_list.size)).to_i}s"
-      p "exists: #{exists}"
+      p "#{self.username} followers:#{follower_ids_list.size}/#{followed} request:#{(finish-start).to_f}s :: IG request:#{(eng_ig-start).to_f} :: left:#{((finish - beginning_time).to_f/follower_ids_list.size * (followed-follower_ids_list.size)).to_i}s / exists: #{exists} / added: #{added}"
 
       break if !options[:ignore_exists] && exists >= 5
 
