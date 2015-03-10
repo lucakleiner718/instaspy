@@ -61,3 +61,4 @@ gem 'geocoder'
 gem 'countries'
 gem "airbrake"
 gem 'kaminari'
+gem 'colorize'

@@ -205,7 +205,6 @@ class User < ActiveRecord::Base
 
     options = args.extract_options!
 
-    client = InstaClient.new.client
     next_cursor = nil
 
     self.update_info!
@@ -213,7 +212,7 @@ class User < ActiveRecord::Base
     return false if self.destroyed? || self.private?
 
     followed = self.followed_by
-    p "#{self.username} followed by: #{followed}"
+    puts ">> [#{self.username.green}] followed by: #{followed}"
 
     exists = 0
     added = 0
@@ -227,6 +226,7 @@ class User < ActiveRecord::Base
       start = Time.now
 
       begin
+        client = InstaClient.new.client
         resp = client.user_followed_by self.insta_id, cursor: next_cursor, count: 100
       rescue Instagram::ServiceUnavailable => e
         if e.message =~ /rate limiting/
@@ -241,7 +241,7 @@ class User < ActiveRecord::Base
         retry
       end
 
-      eng_ig = Time.now
+      end_ig = Time.now
 
       users = User.where(insta_id: resp.data.map{|el| el['id']})
       fols = Follower.where(user_id: self.id, follower_id: users.map{|el| el.id})
@@ -320,7 +320,7 @@ class User < ActiveRecord::Base
       end
 
       finish = Time.now
-      p "#{self.username} followers:#{follower_ids_list.size}/#{followed} request:#{(finish-start).to_f}s :: IG request:#{(eng_ig-start).to_f} / exists: #{exists} / added: #{added}"
+      puts ">> [#{self.username.green}] followers:#{follower_ids_list.size}/#{followed} request:#{(finish-start).to_f}s :: IG request:#{(end_ig-start).to_f} / exists: #{exists} / added: #{added}"
 
       break if !options[:ignore_exists] && exists >= 5
 
@@ -696,7 +696,7 @@ class User < ActiveRecord::Base
   end
 
   def update_media_location
-    p "update_media_location: #{self.username}"
+    puts ">> update_media_location: #{self.username.green}"
     with_location = self.media.with_location
     with_location_amount = with_location.size
 
