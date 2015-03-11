@@ -95,7 +95,7 @@ class Tag < ActiveRecord::Base
       created_time_list = created_time_list.sort
       median_created_time = created_time_list.size % 2 == 0 ? (created_time_list[(created_time_list.size/2-1)..(created_time_list.size/2+1)].sum / 3) : (created_time_list[(created_time_list.size/2)..(created_time_list.size/2+1)].sum / 2)
 
-      puts "Returned #{media_list.data.size} / Median created time: #{Time.at median_created_time.yellow} / Added: #{added.blue}/#{total_added.cyan}"
+      puts "Returned #{media_list.data.size} / Median created time: #{(Time.at median_created_time).to_s.yellow} / Added: #{added.to_s.blue}/#{total_added.to_s.cyan}"
 
       move_next = false
 
