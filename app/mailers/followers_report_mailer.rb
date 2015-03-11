@@ -69,7 +69,7 @@ class FollowersReportMailer < ActionMailer::Base
         followers.find_each do |follower|
           user = follower.follower
           begin
-            user.update_info! if user.grabbed_at.blank? || user.grabbed_at < 7.days.ago || user.followed_by.blank? || user.follows.blank? || user.media_amount.blank?
+            user.update_info! if user.grabbed_at.blank? || user.grabbed_at < 7.days.ago || user.followed_by.blank? || user.follows.blank? || user.media_amount.blank? || user.bio.nil? || user.website.nil?
             csv << [user.username, user.full_name, user.bio, user.website, user.follows, user.followed_by, user.media_amount, user.email]
           rescue => e
             # somehow we don't have user record, just delete link-follower

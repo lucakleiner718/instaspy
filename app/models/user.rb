@@ -128,7 +128,7 @@ class User < ActiveRecord::Base
           return false
         end
 
-        if self.private? && self.grabbed_at && self.grabbed_at > 7.days.ago && self.followed_by.present? && self.follows.present?
+        if self.private? && self.grabbed_at && self.grabbed_at > 7.days.ago && self.followed_by.present? && self.follows.present? && !self.bio.nil? && !self.website.nil?
           return true
         end
 
@@ -143,7 +143,7 @@ class User < ActiveRecord::Base
         end
 
         self.save
-        return self
+        return true
       elsif e.message =~ /this user does not exist/
         self.destroy
       end
@@ -443,7 +443,7 @@ class User < ActiveRecord::Base
     self.username = data['username']
     self.bio = data['bio'] unless data['bio'].nil?
     self.website = data['website'] unless data['website'].nil?
-    self.full_name = data['full_name']
+    self.full_name = data['full_name'] unless data['full_name'].nil?
     self.insta_id = data['id'] if self.insta_id.blank?
   end
 
