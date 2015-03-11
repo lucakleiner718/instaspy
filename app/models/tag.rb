@@ -68,6 +68,9 @@ class Tag < ActiveRecord::Base
         sleep 30
         retries += 1
         retry
+      rescue Instagram::TooManyRequests => e
+        sleep 60
+        retry
       end
 
       added = 0

@@ -372,7 +372,7 @@ class User < ActiveRecord::Base
         client = InstaClient.new.client
         resp = client.user_follows self.insta_id, cursor: next_cursor, count: 100
       rescue Instagram::TooManyRequests => e
-        sleep 120
+        sleep 60
         retry
       end
       next_cursor = resp.pagination['next_cursor']
