@@ -441,8 +441,8 @@ class User < ActiveRecord::Base
 
   def insta_data data
     self.username = data['username']
-    self.bio = data['bio'] if self.bio.present?
-    self.website = data['website'] if self.website.present?
+    self.bio = data['bio'] unless data['bio'].nil?
+    self.website = data['website'] unless data['website'].nil?
     self.full_name = data['full_name']
     self.insta_id = data['id'] if self.insta_id.blank?
   end
