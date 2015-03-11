@@ -106,8 +106,9 @@ class User < ActiveRecord::Base
 
     exists_username = nil
 
+    return false if self.insta_id.blank?
+
     begin
-      raise if self.insta_id.blank?
       info = client.user(self.insta_id)
       data = info.data
 
@@ -122,13 +123,13 @@ class User < ActiveRecord::Base
       if e.message =~ /you cannot view this resource/
 
         # if user is private and we don't have it's username, than just remove it from db
-        if self.private && self.username.blank?
+        if self.private? && self.username.blank?
           self.destroy
           return false
         end
 
-        if self.private && self.grabbed_at && self.grabbed_at > 7.days.ago
-          return self
+        if self.private? && self.grabbed_at && self.grabbed_at > 7.days.ago && self.followed_by.present? && self.follows.present?
+          return true
         end
 
         self.private = true
@@ -217,8 +218,6 @@ class User < ActiveRecord::Base
     if options[:reload]
       self.follower_ids = []
     end
-
-    beginning_time = Time.now
 
     total_exists = 0
     total_added = 0
@@ -346,25 +345,29 @@ class User < ActiveRecord::Base
 
 
   def update_followees *args
-
-    return false if self.insta_id.blank? || self.private?
+    return false if self.insta_id.blank?
 
     options = args.extract_options!
 
-    client = InstaClient.new.client
     next_cursor = nil
 
     self.update_info!
 
-    follows = self.followed_by
-    puts "#{self.username} follows: #{follows}"
+    return false if self.destroyed? || self.private?
 
-    return false if follows == 0
+    followed = self.followed_by
+    puts ">> [#{self.username.green}] follows: #{followed}"
+
+    return false if self.follows == 0
+
+    if options[:reload]
+      self.follower_ids = []
+    end
+
+    # total_exists = 0
+    # total_added = 0
 
     exists = 0
-    if options[:reload]
-      self.followee_ids = []
-    end
 
     followee_ids = []
     begining_time = Time.now
@@ -372,6 +375,7 @@ class User < ActiveRecord::Base
     while true
       start = Time.now
       begin
+        client = InstaClient.new.client
         resp = client.user_follows self.insta_id, cursor: next_cursor, count: 100
       rescue Instagram::TooManyRequests => e
         sleep 120
@@ -394,7 +398,22 @@ class User < ActiveRecord::Base
           user.update_info!
         end
 
-        user.save if user.changed?
+        begin
+          user.save if user.changed?
+        rescue ActiveRecord::RecordNotUnique => e
+          if e.message.match('Duplicate entry') && e.message =~ /index_users_on_insta_id/
+            user = User.where(insta_id: user_data['id']).first
+            new_record = false
+          elsif e.message.match('Duplicate entry') && e.message =~ /index_users_on_username/
+            exists_user = User.where(username: user_data['username']).first
+            if exists_user.insta_id != user_data['id']
+              exists_user.destroy
+              retry
+            end
+          else
+            raise e
+          end
+        end
 
         fol = nil
         fol = fols.select{|el| el.user_id == user.id }.first unless options[:reload]

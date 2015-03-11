@@ -68,11 +68,15 @@ class ProcessFollowersWorker
     return false if origin.destroyed? || origin.private?
 
     while true
+
+      puts 'begin IG request'
+
       begin
         client = InstaClient.new.client
         resp = client.user_followed_by origin.insta_id, cursor: next_cursor, count: 100
       rescue Instagram::ServiceUnavailable => e
         if e.message =~ /rate limiting/
+          puts "Rate limiting".red
           sleep 60
           retry
         else
@@ -80,11 +84,14 @@ class ProcessFollowersWorker
         end
       rescue Instagram::BadGateway, Instagram::InternalServerError, Instagram::ServiceUnavailable, JSON::ParserError,
         Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
+        puts "Issue".red
         sleep 20
         retry
       end
 
+      binding.pry
       ProcessFollowersWorker.perform_async origin.id, resp
+      puts 'added job'
 
       next_cursor = resp.pagination['next_cursor']
 

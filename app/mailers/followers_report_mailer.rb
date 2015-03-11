@@ -58,7 +58,7 @@ class FollowersReportMailer < ActionMailer::Base
     @finish = 1.day.ago.utc.end_of_day
     @files = []
 
-    origins = [origin] unless origins.is_a?(Array)
+    origins = [origins] unless origins.is_a?(Array)
 
     origins.each do |origin|
       followers = Follower.where(user_id: origin.id)

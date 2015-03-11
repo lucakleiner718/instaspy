@@ -104,7 +104,7 @@ class Tag < ActiveRecord::Base
           move_next = true
         end
       elsif total_added > options[:total_limit]
-        puts "#{total_added.blue} total added is over limit #{options[:total_limit].red}"
+        puts "#{total_added.to_s.blue} total added is over limit #{options[:total_limit].to_s.red}"
         # stopping
       elsif options[:ignore_exists]
         move_next = true
