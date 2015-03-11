@@ -64,7 +64,11 @@ class User < ActiveRecord::Base
   end
 
 
-  def update_info!
+  def update_info! *args
+    options = args.extract_options!
+
+    return true if self.actual? && !options[:force]
+
     client = InstaClient.new.client
 
     if self.insta_id.blank? && self.username.present?
@@ -86,16 +90,6 @@ class User < ActiveRecord::Base
         data = d
       end
 
-    #   if self.insta_id.blank?
-    #     exists = User.where(insta_id: data['id']).first
-    #     if exists
-    #       exists.username = self.username
-    #       exists.save
-    #       self.destroy
-    #       return false
-    #     end
-    #   end
-    #
       if data
         self.insta_data data
       else
@@ -128,7 +122,7 @@ class User < ActiveRecord::Base
           return false
         end
 
-        if self.private? && self.grabbed_at && self.grabbed_at > 7.days.ago && self.followed_by.present? && self.follows.present? && !self.bio.nil? && !self.website.nil?
+        if self.private? && !self.outdated?
           return true
         end
 
@@ -829,6 +823,15 @@ class User < ActiveRecord::Base
     p "Added #{added.size}"
 
     GeneralMailer.process_usernames_file(csv_string).deliver
+  end
+
+  def outdated?
+    self.grabbed_at.blank? || self.grabbed_at < 7.days.ago || self.bio.nil? || self.website.nil? || self.follows.blank? ||
+      self.followed_by.blank?
+  end
+
+  def actual?
+    !self.outdated?
   end
 
 end

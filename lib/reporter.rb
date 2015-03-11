@@ -13,7 +13,7 @@ class Reporter
 
         find_usernames.each do |u|
           user = User.where(username: u).first_or_create
-          user.update_info!
+          user.update_info! force: true
           users << user if user.insta_id.present?
         end
       end
@@ -152,14 +152,14 @@ class Reporter
       if users.size < group.size
         not_exists = group - users.map{|el| el.username}
         not_exists.each do |username|
-          user = User.get(username).update_info!
+          user = User.get(username).update_info! force: true
           users << user if user
         end
       end
 
       users.each do |user|
         p "Start #{user.username}"
-        user.update_info! if user.grabbed_at < 7.days.ago
+        user.update_info! if user.outdated?
         user.recent_media ignore_exists: true, total_limit: media_amount if user.media.size < media_amount
         user.update_media_location
         data << [user.username, user.popular_location]
@@ -182,7 +182,7 @@ class Reporter
     media_list = Media.near([lat, lng], options[:distance]/1000, units: :km).includes(:user)
     media_list = media_list.where('created_time >= ?', options[:created_till]) if options[:created_till].present?
 
-    csv << ['Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followed By', 'Media Amount', 'Email', 'AVG likes', 'Country', 'State', 'City']
+    csv << ['Username', 'Full Name', 'Bio', 'Website', 'Follows', 'Followers', 'Email', 'Times followed']
     csv << [user.username, user.full_name, user.website, user.bio, user.follows, user.followed_by, user.media_amount, user.email, user.avg_likes, user.location_country, user.location_state, user.location_city]
 
     csv_string = CSV.generate do |csv|
@@ -190,7 +190,7 @@ class Reporter
 
       media_list.find_each do |media|
         user = media.user
-        user.update_info! if user.grabbed_at.blank? || user.grabbed_at < 7.days.ago || user.bio.blank? || user.website.blank? || user.email.blank?
+        user.update_info! if user.outdated?
         # media.update_location! if media.location_present? && media.location_lat.present? && media.location.blank?
         csv << [
           user.username, user.full_name, user.website, user.bio, user.follows, user.followed_by, user.media_amount,
@@ -258,7 +258,7 @@ class Reporter
 
       # update users from list
       users.each do |user|
-        user.update_info! if user.grabbed_at.blank? || user.grabbed_at < 1.month.ago || user.followed_by.blank?
+        user.update_info! if user.outdated?
       end
 
       # leave in list users only with 1000 subscribers
@@ -290,7 +290,7 @@ class Reporter
 
       # get user's bio, email and website
       users.each do |user|
-        user.update_info! if user.bio.blank? || user.email.blank? || user.website.blank?
+        user.update_info! if user.outdated?
       end
 
       results << ['Final result', users.size]
@@ -319,6 +319,27 @@ class Reporter
       end
     end
     File.write 'public/reports/users-from-300k/300k-report.csv', csv_string
+  end
+
+  def same_followees
+    data = []
+    amounts = {}
+    unames.each do |username|
+      User.get(username).followees.each do |fol|
+        if fol.grabbed_at.blank? || fol.grabbed_at < 7.days.ago || fol.bio.nil? || fol.website.nil? || fol.follows.blank? || fol.followed_by.blank?
+          puts "Updating #{fol.username} ..."
+          fol.update_info!
+        end
+        data << [fol.username, fol.full_name, fol.bio, fol.website, fol.follows, fol.followed_by, fol.email]
+        amounts[fol.username] = 0 if amounts[fol.username].blank?
+        amounts[fol.username] += 1
+      end
+      puts "Processed #{username}. Data size: #{data.size}"
+    end
+    data.uniq!{|el| el[0]}
+    data.map!{|row| row << amounts[row[0]]; row}
+
+    data
   end
 
 end
