@@ -71,7 +71,6 @@ class Tag < ActiveRecord::Base
       end
 
       added = 0
-      avg_created_time = 0
 
       media_list.data.each do |media_item|
         media = Media.where(insta_id: media_item['id']).first_or_initialize
@@ -86,7 +85,6 @@ class Tag < ActiveRecord::Base
         rescue ActiveRecord::RecordNotUnique => e
         end
 
-        avg_created_time += media['created_time'].to_i
         created_time_list << media['created_time'].to_i
       end
 
@@ -94,25 +92,19 @@ class Tag < ActiveRecord::Base
 
       break if media_list.data.size == 0
 
-      avg_created_time = avg_created_time / media_list.data.size
-
       created_time_list = created_time_list.sort
       median_created_time = created_time_list.size % 2 == 0 ? (created_time_list[(created_time_list.size/2-1)..(created_time_list.size/2+1)].sum / 3) : (created_time_list[(created_time_list.size/2)..(created_time_list.size/2+1)].sum / 2)
 
-      p "returned #{media_list.data.size}"
-      p "AVG: #{Time.at avg_created_time} / Median: #{Time.at median_created_time}"
-      p "added: #{added}"
-      # sleep 2
+      puts "Returned #{media_list.data.size} / Median created time: #{Time.at median_created_time.yellow} / Added: #{added.blue}/#{total_added.cyan}"
 
       move_next = false
 
       if options[:created_from].present?
-        # if Time.at(avg_created_time) > options[:created_from]
         if Time.at(median_created_time) > options[:created_from]
           move_next = true
         end
       elsif total_added > options[:total_limit]
-        p "#{total_added} total added is over limit #{options[:total_limit]}"
+        puts "#{total_added.blue} total added is over limit #{options[:total_limit].red}"
         # stopping
       elsif options[:ignore_exists]
         move_next = true

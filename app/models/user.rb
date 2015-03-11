@@ -171,7 +171,7 @@ class User < ActiveRecord::Base
     url = "http://instagram.com/#{self.username}/"
     resp = Curl::Easy.perform(url) do |curl|
       curl.headers["User-Agent"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.93 Safari/537.36"
-      curl.verbose = true
+      curl.verbose = Rails.env.development?
       curl.follow_location = true
     end
     html = Nokogiri::HTML(resp.body)
@@ -214,16 +214,20 @@ class User < ActiveRecord::Base
     followed = self.followed_by
     puts ">> [#{self.username.green}] followed by: #{followed}"
 
-    exists = 0
-    added = 0
     if options[:reload]
       self.follower_ids = []
     end
 
     beginning_time = Time.now
 
+    total_exists = 0
+    total_added = 0
+
     while true
       start = Time.now
+
+      exists = 0
+      added = 0
 
       begin
         client = InstaClient.new.client
@@ -319,8 +323,11 @@ class User < ActiveRecord::Base
         # p "Row #{user_data['username']} end"
       end
 
+      total_exists += exists
+      total_added += added
+
       finish = Time.now
-      puts ">> [#{self.username.green}] followers:#{follower_ids_list.size}/#{followed} request:#{(finish-start).to_f}s :: IG request:#{(end_ig-start).to_f} / exists: #{exists} / added: #{added}"
+      puts ">> [#{self.username.green}] followers:#{follower_ids_list.size}/#{followed} request:#{(finish-start).to_f.round(2)}s :: IG request: #{(end_ig-start).to_f.round(2)} / exists: #{exists} (#{total_exists.to_s.light_black}) / added: #{added} (#{total_added.to_s.light_black})"
 
       break if !options[:ignore_exists] && exists >= 5
 
@@ -330,6 +337,11 @@ class User < ActiveRecord::Base
     end
 
     self.save
+  end
+
+
+  def update_followers_async
+    ProcessFollowersWorker.spawn self.id
   end
 
 
