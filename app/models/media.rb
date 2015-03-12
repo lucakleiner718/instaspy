@@ -45,9 +45,6 @@ class Media < ActiveRecord::Base
     begin
       client = InstaClient.new.client
       response = client.media_item(self.insta_id)
-    rescue Faraday::ConnectionFailed => e
-      Rails.logger.error('Faraday::ConnectionFailed')
-      return false
     rescue Instagram::BadRequest => e
       if e.message =~ /invalid media id/
         self.destroy
@@ -56,22 +53,14 @@ class Media < ActiveRecord::Base
         self.user.update_info!
         return false
       else
-        raise Instagram::BadRequest.new(e)
-        # binding.pry
-        # return false
+        raise e
       end
-    rescue Instagram::ServiceUnavailable => e
+    rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::BadRequest,
+      Instagram::InternalServerError,
+      JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
+      sleep 30
       retries += 1
       retry if retries <= 5
-      raise Instagram::ServiceUnavailable.new(e)
-    # rescue Interrupt
-    #   raise Interrupt
-    # rescue StandardError => e
-    #   # binding.pry
-    #   return false
-    rescue => e
-      # binding.pry
-      return false
     end
 
     media_item = response.data
@@ -264,14 +253,16 @@ class Media < ActiveRecord::Base
     options[:distance] ||= 100
 
     while true
+      retries = 0
       begin
         client = InstaClient.new.client
         media_list = client.media_search(lat, lng, distance: options[:distance], min_timestamp: min_timestamp, max_timestamp: max_timestamp, count: 100)
-      rescue Instagram::BadGateway, Instagram::InternalServerError, Instagram::ServiceUnavailable, JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
-        sleep 20
-        retry
-      rescue Interrupt
-        raise Interrupt
+      rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::BadRequest,
+        Instagram::InternalServerError,
+        JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
+        sleep 30
+        retries += 1
+        retry if retries <= 5
       end
 
       added = 0

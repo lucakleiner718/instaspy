@@ -56,21 +56,17 @@ class Tag < ActiveRecord::Base
     start_media_amount = self.media.size
     created_time_list = []
 
-    retries = 0
-
     while true
-      client = InstaClient.new.client
-
+      retries = 0
       begin
+        client = InstaClient.new.client
         media_list = client.tag_recent_media(URI.escape(self.name), max_tag_id: max_tag_id, count: 100)
-      rescue JSON::ParserError, Instagram::ServiceUnavailable, Instagram::BadGateway, Instagram::InternalServerError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
-        break if retries > 10
+      rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::BadRequest,
+        Instagram::InternalServerError,
+        JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
         sleep 30
         retries += 1
-        retry
-      rescue Instagram::TooManyRequests => e
-        sleep 60
-        retry
+        retry if retries <= 5
       end
 
       added = 0

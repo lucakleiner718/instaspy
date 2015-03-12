@@ -69,10 +69,18 @@ class User < ActiveRecord::Base
 
     return true if self.actual? && !options[:force]
 
-    client = InstaClient.new.client
-
     if self.insta_id.blank? && self.username.present?
-      resp = client.user_search(self.username)
+      retries = 0
+      begin
+        client = InstaClient.new.client
+        resp = client.user_search(self.username)
+      rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::BadRequest,
+        Instagram::InternalServerError,
+        JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
+        sleep 30
+        retries += 1
+        retry if retries <= 5
+      end
 
       data = nil
       data = resp.data.select{|el| el['username'].downcase == self.username.downcase }.first if resp.data.size > 0
@@ -102,7 +110,10 @@ class User < ActiveRecord::Base
 
     return false if self.insta_id.blank?
 
+    retries = 0
+
     begin
+      client = InstaClient.new.client
       info = client.user(self.insta_id)
       data = info.data
 
@@ -142,9 +153,11 @@ class User < ActiveRecord::Base
         self.destroy
       end
       return false
-    rescue => e
-      # binding.pry
-      return false
+    rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::InternalServerError,
+      JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
+      sleep 30
+      retries += 1
+      retry if retries <= 5
     end
 
     self.username = data['username']
@@ -221,21 +234,17 @@ class User < ActiveRecord::Base
 
       exists = 0
       added = 0
+      retries = 0
 
       begin
         client = InstaClient.new.client
         resp = client.user_followed_by self.insta_id, cursor: next_cursor, count: 100
-      rescue Instagram::ServiceUnavailable => e
-        if e.message =~ /rate limiting/
-          sleep 60
-          retry
-        else
-          raise e
-        end
-      rescue Instagram::BadGateway, Instagram::InternalServerError, Instagram::ServiceUnavailable, JSON::ParserError,
-             Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
-        sleep 20
-        retry
+      rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::BadRequest,
+        Instagram::InternalServerError,
+        JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
+        sleep 30
+        retries += 1
+        retry if retries <= 5
       end
 
       end_ig = Time.now
@@ -368,12 +377,16 @@ class User < ActiveRecord::Base
 
     while true
       start = Time.now
+      retries = 0
       begin
         client = InstaClient.new.client
         resp = client.user_follows self.insta_id, cursor: next_cursor, count: 100
-      rescue Instagram::TooManyRequests => e
-        sleep 60
-        retry
+      rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::BadRequest,
+        Instagram::InternalServerError,
+        JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
+        sleep 30
+        retries += 1
+        retry if retries <= 5
       end
       next_cursor = resp.pagination['next_cursor']
 
@@ -448,16 +461,16 @@ class User < ActiveRecord::Base
 
     return user if !user.new_record? && user.grabbed_at.present? && user.grabbed_at > 1.month.ago
 
-    client = InstaClient.new.client
+    retries = 0
     begin
+      client = InstaClient.new.client
       resp = client.user_search username
-    rescue Instagram::TooManyRequests => e
-      sleep 120
-      retry
-    rescue Instagram::BadGateway, Instagram::InternalServerError, Instagram::ServiceUnavailable, JSON::ParserError,
-           Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
-      sleep 20
-      retry
+    rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::BadRequest,
+      Instagram::InternalServerError,
+      JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
+      sleep 30
+      retries += 1
+      retry if retries <= 5
     end
 
     data = nil
@@ -555,17 +568,16 @@ class User < ActiveRecord::Base
     options[:total_limit] ||= 2_000
 
     while true
-      client = InstaClient.new.client
-
+      retries = 0
       begin
+        client = InstaClient.new.client
         media_list = client.user_recent_media self.insta_id, count: 100, max_id: max_id
-      rescue Instagram::TooManyRequests => e
-        sleep 120
-        retry
-      rescue JSON::ParserError, Errno::EPIPE,
-             Instagram::ServiceUnavailable, Instagram::BadGateway, Instagram::InternalServerError, Instagram::BadRequest,
-             Faraday::ConnectionFailed, Faraday::SSLError => e
-        break
+      rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::BadRequest,
+        Instagram::InternalServerError,
+        JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
+        sleep 30
+        retries += 1
+        retry if retries <= 5
       end
 
       added = 0
