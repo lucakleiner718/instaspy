@@ -117,13 +117,13 @@ class User < ActiveRecord::Base
       info = client.user(self.insta_id)
       data = info.data
 
-      if data['username'] != self.username
-        exists_username = User.where(username: data['username']).first
-        if exists_username
-          exists_username.username = nil
-          exists_username.save
-        end
-      end
+      # if data['username'] != self.username
+      #   exists_username = User.where(username: data['username']).first
+      #   if exists_username
+      #     exists_username.username = nil
+      #     exists_username.save
+      #   end
+      # end
     rescue Instagram::BadRequest => e
       if e.message =~ /you cannot view this resource/
 
@@ -845,5 +845,7 @@ class User < ActiveRecord::Base
   def actual?
     !self.outdated?
   end
+
+  def save_followers_to_file
 
 end
