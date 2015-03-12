@@ -657,7 +657,7 @@ class User < ActiveRecord::Base
   def popular_location *args
     options = args.extract_options!
 
-    if self.location_updated_at && self.location_updated_at > 7.days.ago && self.location_country && !options[:force]
+    if self.location_updated_at && self.location_updated_at > 1.month.ago && self.location_country && !options[:force]
       return {
         country: self.location_country,
         state: self.location_state,
@@ -826,8 +826,8 @@ class User < ActiveRecord::Base
   end
 
   def outdated?
-    self.grabbed_at.blank? || self.grabbed_at < 7.days.ago || self.bio.nil? || self.website.nil? || self.follows.blank? ||
-      self.followed_by.blank?
+    self.grabbed_at.blank? || self.grabbed_at < 20.days.ago || self.bio.nil? || self.website.nil? || self.follows.blank? ||
+      self.followed_by.blank? || self.full_name.nil?
   end
 
   def actual?

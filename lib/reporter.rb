@@ -182,9 +182,6 @@ class Reporter
     media_list = Media.near([lat, lng], options[:distance]/1000, units: :km).includes(:user)
     media_list = media_list.where('created_time >= ?', options[:created_till]) if options[:created_till].present?
 
-    csv << ['Username', 'Full Name', 'Bio', 'Website', 'Follows', 'Followers', 'Email', 'Times followed']
-    csv << [user.username, user.full_name, user.website, user.bio, user.follows, user.followed_by, user.media_amount, user.email, user.avg_likes, user.location_country, user.location_state, user.location_city]
-
     csv_string = CSV.generate do |csv|
       csv << ['Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followed By', 'Media Amount', 'Email', 'Added to Instaspy', 'Media URL', 'Media likes', 'Media comments', 'Media date posted']
 
@@ -321,7 +318,7 @@ class Reporter
     File.write 'public/reports/users-from-300k/300k-report.csv', csv_string
   end
 
-  def same_followees
+  def self.same_followees
     data = []
     amounts = {}
     unames.each do |username|
@@ -341,5 +338,36 @@ class Reporter
 
     data
   end
+
+  # def b
+  #   files = []
+  #   a.each do |username|
+  #     user = User.get(username)
+  #
+  #     puts "Started #{username.green} - #{user.followers.size} followers"
+  #
+  #     size =  user.followers.size
+  #     processed = 0
+  #       user.followers.find_each(batch_size: 5000) do |follower|
+  #         processed+=1
+  #         if follower.outdated?
+  #           puts "Updating info for #{follower.username}"
+  #           follower.delay.update_info!
+  #         end
+  #         puts "#{processed}/#{size}"
+  #     end
+  #   end
+  # end
+  #
+  # def c
+  #   csv_string = CSV.generate do |csv|
+  #     csv << ['Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followed By', 'Media Amount', 'Email', 'Country', 'State', 'City']
+  #     users.each do |username|
+  #       user = User.get(username)
+  #       csv << [user.username, user.full_name, user.website, user.bio, user.follows, user.followed_by, user.media_amount, user.email, user.location_country, user.location_state, user.location_city]
+  #     end
+  #   end
+  #   File.write '../../shared/ig-get-locations-march11-results.csv', csv_string
+  # end
 
 end
