@@ -845,7 +845,5 @@ class User < ActiveRecord::Base
   def actual?
     !self.outdated?
   end
-
-  def save_followers_to_file
-
+  
 end
