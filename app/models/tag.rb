@@ -10,6 +10,8 @@ class Tag < ActiveRecord::Base
 
   has_one :observed_tag, dependent: :destroy
 
+  validates :name, format: { with: /\A[^\.\-\/\(\)\*\^\%\$\#\@\!,\?\}\]\{\[\;\:\"\'\>\<]+\z/ }
+
   CHART_DAYS = 14
 
   def users limit=1000
@@ -64,6 +66,7 @@ class Tag < ActiveRecord::Base
       rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::BadRequest,
         Instagram::InternalServerError,
         JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
+        binding.pry
         sleep 30
         retries += 1
         retry if retries <= 5
