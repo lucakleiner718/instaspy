@@ -67,6 +67,7 @@ class Tag < ActiveRecord::Base
         sleep 30
         retries += 1
         retry if retries <= 5
+        raise e
       end
 
       added = 0

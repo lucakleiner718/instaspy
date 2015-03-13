@@ -11,6 +11,7 @@ class User < ActiveRecord::Base
   scope :not_grabbed, -> { where grabbed_at: nil }
   scope :not_private, -> { where private: [nil, false] }
   scope :privates, -> { where private: true }
+  scope :outdated, -> { where('grabbed_at is null OR grabbed_at < ? OR bio is null OR website is null of follows is null OR followed_by is null', 7.days.ago) }
 
   before_save do
     # Catch email from bio
@@ -176,8 +177,7 @@ class User < ActiveRecord::Base
   end
 
   def update_private_account
-    url = "http://instagram.com/#{self.username}/"
-    resp = Curl::Easy.perform(url) do |curl|
+    resp = Curl::Easy.perform("http://instagram.com/#{self.username}/") do |curl|
       curl.headers["User-Agent"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.93 Safari/537.36"
       curl.verbose = Rails.env.development?
       curl.follow_location = true
@@ -645,7 +645,7 @@ class User < ActiveRecord::Base
 
   def self.fix_exists_username username, exists_insta_id
     user = self.where(username: username).where('insta_id != ?', exists_insta_id).first
-    user.update_info! if user.present?
+    user.update_info! force: true if user.present?
   end
 
   # urls (array)
@@ -845,5 +845,5 @@ class User < ActiveRecord::Base
   def actual?
     !self.outdated?
   end
-  
+
 end

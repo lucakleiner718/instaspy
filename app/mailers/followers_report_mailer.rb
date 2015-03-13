@@ -25,13 +25,15 @@ class FollowersReportMailer < ActionMailer::Base
   end
 
   def full origin
-    followers = origin.followers
+    followers_ids = origin.user_followers.pluck(:foloower_id)
 
     csv_string = CSV.generate do |csv|
       csv << ['Username', 'Name', 'Bio', 'Website', 'Follows', 'Followers', 'Media amount', 'Email']
-      followers.find_each do |user|
-        user.update_info! if user.outdated?
-        csv << [user.username, user.full_name, user.bio, user.website, user.follows, user.followed_by, user.media_amount, user.email]
+      followers_ids.in_groups_of(10_000, false) do |group|
+        User.where(id: group).each do |user|
+          user.update_info! if user.outdated?
+          csv << [user.username, user.full_name, user.bio, user.website, user.follows, user.followed_by, user.media_amount, user.email]
+        end
       end
     end
 
@@ -98,6 +100,31 @@ class FollowersReportMailer < ActionMailer::Base
     else
       mail to: "rob@ladylux.com", bcc: 'me@antonzaytsev.com', subject: "InstaSpy followers weekly #{@start.strftime('%m/%d/%y')} - #{@finish.strftime('%m/%d/%y')} report #{origins.size < 6 ? origins.map{|o| o.username}.join(',') : ''}"
     end
+  end
+
+  # Get all followers for provided tags and save them in file
+  # Params:
+  # tags (array) - array of tag names
+  def self.tags_publishers tags
+    files = []
+    tags.each do |tag_name|
+      ids = Tag.get(tag_name).publishers.pluck(:id)
+
+      csv_string = CSV.generate do |csv|
+        csv << ['Username', 'Name', 'Bio', 'Website', 'Follows', 'Followers', 'Media amount', 'Email']
+        ids.in_groups_of(10_000, false) do |group|
+          User.where(id: group).each do |user|
+            csv << [user.username, user.full_name, user.bio, user.website, user.follows, user.followed_by, user.media_amount, user.email]
+          end
+        end
+      end
+
+      path = "reports/#{tag_name}-publishers-#{Time.now.to_i}.csv"
+      File.write "public/#{path}", csv_string
+      files << "http://107.170.110.156/reports/#{path}"
+    end
+
+    files
   end
 
 end
