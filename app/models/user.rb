@@ -118,13 +118,15 @@ class User < ActiveRecord::Base
       info = client.user(self.insta_id)
       data = info.data
 
-      # if data['username'] != self.username
-      #   exists_username = User.where(username: data['username']).first
-      #   if exists_username
-      #     exists_username.username = nil
-      #     exists_username.save
-      #   end
-      # end
+      exists_username = nil
+      # if we already have in database user with same username
+      if data['username'] != self.username
+        exists_username = User.where(username: data['username']).first
+        if exists_username
+          exists_username.username = "#{exists_username.username}#{Time.now.to_i}"
+          exists_username.save
+        end
+      end
     rescue Instagram::BadRequest => e
       if e.message =~ /you cannot view this resource/
 
@@ -171,7 +173,10 @@ class User < ActiveRecord::Base
     self.grabbed_at = Time.now
     self.save
 
-    exists_username.update_info! if exists_username
+    if exists_username
+      exists_username.update_info!
+      exists_username.destroy if exists_username.private?
+    end
 
     self
   end
