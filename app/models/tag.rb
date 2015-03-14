@@ -59,6 +59,8 @@ class Tag < ActiveRecord::Base
     created_time_list = []
 
     while true
+      time_start = Time.now
+
       retries = 0
       begin
         client = InstaClient.new.client
@@ -66,22 +68,36 @@ class Tag < ActiveRecord::Base
       rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::BadRequest,
         Instagram::InternalServerError,
         JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
-        binding.pry
+        # binding.pry
         sleep 30
         retries += 1
         retry if retries <= 5
         raise e
       end
 
+      ig_time_end = Time.now
+
       added = 0
 
-      media_list.data.each do |media_item|
-        media = Media.where(insta_id: media_item['id']).first_or_initialize
+      data = media_list.data
 
-        media.media_user media_item['user']
-        media.media_data media_item
+      # binding.pry
+
+      media_found = Media.where(insta_id: data.map{|el| el['id']})
+      tags_found = Tag.where(name: data.map{|el| el['tags']}.flatten.uniq).select(:id, :name)
+      users_found = User.where(insta_id: data.map{|el| el['user']['id']})
+
+      data.each do |media_item|
+        puts "#{">>".green} Start process #{media_item['id']}"
+        media = media_found.select{|el| el.insta_id == media_item['id']}.first
+        unless media
+          media = Media.new(insta_id: media_item['id'])
+        end
 
         added += 1 if media.new_record?
+
+        media.media_user media_item['user'], users_found
+        media.media_data media_item, tags_found
 
         begin
           media.save unless media.new_record? && Media.where(insta_id: media_item['id']).size == 1
@@ -89,6 +105,7 @@ class Tag < ActiveRecord::Base
         end
 
         created_time_list << media['created_time'].to_i
+        puts "#{">>".green} End process #{media_item['id']}"
       end
 
       total_added += added
@@ -98,7 +115,8 @@ class Tag < ActiveRecord::Base
       created_time_list = created_time_list.sort
       median_created_time = created_time_list.size % 2 == 0 ? (created_time_list[(created_time_list.size/2-1)..(created_time_list.size/2+1)].sum / 3) : (created_time_list[(created_time_list.size/2)..(created_time_list.size/2+1)].sum / 2)
 
-      puts "Returned #{media_list.data.size} / Median created time: #{(Time.at median_created_time).to_s.yellow} / Added: #{added.to_s.blue}/#{total_added.to_s.cyan}"
+      time_end = Time.now
+      puts "#{">>".green} Returned #{media_list.data.size} / Median created time: #{((Time.at median_created_time).strftime('%d/%m/%y %H:%M:%S')).to_s.yellow} / Added: #{added.to_s.blue}/#{total_added.to_s.cyan} / ig request: #{(ig_time_end-time_start).to_f.round(2)} / time: #{(time_end - time_start).to_f.round(2)}s"
 
       move_next = false
 
@@ -111,7 +129,7 @@ class Tag < ActiveRecord::Base
         # stopping
       elsif options[:ignore_exists]
         move_next = true
-      # if amount of currently added is voer 90% of grabbed from instagram
+      # if amount of currently added is over 30% of grabbed from instagram
       elsif added.to_f / media_list.data.size > 0.3
         move_next = true
       end

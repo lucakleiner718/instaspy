@@ -72,7 +72,7 @@ class Media < ActiveRecord::Base
     self.save
   end
 
-  def media_data media_item
+  def media_data media_item, tags_found=nil
     if media_item['location']
       self.location_present = true
       self.location_lat = media_item['location']['latitude']
@@ -87,27 +87,39 @@ class Media < ActiveRecord::Base
     self.link = media_item['link']
     self.created_time = Time.at media_item['created_time'].to_i
 
-    tags = []
+    tags_list = []
     media_item['tags'].each do |tag_name|
       begin
-        tags << Tag.unscoped.where(name: tag_name).first_or_create
+        tag = nil
+        tag = tags_found.select{|el| el.name == tag_name}.first if tags_found
+        unless tag
+          begin
+            tag = Tag.unscoped.where(name: tag_name).create
+          rescue ActiveRecord::RecordNotUnique => e
+            tag = Tag.unscoped.where(name: tag_name).first
+          end
+        end
+        tags_list << tag
       rescue ActiveRecord::RecordNotUnique => e
         retry
       end
     end
-    self.tags = tags
+
+    self.tags = tags_list
   end
 
-  def media_user media_item_user
-    user = User.where(insta_id: media_item_user['id']).first_or_initialize
-    if user.new_record?
-      # with same username as we want to create
-      user2 = User.where(username: media_item_user['username']).first_or_initialize
-      unless user2.new_record?
-        user = user2
-        user.insta_id = media_item_user['id']
-      end
-    end
+  def media_user media_item_user, users_found=nil
+    user = nil
+    user = users_found.select{|el| el.insta_id == media_item_user['id'].to_i}.first if users_found.present?
+    user = User.where(insta_id: media_item_user['id']).first_or_initialize unless user
+    # if user.new_record?
+    #   # with same username as we want to create
+    #   user2 = User.where(username: media_item_user['username']).first_or_initialize
+    #   unless user2.new_record?
+    #     user = user2
+    #     user.insta_id = media_item_user['id']
+    #   end
+    # end
     user.username = media_item_user['username']
     user.full_name = media_item_user['full_name']
 
