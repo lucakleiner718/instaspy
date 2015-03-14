@@ -88,7 +88,7 @@ class Tag < ActiveRecord::Base
       users_found = User.where(insta_id: data.map{|el| el['user']['id']})
 
       data.each do |media_item|
-        puts "#{">>".green} Start process #{media_item['id']}"
+        logger.debug "#{">>".green} Start process #{media_item['id']}"
         media = media_found.select{|el| el.insta_id == media_item['id']}.first
         unless media
           media = Media.new(insta_id: media_item['id'])
@@ -105,7 +105,7 @@ class Tag < ActiveRecord::Base
         end
 
         created_time_list << media['created_time'].to_i
-        puts "#{">>".green} End process #{media_item['id']}"
+        logger.debug "#{">>".green} End process #{media_item['id']}"
       end
 
       total_added += added
@@ -116,7 +116,7 @@ class Tag < ActiveRecord::Base
       median_created_time = created_time_list.size % 2 == 0 ? (created_time_list[(created_time_list.size/2-1)..(created_time_list.size/2+1)].sum / 3) : (created_time_list[(created_time_list.size/2)..(created_time_list.size/2+1)].sum / 2)
 
       time_end = Time.now
-      puts "#{">>".green} Returned #{media_list.data.size} / Median created time: #{((Time.at median_created_time).strftime('%d/%m/%y %H:%M:%S')).to_s.yellow} / Added: #{added.to_s.blue}/#{total_added.to_s.cyan} / ig request: #{(ig_time_end-time_start).to_f.round(2)} / time: #{(time_end - time_start).to_f.round(2)}s"
+      puts "#{">>".green} Returned #{media_list.data.size} / Median created time: #{((Time.at median_created_time).strftime('%d/%m/%y %H:%M:%S')).to_s.yellow} / Added: #{added.to_s.blue}/#{total_added.to_s.cyan} / IG request: #{(ig_time_end-time_start).to_f.round(2)}s / time: #{(time_end - time_start).to_f.round(2)}s"
 
       move_next = false
 

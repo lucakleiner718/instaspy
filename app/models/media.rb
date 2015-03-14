@@ -87,14 +87,24 @@ class Media < ActiveRecord::Base
     self.link = media_item['link']
     self.created_time = Time.at media_item['created_time'].to_i
 
+    unless tags_found && self.new_record?
+      tags_found = self.tags
+    end
+
     tags_list = []
     media_item['tags'].each do |tag_name|
       begin
         tag = nil
-        tag = tags_found.select{|el| el.name == tag_name}.first if tags_found
+        if tags_found
+          tag = tags_found.select{|el| el.name == tag_name}.first
+        end
         unless tag
           begin
-            tag = Tag.unscoped.where(name: tag_name).create
+            if tags_found
+              tag = Tag.unscoped.where(name: tag_name).create
+            else
+              tag = Tag.unscoped.where(name: tag_name).first_or_create
+            end
           rescue ActiveRecord::RecordNotUnique => e
             tag = Tag.unscoped.where(name: tag_name).first
           end
@@ -324,6 +334,10 @@ class Media < ActiveRecord::Base
         break
       end
     end
+  end
+
+  def self.get id
+    Media.where(insta_id: id).first
   end
 
 end
