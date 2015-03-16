@@ -572,7 +572,11 @@ class User < ActiveRecord::Base
     total_added = 0
     options[:total_limit] ||= 2_000
 
+    self.update_info! unless self.insta_id
+    raise Exception unless self.insta_id || self.destroyed?
+
     while true
+      time_start = Time.now
       retries = 0
       begin
         client = InstaClient.new.client
@@ -585,12 +589,25 @@ class User < ActiveRecord::Base
         retry if retries <= 5
       end
 
+      ig_time_end = Time.now
+
       added = 0
       avg_created_time = 0
 
-      media_list.data.each do |media_item|
-        media = Media.where(insta_id: media_item['id']).first_or_initialize(user_id: self.id)
-        media.media_data media_item
+      data = media_list.data
+
+      media_found = Media.where(insta_id: data.map{|el| el['id']})
+      tags_found = Tag.where(name: data.map{|el| el['tags']}.flatten.uniq).select(:id, :name)
+
+      data.each do |media_item|
+        logger.debug "#{">>".green} Start process #{media_item['id']}"
+
+        media = media_found.select{|el| el.insta_id == media_item['id']}.first
+        unless media
+          media = Media.new(insta_id: media_item['id'], user_id: self.id)
+        end
+
+        media.media_data media_item, tags_found
 
         added += 1 if media.new_record?
 
@@ -600,13 +617,16 @@ class User < ActiveRecord::Base
         end
 
         avg_created_time += media['created_time'].to_i
+
+        logger.debug "#{">>".green} End process #{media_item['id']}"
       end
 
       break if media_list.data.size == 0
 
       total_added += added
 
-      p "total_added: #{total_added}"
+      time_end = Time.now
+      puts "#{">>".green} [#{self.username.green}] / #{media_list.data.size}/#{added.to_s.blue}/#{total_added.to_s.cyan} / IG: #{(ig_time_end-time_start).to_f.round(2)}s / T: #{(time_end - time_start).to_f.round(2)}s"
 
       avg_created_time = avg_created_time / media_list.data.size
 

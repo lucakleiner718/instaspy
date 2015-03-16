@@ -87,7 +87,7 @@ class Media < ActiveRecord::Base
     self.link = media_item['link']
     self.created_time = Time.at media_item['created_time'].to_i
 
-    unless tags_found && self.new_record?
+    unless tags_found
       tags_found = self.tags
     end
 
