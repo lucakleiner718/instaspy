@@ -352,6 +352,9 @@ class User < ActiveRecord::Base
   end
 
 
+  # Params:
+  # reload (boolean) - fully re-check all followers
+  # ignore_exists (boolean)
   def update_followees *args
     return false if self.insta_id.blank?
 
@@ -363,8 +366,7 @@ class User < ActiveRecord::Base
 
     return false if self.destroyed? || self.private?
 
-    followed = self.followed_by
-    puts ">> [#{self.username.green}] follows: #{followed}"
+    puts ">> [#{self.username.green}] follows: #{self.follows}"
 
     return false if self.follows == 0
 
@@ -392,6 +394,7 @@ class User < ActiveRecord::Base
         sleep 30
         retries += 1
         retry if retries <= 5
+        raise e
       end
       next_cursor = resp.pagination['next_cursor']
 
@@ -440,9 +443,7 @@ class User < ActiveRecord::Base
         followee_ids << user.id
       end
 
-      puts "followers:#{followee_ids.size}/#{follows} request:#{(Time.now-start).to_f}s left:#{((Time.now - begining_time).to_f/followee_ids.size * (follows-followee_ids.size)).to_i}s"
-
-      puts "exists: #{exists}"
+      puts "followers: #{followee_ids.size}/#{follows} / request:#{(Time.now-start).to_f.round(2)}s / exists: #{exists}"
 
       break if !options[:ignore_exists] && exists >= 5
       break unless next_cursor
@@ -587,6 +588,7 @@ class User < ActiveRecord::Base
         sleep 30
         retries += 1
         retry if retries <= 5
+        raise e
       end
 
       ig_time_end = Time.now

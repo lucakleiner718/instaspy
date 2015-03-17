@@ -168,10 +168,14 @@ class Media < ActiveRecord::Base
 
     return false if self.location_lat.blank? || self.location_lng.blank?
 
+    retries = 0
     begin
       resp = Geocoder.search("#{self.location_lat},#{self.location_lng}")
-    rescue Errno::EHOSTUNREACH, Zlib::BufError => e
-      return false
+    rescue Errno::EHOSTUNREACH, Zlib::BufError, Zlib::DataError => e
+      sleep 30
+      retries += 1
+      retry if retries <= 5
+      raise e
     end
 
     # if resp.size == 0
