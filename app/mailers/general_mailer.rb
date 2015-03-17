@@ -126,8 +126,9 @@ class GeneralMailer < ActionMailer::Base
     csv_string = CSV.generate do |csv|
       csv << ['Full Name', 'Username', 'Bio', 'Private', 'Country', 'Country and State', 'Location', 'Email']
       data.each do |row|
-        user = User.get(row[0])
-        location = row[1]
+        user = User.where(id: row[0]).first
+        next unless user
+        location = row[2]
         csv << [user.full_name, user.username, user.bio, (user.private? ? 'Private' : 'Public'), location[:country], location[:state], location[:city], user.email]
       end
     end

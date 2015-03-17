@@ -162,14 +162,14 @@ class Reporter
       users.each do |user|
         p "Start #{user.username}"
         user.update_info! if user.outdated?
-        user.recent_media ignore_exists: true, total_limit: media_amount if user.media.size < media_amount
-        user.update_media_location
-        data << [user.username, user.popular_location]
+        user.recent_media ignore_exists: true, total_limit: media_amount if user.media.size < media_amount && user.media_amount > user.media.size
+        # user.update_media_location
+        data << [user.id, user.username, user.popular_location]
         p "Added #{user.username} [#{data.size}/#{usernames.size}]"
       end
     end
 
-    not_processed = usernames - data.map{|el| el[0]}
+    not_processed = usernames - data.map{|el| el[1]}
     if not_processed.size > 0
       p "Not processed: #{not_processed.join(', ')}"
     end
