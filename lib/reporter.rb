@@ -390,6 +390,8 @@ class Reporter
   end
 
   def self.users_followees usernames
+    files = []
+
     usernames.each do |username|
       user = User.add_by_username(username)
       next unless user
@@ -400,11 +402,30 @@ class Reporter
         end
       end
 
-      File.write("../../shared/#{user.username}-followees-#{Time.now.to_i}.csv", csv_string)
+      files << ["#{user.username}-followees-#{Time.now.to_i}.csv", csv_string]
+    end
+
+    if files.size > 10
+      stringio = Zip::OutputStream.write_buffer do |zio|
+        files.each do |file|
+          zio.put_next_entry(file[0])
+          zio.write file[1]
+        end
+      end
+      stringio.rewind
+      binary_data = stringio.sysread
+
+      File.write("../../shared/users-followees-#{files.size}-#{Time.now.to_i}", binary_data)
+    else
+      files.each do |item|
+        File.write("../../shared/#{item[0]}", item[1])
+      end
     end
   end
 
   def self.users_followers usernames
+    files = []
+
     usernames.each do |username|
       user = User.add_by_username(username)
       next unless user
@@ -415,7 +436,24 @@ class Reporter
         end
       end
 
-      File.write("../../shared/#{user.username}-followers-#{Time.now.to_i}.csv", csv_string)
+      files << ["#{user.username}-followers-#{Time.now.to_i}.csv", csv_string]
+    end
+
+    if files.size > 10
+      stringio = Zip::OutputStream.write_buffer do |zio|
+        files.each do |file|
+          zio.put_next_entry(file[0])
+          zio.write file[1]
+        end
+      end
+      stringio.rewind
+      binary_data = stringio.sysread
+
+      File.write("../../shared/users-followers-#{files.size}-#{Time.now.to_i}", binary_data)
+    else
+      files.each do |item|
+        File.write("../../shared/#{item[0]}", item[1])
+      end
     end
   end
 
