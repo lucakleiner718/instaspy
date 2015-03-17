@@ -152,8 +152,10 @@ class Reporter
       if users.size < group.size
         not_exists = group - users.map{|el| el.username}
         not_exists.each do |username|
-          user = User.get(username).update_info! force: true
-          users << user if user
+          user = User.get(username)
+          next unless user
+          user.update_info! force: true
+          users << user
         end
       end
 
@@ -405,22 +407,21 @@ class Reporter
       files << ["#{user.username}-followees-#{Time.now.to_i}.csv", csv_string]
     end
 
-    if files.size > 10
-      stringio = Zip::OutputStream.write_buffer do |zio|
-        files.each do |file|
-          zio.put_next_entry(file[0])
-          zio.write file[1]
-        end
-      end
-      stringio.rewind
-      binary_data = stringio.sysread
+    return false if files.size == 0
 
-      File.write("../../shared/users-followees-#{files.size}-#{Time.now.to_i}", binary_data)
-    else
-      files.each do |item|
-        File.write("../../shared/#{item[0]}", item[1])
+    stringio = Zip::OutputStream.write_buffer do |zio|
+      files.each do |file|
+        zio.put_next_entry(file[0])
+        zio.write file[1]
       end
     end
+    stringio.rewind
+    binary_data = stringio.sysread
+
+    filepath = "reports/users-followees-#{files.size}-#{Time.now.to_i}.zip"
+    File.write("public/#{filepath}", binary_data)
+
+    "http://107.170.110.156/#{filepath}"
   end
 
   def self.users_followers usernames
@@ -439,22 +440,21 @@ class Reporter
       files << ["#{user.username}-followers-#{Time.now.to_i}.csv", csv_string]
     end
 
-    if files.size > 10
-      stringio = Zip::OutputStream.write_buffer do |zio|
-        files.each do |file|
-          zio.put_next_entry(file[0])
-          zio.write file[1]
-        end
-      end
-      stringio.rewind
-      binary_data = stringio.sysread
+    return false if files.size == 0
 
-      File.write("../../shared/users-followers-#{files.size}-#{Time.now.to_i}", binary_data)
-    else
-      files.each do |item|
-        File.write("../../shared/#{item[0]}", item[1])
+    stringio = Zip::OutputStream.write_buffer do |zio|
+      files.each do |file|
+        zio.put_next_entry(file[0])
+        zio.write file[1]
       end
     end
+    stringio.rewind
+    binary_data = stringio.sysread
+
+    filepath = "reports/users-followers-#{files.size}-#{Time.now.to_i}.zip"
+    File.write("public/#{filepath}", binary_data)
+
+    "http://107.170.110.156/#{filepath}"
   end
 
 end
