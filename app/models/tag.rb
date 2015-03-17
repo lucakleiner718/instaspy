@@ -114,7 +114,7 @@ class Tag < ActiveRecord::Base
       median_created_time = created_time_list.size % 2 == 0 ? (created_time_list[(created_time_list.size/2-1)..(created_time_list.size/2+1)].sum / 3) : (created_time_list[(created_time_list.size/2)..(created_time_list.size/2+1)].sum / 2)
 
       time_end = Time.now
-      puts "#{">>".green} [#{self.name.green}] / #{media_list.data.size}/#{added.to_s.blue}/#{total_added.to_s.cyan} / MT: #{((Time.at median_created_time).strftime('%d/%m/%y %H:%M:%S')).to_s.yellow} / IG: #{(ig_time_end-time_start).to_f.round(2)}s / T: #{(time_end - time_start).to_f.round(2)}s"
+      logger.debug "#{">>".green} [#{self.name.green}] / #{media_list.data.size}/#{added.to_s.blue}/#{total_added.to_s.cyan} / MT: #{((Time.at median_created_time).strftime('%d/%m/%y %H:%M:%S')).to_s.yellow} / IG: #{(ig_time_end-time_start).to_f.round(2)}s / T: #{(time_end - time_start).to_f.round(2)}s"
 
       move_next = false
 
@@ -123,7 +123,7 @@ class Tag < ActiveRecord::Base
           move_next = true
         end
       elsif total_added > options[:total_limit]
-        puts "#{total_added.to_s.blue} total added is over limit #{options[:total_limit].to_s.red}"
+        logger.debug "#{total_added.to_s.blue} total added is over limit #{options[:total_limit].to_s.red}"
         # stopping
       elsif options[:ignore_exists]
         move_next = true

@@ -163,7 +163,7 @@ class Media < ActiveRecord::Base
     proxy = Proxy.get_some
     if proxy
       Geocoder::Configuration.http_proxy = proxy.to_s
-      # p "using proxy #{proxy.to_s}"
+      # logger.debug "using proxy #{proxy.to_s}"
     end
 
     return false if self.location_lat.blank? || self.location_lng.blank?
@@ -320,9 +320,7 @@ class Media < ActiveRecord::Base
 
       avg_created_time = avg_created_time / media_list.data.size
 
-      p "#{avg_created_time} / #{Time.at avg_created_time}"
-      p "added: #{added}"
-      # sleep 2
+      logger.debug "#{avg_created_time} / #{Time.at avg_created_time} / added: #{added}"
 
       if options[:without_location].blank?
         added_media.each { |media| media.update_location! }

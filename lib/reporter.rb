@@ -327,7 +327,7 @@ class Reporter
           puts "Updating #{fol.username} ..."
           fol.update_info!
         end
-        data << [fol.username, fol.full_name, fol.bio, fol.website, fol.follows, fol.followed_by, fol.email]
+          data << [fol.username, fol.full_name, fol.bio, fol.website, fol.follows, fol.followed_by, fol.email]
         amounts[fol.username] = 0 if amounts[fol.username].blank?
         amounts[fol.username] += 1
       end

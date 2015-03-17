@@ -78,6 +78,7 @@ class User < ActiveRecord::Base
       rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::BadRequest,
         Instagram::InternalServerError,
         JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
+        logger.info "#{">> issue".red} #{e.class.name} :: #{e.message}"
         sleep 30
         retries += 1
         retry if retries <= 5
@@ -225,7 +226,7 @@ class User < ActiveRecord::Base
     return false if self.destroyed? || self.private?
 
     followed = self.followed_by
-    puts ">> [#{self.username.green}] followed by: #{followed}"
+    logger.debug ">> [#{self.username.green}] followed by: #{followed}"
 
     if options[:reload]
       self.follower_ids = []
@@ -264,7 +265,7 @@ class User < ActiveRecord::Base
       follower_ids_list = self.follower_ids.to_a
 
       resp.data.each do |user_data|
-        # p "Row #{user_data['username']} start"
+        logger.debug "Row #{user_data['username']} start"
 
         new_record = false
 
@@ -331,14 +332,14 @@ class User < ActiveRecord::Base
         end
 
         user = nil # trying to save some RAM but nulling variable
-        # p "Row #{user_data['username']} end"
+        logger.debug "Row #{user_data['username']} end"
       end
 
       total_exists += exists
       total_added += added
 
       finish = Time.now
-      puts ">> [#{self.username.green}] followers:#{follower_ids_list.size}/#{followed} request:#{(finish-start).to_f.round(2)}s :: IG request: #{(end_ig-start).to_f.round(2)} / exists: #{exists} (#{total_exists.to_s.light_black}) / added: #{added} (#{total_added.to_s.light_black})"
+      logger.debug ">> [#{self.username.green}] followers:#{follower_ids_list.size}/#{followed} request:#{(finish-start).to_f.round(2)}s :: IG request: #{(end_ig-start).to_f.round(2)} / exists: #{exists} (#{total_exists.to_s.light_black}) / added: #{added} (#{total_added.to_s.light_black})"
 
       break if !options[:ignore_exists] && exists >= 5
 
@@ -370,12 +371,12 @@ class User < ActiveRecord::Base
 
     return false if self.destroyed? || self.private?
 
-    puts ">> [#{self.username.green}] follows: #{self.follows}"
+    logger.debug ">> [#{self.username.green}] follows: #{self.follows}"
 
     return false if self.follows == 0
 
     if options[:reload]
-      self.follower_ids = []
+      self.followees_ids = []
     end
 
     # total_exists = 0
@@ -394,6 +395,7 @@ class User < ActiveRecord::Base
         resp = client.user_follows self.insta_id, cursor: next_cursor, count: 100
       rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::InternalServerError,
         JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
+        logger.info "#{">> issue".red} #{e.class.name} :: #{e.message}"
         sleep 30
         retries += 1
         retry if retries <= 5
@@ -406,10 +408,12 @@ class User < ActiveRecord::Base
       end
       next_cursor = resp.pagination['next_cursor']
 
-      users = User.where(insta_id: resp.data.map{|el| el['id']})
+      data = resp.data
+
+      users = User.where(insta_id: data.map{|el| el['id']})
       fols = Follower.where(follower_id: self.id, user_id: users.map{|el| el.id}) unless options[:reload]
 
-      resp.data.each do |user_data|
+      data.each do |user_data|
         user = users.select{|el| el.insta_id == user_data['id'].to_i}.first
         unless user
           user = User.new(insta_id: user_data['id'])
@@ -440,7 +444,7 @@ class User < ActiveRecord::Base
 
         fol = nil
         fol = fols.select{|el| el.user_id == user.id }.first unless options[:reload]
-        fol = Follower.where(follower_id: self.id, user_id: user.id).first_or_initialize if fol.blank?
+        fol = Follower.where(follower_id: self.id, user_id: user.id).first_or_initialize unless fol
 
         if !options[:reload] && !fol.new_record?
           exists += 1
@@ -451,7 +455,7 @@ class User < ActiveRecord::Base
         followee_ids << user.id
       end
 
-      puts "followers: #{followee_ids.size}/#{follows} / request:#{(Time.now-start).to_f.round(2)}s / exists: #{exists}"
+      logger.debug "followees: #{followee_ids.size}/#{follows} / request:#{(Time.now-start).to_f.round(2)}s / exists: #{exists}"
 
       break if !options[:ignore_exists] && exists >= 5
       break unless next_cursor
@@ -641,7 +645,7 @@ class User < ActiveRecord::Base
       total_added += added
 
       time_end = Time.now
-      puts "#{">>".green} [#{self.username.green}] / #{media_list.data.size}/#{added.to_s.blue}/#{total_added.to_s.cyan} / IG: #{(ig_time_end-time_start).to_f.round(2)}s / T: #{(time_end - time_start).to_f.round(2)}s"
+      logger.debug "#{">>".green} [#{self.username.green}] / #{media_list.data.size}/#{added.to_s.blue}/#{total_added.to_s.cyan} / IG: #{(ig_time_end-time_start).to_f.round(2)}s / T: #{(time_end - time_start).to_f.round(2)}s"
 
       avg_created_time = avg_created_time / media_list.data.size
 
@@ -773,7 +777,7 @@ class User < ActiveRecord::Base
   end
 
   def update_media_location
-    puts ">> update_media_location: #{self.username.green}"
+    logger.debug ">> update_media_location: #{self.username.green}"
     with_location = self.media.with_location
     with_location_amount = with_location.size
 
@@ -848,7 +852,7 @@ class User < ActiveRecord::Base
     added = []
 
     usernames.each do |row|
-      p "Start #{row[0]}"
+      logger.debug "Start #{row[0]}"
       user = User.add_by_username row[0]
       if user && user.email.blank?
         user.email = row[2]
@@ -862,7 +866,7 @@ class User < ActiveRecord::Base
 
       processed += 1
 
-      p "Progress #{processed}/#{initial} (#{(processed/initial.to_f * 100).to_i}%)"
+      logger.debug "Progress #{processed}/#{initial} (#{(processed/initial.to_f * 100).to_i}%)"
     end
 
     csv_string = CSV.generate do |csv|
@@ -872,7 +876,7 @@ class User < ActiveRecord::Base
       end
     end
 
-    p "Added #{added.size}"
+    logger.debug "Added #{added.size}"
 
     GeneralMailer.process_usernames_file(csv_string).deliver
   end
