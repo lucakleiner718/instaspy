@@ -1,5 +1,9 @@
 Rails.application.routes.draw do
 
+  get 'users' => 'users#index', as: :users
+  get 'users/:id/followers.csv' => 'users#followers', as: :users_followers
+  get 'users/:id/followees.csv' => 'users#followees', as: :users_followees
+
   root to: 'pages#home'
 
   get 'oauth/connect'

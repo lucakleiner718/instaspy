@@ -376,7 +376,7 @@ class User < ActiveRecord::Base
     return false if self.follows == 0
 
     if options[:reload]
-      self.followees_ids = []
+      self.followee_ids = []
     end
 
     # total_exists = 0
