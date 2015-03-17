@@ -370,4 +370,23 @@ class Reporter
   #   File.write '../../shared/ig-get-locations-march11-results.csv', csv_string
   # end
 
+  def self.latest_30_media usernames, amount=30
+    unames = []
+    csv_str = CSV.generate do |csv|
+      csv << ['Username', 'Likes', 'Comments', 'Date', 'Link', "Tags"]
+
+      usernames.each do |username|
+        user = User.add_by_username(username)
+        unames << user.username
+
+        user.media.order(created_time: :desc).limit(amount).each do |m|
+          m.update_info!
+          csv << [user.username, m.likes_amount, m.comments_amount, m.created_time.strftime('%m/%d/%Y'), m.link, m.tags.map(&:name).join(', ')]
+        end
+      end
+    end
+
+    File.write "../../shared/users-latest-#{amount}-media-#{Time.now.to_i}.csv", csv_str
+  end
+
 end

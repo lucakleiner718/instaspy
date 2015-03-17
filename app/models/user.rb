@@ -244,12 +244,16 @@ class User < ActiveRecord::Base
       begin
         client = InstaClient.new.client
         resp = client.user_followed_by self.insta_id, cursor: next_cursor, count: 100
-      rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::BadRequest,
-        Instagram::InternalServerError,
+      rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::InternalServerError,
         JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
         sleep 30
         retries += 1
         retry if retries <= 5
+      rescue Instagram::BadRequest => e
+        if e.message =~ /you cannot view this resource/
+          break
+        end
+        raise e
       end
 
       end_ig = Time.now
@@ -388,12 +392,16 @@ class User < ActiveRecord::Base
       begin
         client = InstaClient.new.client
         resp = client.user_follows self.insta_id, cursor: next_cursor, count: 100
-      rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::BadRequest,
-        Instagram::InternalServerError,
+      rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::InternalServerError,
         JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
         sleep 30
         retries += 1
         retry if retries <= 5
+        raise e
+      rescue Instagram::BadRequest => e
+        if e.message =~ /you cannot view this resource/
+          break
+        end
         raise e
       end
       next_cursor = resp.pagination['next_cursor']
@@ -516,7 +524,7 @@ class User < ActiveRecord::Base
     if username.numeric?
       User.where('id = :id or insta_id = :id', id: username).first_or_create(insta_id: username)
     else
-      User.where('username = :id', id: username).first_or_create(username: username)
+      User.add_by_username(username)
     end
   end
 
@@ -575,6 +583,7 @@ class User < ActiveRecord::Base
 
     self.update_info! unless self.insta_id
     raise Exception unless self.insta_id || self.destroyed?
+    return false if self.private?
 
     while true
       time_start = Time.now
@@ -582,12 +591,16 @@ class User < ActiveRecord::Base
       begin
         client = InstaClient.new.client
         media_list = client.user_recent_media self.insta_id, count: 100, max_id: max_id
-      rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::BadRequest,
-        Instagram::InternalServerError,
+      rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::InternalServerError,
         JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
         sleep 30
         retries += 1
         retry if retries <= 5
+        raise e
+      rescue Instagram::BadRequest => e
+        if e.message =~ /you cannot view this resource/
+          break
+        end
         raise e
       end
 
