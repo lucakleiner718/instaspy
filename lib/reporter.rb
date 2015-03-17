@@ -404,4 +404,19 @@ class Reporter
     end
   end
 
+  def self.users_followers usernames
+    usernames.each do |username|
+      user = User.add_by_username(username)
+      next unless user
+      csv_string = CSV.generate do |csv|
+        csv << ['Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followers', 'Email']
+        user.followers.each do |u|
+          csv << [u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email]
+        end
+      end
+
+      File.write("../../shared/#{user.username}-followers-#{Time.now.to_i}.csv", csv_string)
+    end
+  end
+
 end
