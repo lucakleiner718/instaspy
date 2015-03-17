@@ -1,0 +1,32 @@
+<div class="row">
+  <div class="col-sm-4">
+    <%= link_to 'All', tags_path, class: "label label-default" %>
+    <%= link_to 'Observed', tags_path(filter: :observed), class: "label label-primary" %>
+    <%= link_to 'CSV', tags_path(filter: :csv), class: "label label-primary" %>
+    <%= link_to 'Charts', tags_path(filter: :charts), class: "label label-primary" %>
+  </div>
+</div>
+<h1>Tags<% if params[:filter] %> <span class="label label-default"><%= params[:filter].titleize %></span><% end %></h1>
+<table class="table">
+  <thead>
+  <tr>
+    <th>Tag name</th>
+    <th>Media in db</th>
+    <% if params[:filter] == 'observed' %>
+      <th>Started tracking</th>
+    <% end %>
+  </tr>
+  </thead>
+  <tbody>
+  <% @tags.each do |tag| %>
+    <tr>
+      <td><%= tag.name %></td>
+      <td><%= tag.media.size %></td>
+      <% if params[:filter] == 'observed' %>
+        <td><%= tag.observed_tag.created_at.strftime('%m/%d/%Y') %></td>
+      <% end %>
+    </tr>
+  <% end %>
+  </tbody>
+</table>
+<%= paginate @tags %>
