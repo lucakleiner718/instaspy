@@ -87,7 +87,7 @@ class Reporter
         # catching all users, which did post media with specified tag
         users_ids = tag.media.where('created_at > ? AND created_at <= ?', starts, ends).pluck(:user_id).uniq
 
-        logger.debug "#{"[Media Report]".cyan} Total users for tag #{tag.name}: #{users_ids.size}"
+        Rails.logger.debug "#{"[Media Report]".cyan} Total users for tag #{tag.name}: #{users_ids.size}"
 
         processed = 0
 
@@ -101,7 +101,7 @@ class Reporter
             retries = 0
             processed += 1
 
-            logger.debug "#{"[Media Report]".cyan} #{"#{(processed/users_ids.size.to_f/100).to_i}%".red} Start process #{user.username} (#{user.id})"
+            Rails.logger.debug "#{"[Media Report]".cyan} #{"#{(processed/users_ids.size.to_f/100).to_i}%".red} Start process #{user.username} (#{user.id})"
 
             while true
               media = user.media.joins(:tags).where('tags.name = ?', tag.name).order(created_at: :desc).where('created_time < ?', 1.day.ago).first
