@@ -185,10 +185,18 @@ class User < ActiveRecord::Base
   end
 
   def update_private_account
-    resp = Curl::Easy.perform("http://instagram.com/#{self.username}/") do |curl|
-      curl.headers["User-Agent"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.93 Safari/537.36"
-      curl.verbose = Rails.env.development?
-      curl.follow_location = true
+    retries = 0
+    begin
+      resp = Curl::Easy.perform("http://instagram.com/#{self.username}/") do |curl|
+        curl.headers["User-Agent"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.93 Safari/537.36"
+        curl.verbose = Rails.env.development?
+        curl.follow_location = true
+      end
+    rescue Curl::Err::HostResolutionError => e
+      sleep 30
+      retries += 1
+      retry if retries < 5
+      return false
     end
 
     # accounts is private and username is changed

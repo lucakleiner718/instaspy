@@ -79,6 +79,8 @@ class Reporter
     # ends = Time.now
     starts = options[:starts] || 6.days.ago(ends).beginning_of_day
 
+    Rails.logger.info "#{"[Media Report]".cyan} Started with #{Tag.exportable.size.red} tags"
+
     header = ['Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followed By', 'Media Amount', 'Added to Instaspy', 'Media URL', 'Media likes', 'Media comments']
     csv_files = {}
     Tag.exportable.each do |tag|
@@ -89,11 +91,11 @@ class Reporter
         # catching all users, which did post media with specified tag
         users_ids = tag.media.where('created_at > ? AND created_at <= ?', starts, ends).pluck(:user_id).uniq
         users = User.where(id: users_ids).where("website is not null AND website != ''").where('users.created_at >= ?', starts).where('users.created_at <= ?', ends)
-        users_size = users.size
 
         users_ids = users.pluck(:id)
+        users_size = users_ids.size
 
-        Rails.logger.info "#{"[Media Report]".cyan} Total users for tag #{tag.name}: #{users_size}/#{users_ids.size} / Initial request: #{(Time.now - start_time).to_f.round(2)}s"
+        Rails.logger.info "#{"[Media Report]".cyan} Total users for tag #{tag.name}: #{users_size} / Initial request: #{(Time.now - start_time).to_f.round(2)}s"
 
         processed = 0
 
@@ -152,7 +154,7 @@ class Reporter
             ]
 
             time_end = Time.now
-            Rails.logger.info "#{"[Media Report]".cyan} #{"#{(processed/users_size.to_f*100).to_i}%".red} Processed #{user.username} (#{user.id}) / Time: #{(time_end - start_time).to_f.round(2)}s"
+            Rails.logger.info "#{"[Media Report]".cyan} #{"#{(processed/users_size.to_f*100).to_i}%".red} (#{processed}/#{users_size}) / Processed #{user.username} (#{user.id}) / Time: #{(time_end - start_time).to_f.round(2)}s"
           end
         end
       end
