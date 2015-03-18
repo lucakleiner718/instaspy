@@ -103,6 +103,8 @@ class Reporter
 
           users = User.where(id: users_group_ids)
 
+          ts = Time.now
+
           media_items = Media.connection.execute(
                 "SELECT *
                  FROM (
@@ -116,6 +118,8 @@ class Reporter
                  ) as result1
                  GROUP BY result1.user_id"
           ).to_a
+
+          Rails.logger.info "#{"[Media Report]".cyan} Media Item request took #{(Time.now - ts.to_f).round(2)}s"
 
           users.each do |user|
             start_time = Time.now
