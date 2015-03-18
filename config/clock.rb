@@ -40,10 +40,10 @@ module Clockwork
 
 
   # Send weekly report about followers for specified users
-  every(1.week, 'FollowersReport.report', at: "Wednesday 04:00") { FollowersReportWorker.perform_async }
+  every(1.week, 'FollowersReport.report', at: "Wednesday 02:00") { FollowersReportWorker.perform_async }
 
   # Send weekly report about media
-  every(1.week, 'media.report', at: "Wednesday 05:00") { ReportWorker.perform_async }
+  every(1.week, 'media.report', at: "Wednesday 03:00") { ReportWorker.perform_async }
 
   # every(30.minutes, 'media.ny.location.1') {
   #   Media.get_by_location 40.74226964, -74.007271584 if Time.now < Time.at('2015/02/21 00:00:00 UTC')

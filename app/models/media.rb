@@ -172,10 +172,17 @@ class Media < ActiveRecord::Base
     begin
       resp = Geocoder.search("#{self.location_lat},#{self.location_lng}")
     rescue Errno::EHOSTUNREACH, Zlib::BufError, Zlib::DataError => e
+      logger.info "Geocoder exception #{e.class.name}::#{e.message}".gray
       sleep 30
       retries += 1
       retry if retries <= 5
       raise e
+    rescue TimeoutError, SocketError => e
+      logger.info "Geocoder exception #{e.class.name}::#{e.message}".gray
+      sleep 30
+      retries += 1
+      retry if retries <= 5
+      return false
     end
 
     # if resp.size == 0

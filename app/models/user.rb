@@ -142,14 +142,18 @@ class User < ActiveRecord::Base
         self.grabbed_at = Time.now
 
         # If account private - try to get info from public page via http
-        begin
+        # begin
           self.update_private_account
-        rescue => e
+        # rescue => e
           # binding.pry
-        end
+        # end
 
-        self.save
-        return true
+        if self.destroyed?
+          return false
+        else
+          self.save
+          return true
+        end
       elsif e.message =~ /this user does not exist/
         self.destroy
       end
@@ -186,6 +190,15 @@ class User < ActiveRecord::Base
       curl.verbose = Rails.env.development?
       curl.follow_location = true
     end
+
+    # accounts is private and username is changed
+    # so we don't have any way to get new username for user
+    # that's why we delete it from database
+    if resp.response_code == 404
+      self.destroy
+      return false
+    end
+
     html = Nokogiri::HTML(resp.body)
     # content = html.search('script').select{|script| script.attr('src').blank? }.last.text.sub('window._sharedData = ', '').sub(/;$/, '')
     content = html.xpath('//script[contains(text(), "_sharedData")]').first.text.sub('window._sharedData = ', '').sub(/;$/, '')

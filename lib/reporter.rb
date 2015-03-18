@@ -99,7 +99,7 @@ class Reporter
               media = user.media.joins(:tags).where('tags.name = ?', tag.name).order(created_at: :desc).first if media.blank?
               # if we don't have media for that user and tag
               break unless media
-              if !user.private? && (media.updated_at < 3.days.ago || media.likes_amount.blank? || media.comments_amount.blank? || media.link.blank?)
+              if !user.private? && user.outdated?
                 unless media.update_info!
                   # media.destroy
                   redo

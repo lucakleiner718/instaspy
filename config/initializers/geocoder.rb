@@ -20,6 +20,7 @@ Geocoder.configure(
   # (if you want to implement custom error handling);
   # supports SocketError and TimeoutError
   # :always_raise => [],
+  :always_raise => :all,
 
   # calculation options
   # :units     => :mi,       # :km for kilometers or :mi for miles
