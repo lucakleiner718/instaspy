@@ -457,4 +457,40 @@ class Reporter
     "http://107.170.110.156/#{filepath}"
   end
 
+  def self.users_exports usernames, additional_columns=[]
+    users = User.where(username: usernames)
+    not_found = usernames - users.pluck(:username)
+
+    header = ['Username', 'Full name', 'Bio', 'Website', 'Follows', 'Followers', 'Email']
+    header += ['Country', 'State', 'City'] if additional_columns.include? :location
+    header += ['AVG Likes'] if additional_columns.include? :likes
+
+    process_user = Proc.new do |user, csv|
+      row = [user.username, user.full_name, user.bio, user.website, user.follows, user.followed_by, user.email]
+      row += [user.location_country, user.location_state, user.location_city] if additional_columns.include? :location
+      row += [user.avg_likes] if additional_columns.include? :likes
+
+      csv << row
+    end
+
+    csv_string = CSV.generate do |csv|
+      csv << header
+
+      users.find_each do |user|
+        process_user.call(user, csv)
+      end
+
+      not_found.each do |username|
+        user = User.get(username)
+        next unless user
+        process_user.call(user, csv)
+      end
+    end
+
+    filepath = "reports/users-report-#{Time.now.to_i}.csv"
+    File.write "public/#{filepath}", csv_string
+
+    Rails.env.production? ? "http://107.170.110.156/#{filepath}" : "http://localhost:3000/#{filepath}"
+  end
+
 end
