@@ -76,6 +76,7 @@ class Reporter
     options = args.extract_options!
 
     ends = options[:ends] || 1.day.ago.end_of_day
+    # ends = Time.now
     starts = options[:starts] || 6.days.ago(ends).beginning_of_day
 
     header = ['Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followed By', 'Media Amount', 'Added to Instaspy', 'Media URL', 'Media likes', 'Media comments']
@@ -84,28 +85,51 @@ class Reporter
       csv_string = CSV.generate do |csv|
         csv << header
 
+        start_time = Time.now
         # catching all users, which did post media with specified tag
         users_ids = tag.media.where('created_at > ? AND created_at <= ?', starts, ends).pluck(:user_id).uniq
+        users = User.where(id: users_ids).where("website is not null AND website != ''").where('users.created_at >= ?', starts).where('users.created_at <= ?', ends)
+        users_size = users.size
 
-        Rails.logger.debug "#{"[Media Report]".cyan} Total users for tag #{tag.name}: #{users_ids.size}"
+        users_ids = users.pluck(:id)
+
+        Rails.logger.info "#{"[Media Report]".cyan} Total users for tag #{tag.name}: #{users_size}/#{users_ids.size} / Initial request: #{(Time.now - start_time).to_f.round(2)}s"
 
         processed = 0
 
-        users_ids.in_groups_of(1000, false).each do |user_ids_group|
-          users = User.where(id: user_ids_group).where("website is not null AND website != ''")
-                      .where('users.created_at >= ?', starts).where('users.created_at <= ?', ends)
-                    # .joins(:media => [:tags]).where('tags.name = ?', Tag.observed.first.name)
-                    # .select([:id, :username, :full_name, :website, :bio, :follows, :followed_by, :media_amount, :created_at, :private])
+        users_ids.in_groups_of(1000, false) do |users_group_ids|
 
-          users.find_each(batch_size: 1000) do |user|
+          users = User.where(id: users_group_ids)
+
+          media_items = Media.connection.execute(
+                "SELECT *
+                 FROM (
+                   SELECT m.id, m.user_id
+                   FROM media AS m
+                   INNER JOIN media_tags AS mt ON mt.media_id = m.id
+                   INNER JOIN tags AS t on t.id = mt.tag_id
+                   WHERE t.name='#{tag.name}' AND m.created_at < '#{1.day.ago.strftime('%Y-%m-%d %H:%M:%S')}'
+                         AND m.user_id in (#{users_group_ids.join(',')})
+                   ORDER BY m.created_at DESC
+                 ) as result1
+                 GROUP BY result1.user_id"
+          ).to_a
+
+          users.each do |user|
+            start_time = Time.now
             retries = 0
             processed += 1
 
-            Rails.logger.debug "#{"[Media Report]".cyan} #{"#{(processed/users_ids.size.to_f/100).to_i}%".red} Start process #{user.username} (#{user.id})"
-
             while true
-              media = user.media.joins(:tags).where('tags.name = ?', tag.name).order(created_at: :desc).where('created_time < ?', 1.day.ago).first
-              media = user.media.joins(:tags).where('tags.name = ?', tag.name).order(created_at: :desc).first if media.blank?
+              media_found = media_items.select{|el| el[1] == user.id}.first
+              if media_found
+                media_items.slice! media_items.index{|el| el[1] == user.id}
+                media = Media.find(media_found[0])
+              else
+                media = user.media.joins(:tags).where('tags.name = ?', tag.name).order(created_at: :desc).where('created_time < ?', 1.day.ago).first
+                media = user.media.joins(:tags).where('tags.name = ?', tag.name).order(created_at: :desc).first if media.blank?
+              end
+
               # if we don't have media for that user and tag
               break unless media
               if !user.private? && (media.updated_at < 3.days.ago || media.likes_amount.blank? || media.comments_amount.blank? || media.link.blank?)
@@ -126,6 +150,9 @@ class Reporter
               user.username, user.full_name, user.website, user.bio, user.follows, user.followed_by, user.media_amount,
               user.created_at.strftime('%m/%d/%Y'), media.link, media.likes_amount, media.comments_amount
             ]
+
+            time_end = Time.now
+            Rails.logger.info "#{"[Media Report]".cyan} #{"#{(processed/users_size.to_f*100).to_i}%".red} Processed #{user.username} (#{user.id}) / Time: #{(time_end - start_time).to_f.round(2)}s"
           end
         end
       end
@@ -182,7 +209,7 @@ class Reporter
 
     not_processed = usernames - data.map{|el| el[1]}
     if not_processed.size > 0
-      p "Not processed: #{not_processed.join(', ')}"
+      logger.debug "Not processed: #{not_processed.join(', ')}"
     end
 
     GeneralMailer.location_report(data, not_processed).deliver if send_email
