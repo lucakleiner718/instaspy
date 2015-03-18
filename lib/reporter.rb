@@ -79,7 +79,7 @@ class Reporter
     # ends = Time.now
     starts = options[:starts] || 6.days.ago(ends).beginning_of_day
 
-    Rails.logger.info "#{"[Media Report]".cyan} Started with #{Tag.exportable.size.red} tags"
+    Rails.logger.info "#{"[Media Report]".cyan} Started with #{Tag.exportable.size.to_s.red} tags"
 
     header = ['Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followed By', 'Media Amount', 'Added to Instaspy', 'Media URL', 'Media likes', 'Media comments']
     csv_files = {}
