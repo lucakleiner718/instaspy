@@ -87,25 +87,36 @@ class Reporter
         # catching all users, which did post media with specified tag
         users_ids = tag.media.where('created_at > ? AND created_at <= ?', starts, ends).pluck(:user_id).uniq
 
+        logger.debug "#{"[Media Report]".cyan} Total users for tag #{tag.name}: #{users_ids.size}"
+
+        processed = 0
+
         users_ids.in_groups_of(1000, false).each do |user_ids_group|
           users = User.where(id: user_ids_group).where("website is not null AND website != ''")
                       .where('users.created_at >= ?', starts).where('users.created_at <= ?', ends)
                     # .joins(:media => [:tags]).where('tags.name = ?', Tag.observed.first.name)
                     # .select([:id, :username, :full_name, :website, :bio, :follows, :followed_by, :media_amount, :created_at, :private])
 
-          users.find_each do |user|
+          users.find_each(batch_size: 1000) do |user|
+            retries = 0
+            processed += 1
+
+            logger.debug "#{"[Media Report]".cyan} #{"#{(processed/users_ids.size.to_f/100).to_i}%".red} Start process #{user.username} (#{user.id})"
+
             while true
               media = user.media.joins(:tags).where('tags.name = ?', tag.name).order(created_at: :desc).where('created_time < ?', 1.day.ago).first
               media = user.media.joins(:tags).where('tags.name = ?', tag.name).order(created_at: :desc).first if media.blank?
               # if we don't have media for that user and tag
               break unless media
               if !user.private? && (media.updated_at < 3.days.ago || media.likes_amount.blank? || media.comments_amount.blank? || media.link.blank?)
-                unless media.update_info!
+                unless media.update_info! && retries < 5
                   # media.destroy
+                  retries += 1
                   redo
                 end
               end
-              # if media was deleted from instagram
+
+              # if media was deleted from instagram and database as well
               redo if media.destroyed?
               break if media.present?
             end
