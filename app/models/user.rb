@@ -82,6 +82,7 @@ class User < ActiveRecord::Base
         sleep 30
         retries += 1
         retry if retries <= 5
+        raise e
       end
 
       data = nil
@@ -137,10 +138,6 @@ class User < ActiveRecord::Base
           return false
         end
 
-        if self.private? && !self.outdated?
-          return true
-        end
-
         self.private = true
         self.grabbed_at = Time.now
 
@@ -162,6 +159,7 @@ class User < ActiveRecord::Base
       sleep 30
       retries += 1
       retry if retries <= 5
+      raise e
     end
 
     self.username = data['username']
@@ -179,7 +177,7 @@ class User < ActiveRecord::Base
       exists_username.destroy if exists_username.private?
     end
 
-    self
+    true
   end
 
   def update_private_account
@@ -657,15 +655,13 @@ class User < ActiveRecord::Base
         if Time.at(avg_created_time) > options[:created_from]
           move_next = true
         end
-      elsif total_added >= options[:total_limit]
-        # stop
       elsif options[:ignore_exists]
         move_next = true
       elsif added.to_f / media_list.data.size > 0.1
         move_next = true
-      else
-        break
       end
+
+      move_next = false if total_added >= options[:total_limit]
 
       break unless move_next
 
@@ -714,11 +710,7 @@ class User < ActiveRecord::Base
     options = args.extract_options!
 
     if self.location_updated_at && self.location_updated_at > 1.month.ago && self.location_country && !options[:force]
-      return {
-        country: self.location_country,
-        state: self.location_state,
-        city: self.location_city,
-      }
+      self.location
     end
 
     self.update_info! if !self.private? && (self.media_amount.blank? || !self.grabbed_at.present? || self.grabbed_at < 7.days.ago)
@@ -729,8 +721,8 @@ class User < ActiveRecord::Base
     media_size = self.media.size
 
     # do not waste time on private
-    if self.private && media_size == 0
-      return false
+    if self.private? && media_size == 0
+      return self.location
     end
 
     # get some media, at least latest 50 posts
@@ -739,6 +731,11 @@ class User < ActiveRecord::Base
     end
 
     self.update_media_location
+
+    if self.media.with_location == 0 && self.media_amount > self.media.size
+      self.recent_media ignore_exists: true, total_limit: media_amount + 100
+      self.update_media_location
+    end
 
     countries = {}
     states = {}
@@ -769,6 +766,11 @@ class User < ActiveRecord::Base
     self.location_city = city && city[0].join(', ')
     self.location_updated_at = Time.now
     self.save
+
+    self.location
+  end
+
+  def location
     {
       country: self.location_country,
       state: self.location_state,
@@ -815,7 +817,7 @@ class User < ActiveRecord::Base
     comments_amount = 0
     media_amount = 0
 
-    if media.size < 10
+    if media.size < 50
       self.recent_media total_limit: 50
     end
 

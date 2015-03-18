@@ -160,12 +160,12 @@ class Reporter
       end
 
       users.each do |user|
-        p "Start #{user.username}"
+        logger.debug "Start #{user.username}"
         user.update_info! if user.outdated?
         user.recent_media ignore_exists: true, total_limit: media_amount if user.media.size < media_amount && user.media_amount > user.media.size
         # user.update_media_location
         data << [user.id, user.username, user.popular_location]
-        p "Added #{user.username} [#{data.size}/#{usernames.size}]"
+        logger.debug "Added #{user.username} [#{data.size}/#{usernames.size}]"
       end
     end
 

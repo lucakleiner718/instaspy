@@ -8,7 +8,6 @@ class UserWorker
     User.where(id: users).each do |u|
       next if u.grabbed_at.present? && u.grabbed_at > 1.day.ago
       u.update_info!
-      p "Updated #{u.username}"
     end
   end
 
