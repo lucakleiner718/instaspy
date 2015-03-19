@@ -96,7 +96,7 @@ class Media < ActiveRecord::Base
       begin
         tag = nil
         if tags_found
-          tag = tags_found.select{|el| el.name == tag_name}.first
+          tag = tags_found.select{|el| el.name.downcase == tag_name.downcase}.first
         end
         unless tag
           begin

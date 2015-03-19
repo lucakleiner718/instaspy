@@ -95,7 +95,7 @@ class Reporter
         users_ids = users.pluck(:id)
         users_size = users_ids.size
 
-        Rails.logger.info "#{"[Media Report]".cyan} Total users for tag #{tag.name.red}: #{users_size} / Initial request: #{(Time.now - start_time).to_f.round(2)}s"
+        Rails.logger.debug "#{"[Media Report]".cyan} Total users for tag #{tag.name.red}: #{users_size} / Initial request: #{(Time.now - start_time).to_f.round(2)}s"
 
         processed = 0
 
@@ -119,20 +119,21 @@ class Reporter
                  GROUP BY result1.user_id"
           ).to_a
 
-          Rails.logger.info "#{"[Media Report]".cyan} Media Item request took #{(Time.now - ts).to_f.round(2)}s"
+          Rails.logger.debug "#{"[Media Report]".cyan} Media Item request took #{(Time.now - ts).to_f.round(2)}s"
 
           users.each do |user|
+            user.update_info! force: true
+            next if user.destroyed?
+
             start_time = Time.now
             retries = 0
             processed += 1
 
-            user.update_info!
-
-            Rails.logger.info "#{"[Media Report]".cyan} Processing #{user.username} (#{user.id})"
+            Rails.logger.debug "#{"[Media Report]".cyan} Processing #{user.username} (#{user.id})"
 
             while true
               media_found = media_items.select{|el| el[1] == user.id}.first
-              Rails.logger.info "#{"[Media Report]".cyan} Media found #{media_found}"
+              # Rails.logger.info "#{"[Media Report]".cyan} Media found #{media_found}"
               if media_found
                 media_items.slice! media_items.index{|el| el[1] == user.id}
                 media = Media.find(media_found[0])
@@ -144,7 +145,7 @@ class Reporter
               # if we don't have media for that user and tag
               break unless media
               if !user.private? && (media.updated_at < 3.days.ago || media.likes_amount.blank? || media.comments_amount.blank? || media.link.blank?)
-                Rails.logger.info "#{"[Media Report]".cyan} Updating media #{media.id} / retries: #{retries}"
+                # Rails.logger.info "#{"[Media Report]".cyan} Updating media #{media.id} / retries: #{retries}"
                 unless media.update_info! && retries < 5
                   # media.destroy
                   retries += 1
@@ -164,11 +165,11 @@ class Reporter
             ]
 
             time_end = Time.now
-            Rails.logger.info "#{"[Media Report]".cyan} #{"#{(processed/users_size.to_f*100).to_i}%".red} (#{processed}/#{users_size}) / Processed #{user.username} (#{user.id}) / Time: #{(time_end - start_time).to_f.round(2)}s"
+            Rails.logger.debug "#{"[Media Report]".cyan} #{"#{(processed/users_size.to_f*100).to_i}%".red} (#{processed}/#{users_size}) / Processed #{user.username} (#{user.id}) / Time: #{(time_end - start_time).to_f.round(2)}s"
           end
         end
       end
-      csv_files << [tag.name, csv_string]
+      csv_files << ["#{tag.name}.csv", csv_string]
     end
 
     stringio = Zip::OutputStream.write_buffer do |zio|
