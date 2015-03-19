@@ -69,7 +69,7 @@ class Tag < ActiveRecord::Base
         Instagram::InternalServerError,
         JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
         # binding.pry
-        sleep 30
+        sleep 10
         retries += 1
         retry if retries <= 5
         raise e
@@ -122,7 +122,7 @@ class Tag < ActiveRecord::Base
         if Time.at(median_created_time) > options[:created_from]
           move_next = true
         end
-      elsif total_added > options[:total_limit]
+      elsif options[:total_limit] && total_added > options[:total_limit]
         logger.debug "#{total_added.to_s.blue} total added is over limit #{options[:total_limit].to_s.red}"
         # stopping
       elsif options[:ignore_exists]

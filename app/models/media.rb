@@ -58,7 +58,7 @@ class Media < ActiveRecord::Base
     rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::BadRequest,
       Instagram::InternalServerError,
       JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
-      sleep 30
+      sleep 10
       retries += 1
       retry if retries <= 5
     end
@@ -171,15 +171,15 @@ class Media < ActiveRecord::Base
     retries = 0
     begin
       resp = Geocoder.search("#{self.location_lat},#{self.location_lng}")
-    rescue Errno::EHOSTUNREACH, Zlib::BufError, Zlib::DataError => e
-      logger.info "Geocoder exception #{e.class.name}::#{e.message}".gray
-      sleep 30
+    rescue Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Zlib::BufError, Zlib::DataError => e
+      logger.info "Geocoder exception #{e.class.name}::#{e.message}".light_red
+      sleep 10
       retries += 1
       retry if retries <= 5
       raise e
     rescue TimeoutError, SocketError => e
-      logger.info "Geocoder exception #{e.class.name}::#{e.message}".gray
-      sleep 30
+      logger.info "Geocoder exception #{e.class.name}::#{e.message}".light_red
+      sleep 10
       retries += 1
       retry if retries <= 5
       return false
@@ -293,7 +293,7 @@ class Media < ActiveRecord::Base
       rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::BadRequest,
         Instagram::InternalServerError,
         JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
-        sleep 30
+        sleep 10
         retries += 1
         retry if retries <= 5
       end
