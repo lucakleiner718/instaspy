@@ -119,7 +119,7 @@ class Reporter
                  GROUP BY result1.user_id"
           ).to_a
 
-          Rails.logger.info "#{"[Media Report]".cyan} Media Item request took #{(Time.now - ts.to_f).round(2)}s"
+          Rails.logger.info "#{"[Media Report]".cyan} Media Item request took #{(Time.now - ts).to_f.round(2)}s"
 
           users.each do |user|
             start_time = Time.now
@@ -130,6 +130,7 @@ class Reporter
 
             while true
               media_found = media_items.select{|el| el[1] == user.id}.first
+              Rails.logger.info "#{"[Media Report]".cyan} Media found #{media_found}"
               if media_found
                 media_items.slice! media_items.index{|el| el[1] == user.id}
                 media = Media.find(media_found[0])
@@ -141,6 +142,7 @@ class Reporter
               # if we don't have media for that user and tag
               break unless media
               if !user.private? && (media.updated_at < 3.days.ago || media.likes_amount.blank? || media.comments_amount.blank? || media.link.blank?)
+                Rails.logger.info "#{"[Media Report]".cyan} Updating media #{media.id}"
                 unless media.update_info! && retries < 5
                   # media.destroy
                   retries += 1
