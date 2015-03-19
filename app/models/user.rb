@@ -271,6 +271,9 @@ class User < ActiveRecord::Base
       rescue Instagram::BadRequest => e
         if e.message =~ /you cannot view this resource/
           break
+        elsif e.message =~ /this user does not exist/
+          self.destroy
+          return false
         end
         raise e
       end
@@ -421,6 +424,9 @@ class User < ActiveRecord::Base
       rescue Instagram::BadRequest => e
         if e.message =~ /you cannot view this resource/
           break
+        elsif e.message =~ /this user does not exist/
+          self.destroy
+          return false
         end
         raise e
       end
@@ -621,6 +627,9 @@ class User < ActiveRecord::Base
       rescue Instagram::BadRequest => e
         if e.message =~ /you cannot view this resource/
           break
+        elsif e.message =~ /this user does not exist/
+          self.destroy
+          return false
         end
         raise e
       end

@@ -63,3 +63,6 @@ gem 'bootstrap-sass'
 gem 'kaminari'
 gem 'kaminari-bootstrap'
 gem 'colorize'
+
+# gem 'activerecord-postgis-adapter', '3.0.0.beta2'
+gem 'rgeo'

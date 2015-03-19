@@ -553,4 +553,26 @@ class Reporter
     Rails.env.production? ? "http://107.170.110.156/#{filepath}" : "http://localhost:3000/#{filepath}"
   end
 
+  def self.media_export media_list, *args
+    options = args.extract_options!
+
+    header = ['Username', 'Full Name', 'Website', 'Media URL', 'Media likes', 'Media comments']
+    users = User.where(id: media_list.map{|m| m.user_id})
+
+    csv_string = CSV.generate do |csv|
+      csv << header
+
+      media_list.each do |media|
+        user = users.select{|u| u.id == media.user_id}.first
+        user.update_info!
+        media.update_info! if media.updated_at < 3.days.ago || media.likes_amount.blank? || media.comments_amount.blank? || media.link.blank?
+        csv << [user.username, user.full_name, user.website, media.link, media.likes_amount, media.comments_amount]
+      end
+    end
+
+    filepath = "reports/media-report-#{Time.now}.csv"
+    File.write "public/#{filepath}", csv_string
+    Rails.env.production? ? "http://107.170.110.156/#{filepath}" : "http://localhost:3000/#{filepath}"
+  end
+
 end

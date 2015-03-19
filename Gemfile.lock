@@ -291,6 +291,7 @@ GEM
     ref (1.0.5)
     render_csv (2.0.0)
       rails (>= 3.0)
+    rgeo (0.3.20)
     rubyzip (1.1.6)
     s3-mysql-backup (2.2.0)
       aws-sdk (~> 1.37)
@@ -396,6 +397,7 @@ DEPENDENCIES
   redis
   redis-rails
   render_csv
+  rgeo
   rubyzip
   s3-mysql-backup
   sass-rails (~> 4.0.3)
