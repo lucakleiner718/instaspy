@@ -570,7 +570,7 @@ class Reporter
       end
     end
 
-    filepath = "reports/media-report-#{Time.now}.csv"
+    filepath = "reports/media-report-#{Time.now.to_i}.csv"
     File.write "public/#{filepath}", csv_string
     Rails.env.production? ? "http://107.170.110.156/#{filepath}" : "http://localhost:3000/#{filepath}"
   end

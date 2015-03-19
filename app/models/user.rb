@@ -17,9 +17,9 @@ class User < ActiveRecord::Base
     # Catch email from bio
     if self.bio.present?
       email_regex = /([\w+\-.]+@[a-z\d\-]+(\.[a-z]+)*\.[a-z]+)/
-      m = self.bio.match(email_regex)
+      m = self.bio.downcase.match(email_regex)
       if m && m[1]
-        self.email = m[1].downcase.sub(/^[\.\-\_]+/, '')
+        self.email = m[1].sub(/^[\.\-\_]+/, '')
       end
     end
 
