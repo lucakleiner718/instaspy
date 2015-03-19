@@ -82,7 +82,7 @@ class Reporter
     Rails.logger.info "#{"[Media Report]".cyan} Started with #{Tag.exportable.size.to_s.red} tags"
 
     header = ['Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followed By', 'Media Amount', 'Added to Instaspy', 'Media URL', 'Media likes', 'Media comments']
-    csv_files = {}
+    csv_files = []
     Tag.exportable.each do |tag|
       csv_string = CSV.generate do |csv|
         csv << header
@@ -126,6 +126,8 @@ class Reporter
             retries = 0
             processed += 1
 
+            Rails.logger.info "#{"[Media Report]".cyan} Processing #{user.username} (#{user.id})"
+
             while true
               media_found = media_items.select{|el| el[1] == user.id}.first
               if media_found
@@ -162,10 +164,19 @@ class Reporter
           end
         end
       end
-      csv_files[tag.name] = csv_string
+      csv_files << [tag.name, csv_string]
     end
 
-    ReportMailer.weekly(csv_files, starts, ends).deliver
+    stringio = Zip::OutputStream.write_buffer do |zio|
+      csv_files.each do |file|
+        zio.put_next_entry(file[0])
+        zio.write file[1]
+      end
+    end
+    stringio.rewind
+    binary_data = stringio.sysread
+
+    ReportMailer.weekly(binary_data, starts, ends).deliver
   end
 
   def self.tag_authors tag, timeframe=1.year.ago

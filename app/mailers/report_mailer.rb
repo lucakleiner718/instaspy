@@ -1,8 +1,6 @@
 class ReportMailer < ActionMailer::Base
-  def weekly csv_files, starts, ends
-    csv_files.each do |tag_name, csv_string|
-      attachments["#{tag_name}.csv"] = csv_string
-    end
+  def weekly binary_file, starts, ends
+    attachments["weekly-report-#{Time.now.strftime('%Y%m%d')}.zip"] = binary_file
     ends = ends.class.name == 'String' ? Time.parse(ends) : ends
     starts = starts.class.name == 'String' ? Time.parse(starts) : starts
 
