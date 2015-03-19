@@ -50,7 +50,7 @@ class Media < ActiveRecord::Base
         self.destroy
         return false
       elsif e.message =~ /you cannot view this resource/
-        self.user.update_info!
+        self.user.update_info! force: true
         return false
       else
         raise e

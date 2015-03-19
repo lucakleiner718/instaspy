@@ -95,7 +95,7 @@ class Reporter
         users_ids = users.pluck(:id)
         users_size = users_ids.size
 
-        Rails.logger.info "#{"[Media Report]".cyan} Total users for tag #{tag.name}: #{users_size} / Initial request: #{(Time.now - start_time).to_f.round(2)}s"
+        Rails.logger.info "#{"[Media Report]".cyan} Total users for tag #{tag.name.red}: #{users_size} / Initial request: #{(Time.now - start_time).to_f.round(2)}s"
 
         processed = 0
 
@@ -126,6 +126,8 @@ class Reporter
             retries = 0
             processed += 1
 
+            user.update_info!
+
             Rails.logger.info "#{"[Media Report]".cyan} Processing #{user.username} (#{user.id})"
 
             while true
@@ -142,7 +144,7 @@ class Reporter
               # if we don't have media for that user and tag
               break unless media
               if !user.private? && (media.updated_at < 3.days.ago || media.likes_amount.blank? || media.comments_amount.blank? || media.link.blank?)
-                Rails.logger.info "#{"[Media Report]".cyan} Updating media #{media.id}"
+                Rails.logger.info "#{"[Media Report]".cyan} Updating media #{media.id} / retries: #{retries}"
                 unless media.update_info! && retries < 5
                   # media.destroy
                   retries += 1
