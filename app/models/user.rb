@@ -549,7 +549,7 @@ class User < ActiveRecord::Base
 
   def self.get username
     if username.numeric?
-      User.where('id = :id or insta_id = :id', id: username).first_or_create(insta_id: username)
+      User.where(insta_id: username).first_or_create
     else
       User.add_by_username(username)
     end
@@ -810,11 +810,19 @@ class User < ActiveRecord::Base
   end
 
   def update_media_location
+    if self.username.blank? && self.insta_id.present?
+      self.update_info! force: true
+    end
+
+    return false if self.destroyed?
+
     logger.debug ">> update_media_location: #{self.username.green}"
     with_location = self.media.with_location
     with_location_amount = with_location.size
+    processed = 0
 
     with_location.where('location_country is null').each_with_index do |media, index|
+      processed += 1
       # if user obviously have lots of media in one place, leave other media
       if index % 5 == 0
         resp = Tag.connection.execute("SELECT count(id), location_country FROM `media`  WHERE `media`.`user_id` = #{self.id} AND (location_lat is not null and location_lat != '') GROUP BY location_country").to_a
@@ -827,7 +835,8 @@ class User < ActiveRecord::Base
         # if we have at least 10% of same location
         if with_location_amount > 20 && without_country_amount / with_location_amount.to_f < 0.9
           # if resp.size == 2
-            break
+          logger.debug ">> update_media_location: #{self.username.green}. stopped because most of the media has same country"
+          break
           # else
             # binding.pry
             # raise
@@ -836,6 +845,8 @@ class User < ActiveRecord::Base
       end
 
       media.update_location!
+
+      logger.debug ">> update_media_location: #{self.username.green}. progress: #{(processed / with_location_amount.to_f * 100).to_i}%"
 
       sleep(5)
     end
