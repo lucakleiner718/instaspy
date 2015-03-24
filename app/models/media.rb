@@ -187,7 +187,7 @@ class Media < ActiveRecord::Base
     rescue Geocoder::InvalidRequest => e
       raise e
     rescue Geocoder::OverQueryLimitError => e
-      lookup_list = lookup_list - lookup
+      lookup_list = lookup_list - [lookup]
       retry
     end
 
