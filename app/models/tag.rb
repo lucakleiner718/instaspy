@@ -97,6 +97,8 @@ class Tag < ActiveRecord::Base
         media.media_user media_item['user'], users_found
         media.media_data media_item, tags_found
 
+        tags_found.concat(media.tags).uniq!
+
         begin
           media.save unless media.new_record? && Media.where(insta_id: media_item['id']).size == 1
         rescue ActiveRecord::RecordNotUnique => e
