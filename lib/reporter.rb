@@ -458,9 +458,9 @@ class Reporter
       user = User.add_by_username(username)
       next unless user
       csv_string = CSV.generate do |csv|
-        csv << ['Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followers', 'Email']
+        csv << ['ID', 'Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followers', 'Email']
         user.followees.each do |u|
-          csv << [u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email]
+          csv << [u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email]
         end
       end
 
@@ -491,9 +491,9 @@ class Reporter
       user = User.add_by_username(username)
       next unless user
       csv_string = CSV.generate do |csv|
-        csv << ['Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followers', 'Email']
+        csv << ['ID', 'Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followers', 'Email']
         user.followers.each do |u|
-          csv << [u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email]
+          csv << [u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email]
         end
       end
 
@@ -521,12 +521,12 @@ class Reporter
     users = User.where(username: usernames)
     not_found = usernames - users.pluck(:username)
 
-    header = ['Username', 'Full name', 'Bio', 'Website', 'Follows', 'Followers', 'Email']
+    header = ['ID', 'Username', 'Full name', 'Bio', 'Website', 'Follows', 'Followers', 'Email']
     header += ['Country', 'State', 'City'] if additional_columns.include? :location
     header += ['AVG Likes'] if additional_columns.include? :likes
 
     process_user = Proc.new do |user, csv|
-      row = [user.username, user.full_name, user.bio, user.website, user.follows, user.followed_by, user.email]
+      row = [user.insta_id, user.username, user.full_name, user.bio, user.website, user.follows, user.followed_by, user.email]
       row += [user.location_country, user.location_state, user.location_city] if additional_columns.include? :location
       row += [user.avg_likes] if additional_columns.include? :likes
 
@@ -556,7 +556,7 @@ class Reporter
   def self.media_export media_list, *args
     options = args.extract_options!
 
-    header = ['Username', 'Full Name', 'Website', 'Media URL', 'Media likes', 'Media comments']
+    header = ['ID', 'Username', 'Full Name', 'Website', 'Media URL', 'Media likes', 'Media comments']
     users = User.where(id: media_list.map{|m| m.user_id})
 
     csv_string = CSV.generate do |csv|
@@ -566,7 +566,7 @@ class Reporter
         user = users.select{|u| u.id == media.user_id}.first
         user.update_info!
         media.update_info! if media.updated_at < 3.days.ago || media.likes_amount.blank? || media.comments_amount.blank? || media.link.blank?
-        csv << [user.username, user.full_name, user.website, media.link, media.likes_amount, media.comments_amount]
+        csv << [user.insta_id, user.username, user.full_name, user.website, media.link, media.likes_amount, media.comments_amount]
       end
     end
 
