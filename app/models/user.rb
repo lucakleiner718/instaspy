@@ -653,6 +653,7 @@ class User < ActiveRecord::Base
         end
 
         media.media_data media_item, tags_found
+        tags_found.concat(media.tags).uniq!
 
         added += 1 if media.new_record?
 
