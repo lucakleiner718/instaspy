@@ -109,7 +109,7 @@ class Media < ActiveRecord::Base
             tag = Tag.unscoped.where(name: tag_name).first
           end
         end
-        tags_list << tag
+        tags_list << tag if tag
       rescue ActiveRecord::RecordNotUnique => e
         retry
       end
