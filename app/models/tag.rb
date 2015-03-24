@@ -14,7 +14,7 @@ class Tag < ActiveRecord::Base
 
   CHART_DAYS = 14
 
-  def namename=(value)
+  def name=(value)
     if value.present?
       value = value.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
       value = value.encode(value.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
