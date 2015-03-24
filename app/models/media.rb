@@ -187,7 +187,8 @@ class Media < ActiveRecord::Base
     case row.class.name
       when 'Geocoder::Result::Here'
         address = row.data['Location']['Address']
-        self.location_country = Country.find_country_by_alpha3(address['Country']).alpha2
+        c = Country.find_country_by_alpha3(address['Country'])
+        self.location_country = c ? c.alpha2 : address['Country']
         self.location_state = address['State']
         self.location_city = address['City']
       when 'Geocoder::Result::Google'
