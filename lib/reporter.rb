@@ -517,18 +517,31 @@ class Reporter
     "http://107.170.110.156/#{filepath}"
   end
 
-  def self.users_exports usernames, additional_columns=[]
-    users = User.where(username: usernames)
-    not_found = usernames - users.pluck(:username)
+  def self.users_export *args
+    options = args.extract_options!
+
+    not_found = []
+    options[:additional_columns] ||= []
+
+    if options[:usernames]
+      users = User.where(username: options[:usernames])
+      not_found = options[:usernames] - users.pluck(:username)
+    elsif options[:ids]
+      users = User.where(id: options[:ids])
+    elsif options[:insta_ids]
+      users = User.where(insta_id: options[:insta_ids])
+    end
+
+    return false unless users
 
     header = ['ID', 'Username', 'Full name', 'Bio', 'Website', 'Follows', 'Followers', 'Email']
-    header += ['Country', 'State', 'City'] if additional_columns.include? :location
-    header += ['AVG Likes'] if additional_columns.include? :likes
+    header += ['Country', 'State', 'City'] if options[:additional_columns].include? :location
+    header += ['AVG Likes'] if options[:additional_columns].include? :likes
 
-    process_user = Proc.new do |user, csv|
-      row = [user.insta_id, user.username, user.full_name, user.bio, user.website, user.follows, user.followed_by, user.email]
-      row += [user.location_country, user.location_state, user.location_city] if additional_columns.include? :location
-      row += [user.avg_likes] if additional_columns.include? :likes
+    process_user = Proc.new do |u, csv|
+      row = [u.insta_id, u.username, u.full_name, u.bio, u.website, u.follows, u.followed_by, u.email]
+      row += [u.location_country, u.location_state, u.location_city] if options[:additional_columns].include? :location
+      row += [u.avg_likes] if options[:additional_columns].include? :likes
 
       csv << row
     end
