@@ -1,14 +1,12 @@
 Geocoder.configure(
-  # geocoding options
-  :timeout      => 7,           # geocoding service timeout (secs)
-  # :lookup       => :google,     # name of geocoding service (symbol)
-  # lookup: :yandex,
-  lookup: :bing,
+  timeout:      10,
+  lookup:       :yandex, # :bing :yandex :google
   bing: {
-    api_key: 'AreNey4-B-i5NhpxcZJg3hPEl_Gta4qp2vTlShk5Bc4qt2FXq9vGlgosts-Dzq1l',
+                api_key: 'AreNey4-B-i5NhpxcZJg3hPEl_Gta4qp2vTlShk5Bc4qt2FXq9vGlgosts-Dzq1l',
   },
   # api_key: ['XaB0y63AcGfc5ZtIrbde', 'ZrESX_vdjfU-LmMli8zopg'],
-  language: :en,         # ISO-639 language code
+  # Geocoder::Configuration.api_key = 'd5dd99546055d0d5d6be0de04446595dd5bb365'
+  language:     :en,
   # :use_https    => false,       # use HTTPS for lookup requests? (if supported)
   # :http_proxy   => nil,         # HTTP proxy server (user:pass@host:port)
   # :https_proxy  => nil,         # HTTPS proxy server (user:pass@host:port)

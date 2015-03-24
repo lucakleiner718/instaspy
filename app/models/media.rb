@@ -156,15 +156,12 @@ class Media < ActiveRecord::Base
   end
 
   def set_location
-    # can add option [:lookup]
-    # Geocoder::Configuration.api_key = 'd5dd99546055d0d5d6be0de04446595dd5bb365'
-    # Geocoder::Configuration.lookup = :yandex
 
-    proxy = Proxy.get_some
-    if proxy
-      Geocoder::Configuration.http_proxy = proxy.to_s
-      # logger.debug "using proxy #{proxy.to_s}"
-    end
+    # proxy = Proxy.get_some
+    # if proxy
+    #   Geocoder::Configuration.http_proxy = proxy.to_s
+    #   logger.debug "using proxy #{proxy.to_s}"
+    # end
 
     return false if self.location_lat.blank? || self.location_lng.blank?
 
@@ -179,12 +176,6 @@ class Media < ActiveRecord::Base
       retry if retries <= 5
       return false
     end
-
-    # if resp.size == 0
-    #   Geocoder::Configuration.lookup = :google
-    #   resp = Geocoder.search("#{self.location_lat},#{self.location_lng}")
-    #   Geocoder::Configuration.lookup = :yandex
-    # end
 
     row = resp.first
     case row.class.name
@@ -203,13 +194,13 @@ class Media < ActiveRecord::Base
         address = row.data['GeoObject']['metaDataProperty']['GeocoderMetaData']['AddressDetails']
 
         begin
-          self.location_country = address['Country']['CountryName']
+          self.location_country = Country.find_country_by_name(address['Country']['CountryName']).alpha2
         rescue
         end
 
         if self.location_country.blank?
           begin
-            self.location_country = address['Country']['Locality']['Premise']['PremiseName']
+            self.location_country = Country.find_country_by_name(address['Country']['Locality']['Premise']['PremiseName']).alpha2
           rescue
           end
         end
@@ -342,6 +333,21 @@ class Media < ActiveRecord::Base
 
   def self.get id
     Media.where(insta_id: id).first
+  end
+
+  def get_country
+    coords = [self.location_lat, self.location_lng]
+    g = RGeo::Geos::CAPIFactory.new
+    point = g.point coords[1], coords[0]
+    filename = 'vendor/TM_WORLD_BORDERS-0.3/TM_WORLD_BORDERS-0.3.shp'
+    shapes = RGeo::Shapefile::Reader.open(filename)
+    shapes.each do |shape|
+      puts "#{shape.attributes['NAME']}"
+      if shape.geometry.contains? point
+        return shape.attributes
+      end
+    end
+    false
   end
 
 end

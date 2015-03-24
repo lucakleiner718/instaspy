@@ -741,7 +741,7 @@ class User < ActiveRecord::Base
       self.location
     end
 
-    self.update_info! if !self.private? && (self.media_amount.blank? || !self.grabbed_at.present? || self.grabbed_at < 7.days.ago)
+    self.update_info! if !self.private? && (self.media_amount.blank? || self.grabbed_at.blank? || self.grabbed_at < 7.days.ago)
 
     return false if self.destroyed?
 
