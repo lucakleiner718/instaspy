@@ -30,6 +30,10 @@ class User < ActiveRecord::Base
         User.fix_exists_username(self.username, self.insta_id)
       end
     end
+
+    if self.email_changed? && self.email.present?
+      self.email = self.email.downcase
+    end
   end
 
   def full_name=(value)

@@ -155,7 +155,8 @@ class Media < ActiveRecord::Base
     self.user_id = user.id
   end
 
-  def set_location
+  def set_location *args
+    options = args.extract_options!
 
     # proxy = Proxy.get_some
     # if proxy
@@ -165,13 +166,17 @@ class Media < ActiveRecord::Base
 
     return false if self.location_lat.blank? || self.location_lng.blank?
 
+    lookup_list = [:bing, :google, :yandex, :esri, :here]
+
     retries = 0
     begin
-      lookup = Geocoder::Configuration.lookup
-      default_lookup = lookup
-      lookup = [:bing, :google, :yandex, :esri, :here].sample
+      default_lookup = Geocoder::Configuration.lookup
+
+      lookup = options[:lookup] ? options[:lookup] : lookup_list.sample
+
+      time_start = Time.now
       resp = Geocoder.search("#{self.location_lat},#{self.location_lng}", lookup: lookup)
-      logger.info "Geocoder search for coords with lookup: #{lookup.to_s.cyan}. default: #{default_lookup.to_s.black.on_white}. Media id: #{self.id}"
+      logger.info "Geocoder search for coords with lookup: #{lookup.to_s.cyan}. default: #{default_lookup.to_s.black.on_white}. Media id: #{self.id}. Time: #{(Time.now - time_start).to_f.round(2)}s"
     rescue TimeoutError, SocketError, Geocoder::ResponseParseError,
            Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Zlib::BufError, Zlib::DataError => e
       logger.info "Geocoder exception #{e.class.name}::#{e.message}".light_red
@@ -181,6 +186,9 @@ class Media < ActiveRecord::Base
       return false
     rescue Geocoder::InvalidRequest => e
       raise e
+    rescue Geocoder::OverQueryLimitError => e
+      lookup_list = lookup_list - lookup
+      retry
     end
 
     row = resp.first
@@ -263,8 +271,8 @@ class Media < ActiveRecord::Base
     end
   end
 
-  def update_location!
-    self.set_location
+  def update_location! *args
+    self.set_location *args
     self.save
   end
 
