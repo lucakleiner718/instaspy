@@ -4,7 +4,7 @@ class UserLocationWorker
   sidekiq_options queue: :low, retry: 3
 
   def perform users_id
-    User.find(users_id).popular_location
+    User.find(users_id).update_location!
   end
 
   def self.spawn

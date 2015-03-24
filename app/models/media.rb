@@ -167,7 +167,11 @@ class Media < ActiveRecord::Base
 
     retries = 0
     begin
-      resp = Geocoder.search("#{self.location_lat},#{self.location_lng}")
+      lookup = Geocoder::Configuration.lookup
+      default_lookup = lookup
+      lookup = [:bing, :google, :yandex, :esri, :here].sample
+      resp = Geocoder.search("#{self.location_lat},#{self.location_lng}", lookup: lookup)
+      logger.info "Geocoder search for coords with lookup: #{lookup.to_s.cyan}. default: #{default_lookup.to_s.black.on_white}. Media id: #{self.id}"
     rescue TimeoutError, SocketError, Geocoder::ResponseParseError,
            Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Zlib::BufError, Zlib::DataError => e
       logger.info "Geocoder exception #{e.class.name}::#{e.message}".light_red
@@ -175,13 +179,15 @@ class Media < ActiveRecord::Base
       retries += 1
       retry if retries <= 5
       return false
+    rescue Geocoder::InvalidRequest => e
+      raise e
     end
 
     row = resp.first
     case row.class.name
       when 'Geocoder::Result::Here'
         address = row.data['Location']['Address']
-        self.location_country = Country.find_country_by_alpha3(address['Country']).name
+        self.location_country = Country.find_country_by_alpha3(address['Country']).alpha2
         self.location_state = address['State']
         self.location_city = address['City']
       when 'Geocoder::Result::Google'

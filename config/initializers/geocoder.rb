@@ -1,10 +1,13 @@
 Geocoder.configure(
   timeout:      10,
-  lookup:       :yandex, # :bing :yandex :google
+  lookup:       :bing, # :bing :yandex :google
   bing: {
                 api_key: 'AreNey4-B-i5NhpxcZJg3hPEl_Gta4qp2vTlShk5Bc4qt2FXq9vGlgosts-Dzq1l',
   },
-  # api_key: ['XaB0y63AcGfc5ZtIrbde', 'ZrESX_vdjfU-LmMli8zopg'],
+  here: {
+                api_key: ['XaB0y63AcGfc5ZtIrbde', 'ZrESX_vdjfU-LmMli8zopg'],
+  },
+  #
   # Geocoder::Configuration.api_key = 'd5dd99546055d0d5d6be0de04446595dd5bb365'
   language:     :en,
   # :use_https    => false,       # use HTTPS for lookup requests? (if supported)
