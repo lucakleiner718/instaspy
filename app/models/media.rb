@@ -168,27 +168,35 @@ class Media < ActiveRecord::Base
 
     lookup_list = [:bing, :google, :yandex, :esri, :here]
 
-    retries = 0
-    begin
-      default_lookup = Geocoder::Configuration.lookup
+    while true
+      retries = 0
+      begin
+        default_lookup = Geocoder::Configuration.lookup
 
-      lookup = options[:lookup] ? options[:lookup] : lookup_list.sample
+        lookup = options[:lookup] ? options[:lookup] : lookup_list.sample
 
-      time_start = Time.now
-      resp = Geocoder.search("#{self.location_lat},#{self.location_lng}", lookup: lookup)
-      logger.info "Geocoder search for coords with lookup: #{lookup.to_s.cyan}. default: #{default_lookup.to_s.black.on_white}. Media id: #{self.id}. Time: #{(Time.now - time_start).to_f.round(2)}s"
-    rescue TimeoutError, SocketError, Geocoder::ResponseParseError,
-           Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Zlib::BufError, Zlib::DataError => e
-      logger.info "Geocoder exception #{e.class.name}::#{e.message}".light_red
-      sleep 10
-      retries += 1
-      retry if retries <= 5
-      return false
-    rescue Geocoder::InvalidRequest => e
-      raise e
-    rescue Geocoder::OverQueryLimitError => e
+        time_start = Time.now
+        resp = Geocoder.search("#{self.location_lat},#{self.location_lng}", lookup: lookup)
+        logger.info "Geocoder search for coords with lookup: #{lookup.to_s.cyan}. default: #{default_lookup.to_s.black.on_white}. Media id: #{self.id}. Time: #{(Time.now - time_start).to_f.round(2)}s"
+      rescue TimeoutError, SocketError, Geocoder::ResponseParseError,
+             Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Zlib::BufError, Zlib::DataError => e
+        logger.info "Geocoder exception #{e.class.name}::#{e.message}".light_red
+        sleep 10
+        retries += 1
+        retry if retries <= 5
+        return false
+      rescue Geocoder::InvalidRequest => e
+        raise e
+      rescue Geocoder::OverQueryLimitError => e
+        lookup_list = lookup_list - [lookup]
+        retry
+      end
+
+      break if resp.first
+
       lookup_list = lookup_list - [lookup]
-      retry
+
+      break if lookup_list.size == 0
     end
 
     row = resp.first

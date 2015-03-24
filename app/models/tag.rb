@@ -14,6 +14,18 @@ class Tag < ActiveRecord::Base
 
   CHART_DAYS = 14
 
+  def namename=(value)
+    if value.present?
+      value = value.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
+      value = value.encode(value.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
+      value.strip!
+      value = value[0, 255]
+    end
+
+    # this is same as self[:attribute_name] = value
+    write_attribute(:name, value)
+  end
+
   def users limit=1000
     self.media.limit(limit).map{|media_item| media_item.user}.uniq
   end
