@@ -79,11 +79,10 @@ class Tag < ActiveRecord::Base
         media_list = client.tag_recent_media(URI.escape(self.name), max_tag_id: max_tag_id, count: 100)
       rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::BadRequest,
         Instagram::InternalServerError, Instagram::GatewayTimeout, Instagram::InternalServerError,
-        JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
-        # binding.pry
-        sleep 10
+        JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE, Errno::EOPNOTSUPP => e
         retries += 1
-        retry if retries <= 5
+        sleep 5*retries
+        retry if retries <= 6
         raise e
       end
 

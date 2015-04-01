@@ -25,6 +25,8 @@ Rails.application.routes.draw do
 
   get 'tags' => 'tags#index'
 
+  get 'media/chart' => 'pages#media_chart', as: :media_chart
+
   require 'sidekiq/web'
   Sidekiq::Web.use Rack::Auth::Basic do |username, password|
     username == 'rob' && password == 'awesomeLA'

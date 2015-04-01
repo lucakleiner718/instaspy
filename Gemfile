@@ -30,9 +30,10 @@ end
 
 group :production do
   gem 'puma', '~> 2.8.2'                                    # Production Web Server
-  gem 's3-mysql-backup', require: false
+  # gem 's3-mysql-backup', require: false
 end
 
+gem 'mysql2'                              # Use mysql as the database for Active Record
 gem 'pry-rails'
 gem 'instagram'
 gem 'httparty'
@@ -51,7 +52,6 @@ gem 'redis-rails'
 gem 'daemons'
 gem 'rubyzip', require: 'zip'
 gem 'clockwork'
-gem 'mysql2'                              # Use mysql as the database for Active Record
 gem 'nokogiri'
 gem 'curb'
 gem 'mongoid'

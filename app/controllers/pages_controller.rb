@@ -82,6 +82,10 @@ class PagesController < ApplicationController
     # Stat.where()
   end
 
+  def media_chart
+    @values = MediaAmountStat.where(:date.gt => 14.days.ago.utc.beginning_of_day).order(date: :asc).map{|el| [el.date.strftime('%m/%d'), el.amount]}
+  end
+
   private
 
   def allow_iframe

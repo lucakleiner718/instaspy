@@ -45,6 +45,10 @@ module Clockwork
   # Send weekly report about media
   every(1.week, 'media.report', at: "Wednesday 03:00") { ReportWorker.perform_async }
 
+  every(12.hours, 'media.amount.stat') {
+    DailyMediaStatWorker.spawn
+  }
+
   # every(30.minutes, 'media.ny.location.1') {
   #   Media.get_by_location 40.74226964, -74.007271584 if Time.now < Time.at('2015/02/21 00:00:00 UTC')
   # }

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150303075207) do
+ActiveRecord::Schema.define(version: 20150401061930) do
 
   create_table "followers", force: true do |t|
     t.integer  "user_id"
@@ -52,10 +52,13 @@ ActiveRecord::Schema.define(version: 20150303075207) do
     t.boolean  "location_present"
   end
 
+  add_index "media", ["created_at"], name: "index_media_on_created_at", using: :btree
+  add_index "media", ["created_time"], name: "index_media_on_created_time", using: :btree
   add_index "media", ["insta_id"], name: "index_media_on_insta_id", unique: true, using: :btree
   add_index "media", ["location_city"], name: "index_media_on_location_city", using: :btree
   add_index "media", ["location_country"], name: "index_media_on_location_country", using: :btree
   add_index "media", ["location_state"], name: "index_media_on_location_state", using: :btree
+  add_index "media", ["updated_at"], name: "index_media_on_updated_at", using: :btree
   add_index "media", ["user_id"], name: "index_media_on_user_id", using: :btree
 
   create_table "media_tags", id: false, force: true do |t|
@@ -103,7 +106,7 @@ ActiveRecord::Schema.define(version: 20150303075207) do
     t.datetime "created_at"
   end
 
-  add_index "tags", ["name"], name: "index_tags_on_name", unique: true, using: :btree
+  add_index "tags", ["name"], name: "index_tags_on_name2", length: {"name"=>191}, using: :btree
 
   create_table "track_users", force: true do |t|
     t.integer  "user_id"
@@ -141,11 +144,16 @@ ActiveRecord::Schema.define(version: 20150303075207) do
   add_index "users", ["avg_comments_updated_at"], name: "index_users_on_avg_comments_updated_at", using: :btree
   add_index "users", ["avg_likes"], name: "index_users_on_avg_likes", using: :btree
   add_index "users", ["avg_likes_updated_at"], name: "index_users_on_avg_likes_updated_at", using: :btree
+  add_index "users", ["created_at"], name: "index_users_on_created_at", using: :btree
   add_index "users", ["email"], name: "index_users_on_email", using: :btree
+  add_index "users", ["followed_by"], name: "index_users_on_followed_by", using: :btree
+  add_index "users", ["grabbed_at"], name: "index_users_on_grabbed_at", using: :btree
   add_index "users", ["insta_id"], name: "index_users_on_insta_id", unique: true, using: :btree
   add_index "users", ["location_city"], name: "index_users_on_location_city", using: :btree
   add_index "users", ["location_country"], name: "index_users_on_location_country", using: :btree
   add_index "users", ["location_state"], name: "index_users_on_location_state", using: :btree
+  add_index "users", ["media_amount"], name: "index_users_on_media_amount", using: :btree
+  add_index "users", ["updated_at"], name: "index_users_on_updated_at", using: :btree
   add_index "users", ["username"], name: "index_users_on_username", unique: true, using: :btree
   add_index "users", ["website"], name: "index_users_on_website", using: :btree
 

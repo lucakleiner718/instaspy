@@ -263,7 +263,8 @@ class Media < ActiveRecord::Base
 
       when 'Geocoder::Result::Esri'
         address = row.data['address']
-        self.location_country = Country.find_country_by_alpha3(address['CountryCode']).alpha2
+        c = Country.find_country_by_alpha3(address['CountryCode'])
+        self.location_country = c ? c.alpha2 : address['CountryCode']
         self.location_state = address['Region']
         self.location_city = address['City']
 
