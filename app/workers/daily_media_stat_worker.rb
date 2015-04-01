@@ -6,8 +6,12 @@ class DailyMediaStatWorker
     finish = start.end_of_day
 
     amount = Media.where('created_time >= ? AND created_time <= ?', start, finish).size
+    mas = MediaAmountStat.where(date: start.to_date, action: 'published').first_or_initialize
+    mas.amount = amount
+    mas.save
 
-    mas = MediaAmountStat.where(date: start.to_date).first_or_initialize
+    amount = Media.where('created_at >= ? AND created_at <= ?', start, finish).size
+    mas = MediaAmountStat.where(date: start.to_date, action: 'added').first_or_initialize
     mas.amount = amount
     mas.save
   end

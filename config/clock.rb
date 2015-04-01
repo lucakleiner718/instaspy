@@ -14,7 +14,6 @@ module Clockwork
 
   # Grab new media for observed tags
   every(15.minute, 'get.new.media') { MediaWorker.spawn }
-  # every(1.minute, 'get.new.media') { MediaWorker.spawn }
 
   every(1.day, 'check.media', if: lambda { |t| t.day == 1 }) {
     Tag.observed.pluck(:id).each do |tag_id|
@@ -31,13 +30,12 @@ module Clockwork
   # Update followers list for specified users
   every(12.hours, 'FollowersReport.update') { FollowersReport.track }
 
-
   # Save some stat
   every(1.day, 'StatWorker', at: '00:00') { StatWorker.perform_async }
+  every(10.minutes, 'LimitsWorker') { LimitsWorker.perform_async }
 
   # Save tag stat for chart
   every(1.day, 'TagStat', at: '01:00') { TagStatWorker.spawn }
-
 
   # Send weekly report about followers for specified users
   every(1.week, 'FollowersReport.report', at: "Wednesday 02:00") { FollowersReportWorker.perform_async }

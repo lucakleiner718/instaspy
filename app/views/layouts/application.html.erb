@@ -52,6 +52,16 @@
           </ul>
         </li>
       </ul>
+
+      <% s = Stat.where(key: 'ig_limit').first; s ? s = JSON.parse(s.value) : nil %>
+      <% if s %>
+        <ul class="nav pull-right">
+          <li class="api-limits-menu">
+            <% perc = (s['total_limit'].to_f / s['total_remining']).round(2) * 100 %>
+            API Limits: <span class="perc perc-<%= perc < 30 ? 'danger' : perc < 70 ? 'warning' : 'normal' %>"><%= perc %>%</span> (<%= s['total_limit'] %> / <%= s['total_remining'] %>)
+          </li>
+        </ul>
+      <% end %>
     </div><!-- /.navbar-collapse -->
   </div><!-- /.container-fluid -->
 </nav>

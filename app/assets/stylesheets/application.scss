@@ -130,3 +130,22 @@ body{
   }
 }
 
+.navbar{
+  border-radius: 0;
+}
+
+
+
+.api-limits-menu{
+  line-height: 50px;
+
+  .perc-normal{
+    color: green;
+  }
+  .perc-warning{
+    color: orange;
+  }
+  .perc-danger{
+    color: red;
+  }
+}

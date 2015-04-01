@@ -83,7 +83,8 @@ class PagesController < ApplicationController
   end
 
   def media_chart
-    @values = MediaAmountStat.where(:date.gt => 14.days.ago.utc.beginning_of_day).order(date: :asc).map{|el| [el.date.strftime('%m/%d'), el.amount]}
+    @published = MediaAmountStat.where(:date.gt => (params[:days] || 14).days.ago.utc.beginning_of_day, action: :published).order(date: :asc).map{|el| [el.date.strftime('%m/%d'), el.amount]}
+    @added = MediaAmountStat.where(:date.gt => (params[:days] || 14).days.ago.utc.beginning_of_day, action: :added).order(date: :asc).map{|el| [el.date.strftime('%m/%d'), el.amount]}
   end
 
   private

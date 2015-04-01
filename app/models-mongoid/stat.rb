@@ -4,5 +4,6 @@ class Stat
   field :key, type: String
   field :value, type: String
   field :created_at, type: DateTime
+  field :updated_at, type: DateTime
 
 end
