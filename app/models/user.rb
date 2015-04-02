@@ -439,7 +439,7 @@ class User < ActiveRecord::Base
         end
 
         begin
-          user.save if user.changed?
+          user.save if user.new_record? || user.changed?
         rescue ActiveRecord::RecordNotUnique => e
           if e.message.match('Duplicate entry') && e.message =~ /index_users_on_insta_id/
             user = User.where(insta_id: user_data['id']).first
