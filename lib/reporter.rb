@@ -380,25 +380,36 @@ class Reporter
     File.write 'public/reports/users-from-300k/300k-report.csv', csv_string
   end
 
-  def self.same_followees
+  def self.same_followees ids
     data = []
     amounts = {}
-    unames.each do |username|
-      User.get(username).followees.each do |fol|
-        if fol.grabbed_at.blank? || fol.grabbed_at < 7.days.ago || fol.bio.nil? || fol.website.nil? || fol.follows.blank? || fol.followed_by.blank?
+    ids.each do |id|
+      user = User.find(id)
+      user.followees.each do |fol|
+        if fol.outdated?
           puts "Updating #{fol.username} ..."
           fol.update_info!
         end
-          data << [fol.username, fol.full_name, fol.bio, fol.website, fol.follows, fol.followed_by, fol.email]
-        amounts[fol.username] = 0 if amounts[fol.username].blank?
-        amounts[fol.username] += 1
+        data << [fol.insta_id, fol.username, fol.full_name, fol.bio, fol.website, fol.follows, fol.followed_by, fol.email]
+        amounts[fol.insta_id] = 0 if amounts[fol.insta_id].blank?
+        amounts[fol.insta_id] += 1
       end
-      puts "Processed #{username}. Data size: #{data.size}"
+      puts "Processed #{user.username}. Data size: #{data.size}"
     end
     data.uniq!{|el| el[0]}
     data.map!{|row| row << amounts[row[0]]; row}
 
-    data
+    csv_string = CSV.generate do |csv|
+      csv << ['ID', 'Username', 'Full Name', 'Bio', 'Website', 'Follows', 'Followers', 'Email']
+
+      data.each do |row|
+        csv << row
+      end
+    end
+
+    filepath = "reports/followees-report-#{Time.now.to_i}.csv"
+    File.write "public/#{filepath}", csv_string
+    Rails.env.production? ? "http://107.170.110.156/#{filepath}" : "http://localhost:3000/#{filepath}"
   end
 
   # def b
