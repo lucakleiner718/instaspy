@@ -2,15 +2,23 @@ $(document).on 'ready page:load', ->
   media_chart = $('#media-chart')
   return false if media_chart.length == 0
 
-  data = []
-  $.each media_chart.data('values'), (index, row) ->
-    data.push row[1]
-  initial_series = [{
-    name: 'Media amount',
-    data: data
-  }]
+  published = []
+  $.each media_chart.data('published'), (index, row) ->
+    published.push row[1]
 
-  console.log initial_series
+  added = []
+  $.each media_chart.data('added'), (index, row) ->
+    added.push row[1]
+  initial_series = [
+    {
+      name: 'Media published',
+      data: published
+    },
+    {
+      name: 'Media added',
+      data: added
+    }
+  ]
 
   media_chart.highcharts
     chart:
