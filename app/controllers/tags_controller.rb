@@ -13,9 +13,20 @@ class TagsController < ApplicationController
     end
 
     @tags = @tags.order(:name).page(params[:page]).per(20)
+
+    @tags.map do |t|
+      if t.media_count == 0
+        t.update_column :media_count, t.media.length
+      end
+    end
   end
 
   def observed
     @tags = Tag.observed.includes(:observed_tag).order(:name).page(params[:page]).per(20)
+    @tags.map do |t|
+      if t.media_count == 0
+        t.update_column :media_count, t.media.length
+      end
+    end
   end
 end

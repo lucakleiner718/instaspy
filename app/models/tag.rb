@@ -209,13 +209,13 @@ class Tag < ActiveRecord::Base
     User.where(id: ids)
   end
 
-  def media_amount
-    if self.media_count.blank? || self.media_count_updated_at < 3.days.ago
-      self.media_count = self.media.size
-      self.media_count_updated_at = Time.now
-      self.save
-    end
-    self.media_count
-  end
+  # def media_amount
+  #   if self.media_count.blank? || self.media_count_updated_at < 3.days.ago
+  #     self.media_count = self.media.size
+  #     self.media_count_updated_at = Time.now
+  #     self.save
+  #   end
+  #   self.media_count
+  # end
 
 end

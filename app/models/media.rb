@@ -1,6 +1,6 @@
 class Media < ActiveRecord::Base
 
-  has_and_belongs_to_many :tags, counter_cache: true
+  has_and_belongs_to_many :tags
   belongs_to :user
 
   scope :with_location, -> { where('location_lat is not null and location_lat != ""') }
