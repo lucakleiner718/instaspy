@@ -135,13 +135,14 @@ class User < ActiveRecord::Base
     rescue Instagram::BadRequest => e
       if e.message =~ /you cannot view this resource/
 
+        self.private = true
+
         # if user is private and we don't have it's username, than just remove it from db
         if self.private? && self.username.blank?
           self.destroy
           return false
         end
 
-        self.private = true
         self.grabbed_at = Time.now
 
         # If account private - try to get info from public page via http
@@ -169,13 +170,7 @@ class User < ActiveRecord::Base
       raise e
     end
 
-    self.username = data['username']
-    self.bio = data['bio']
-    self.website = data['website']
-    self.full_name = data['full_name']
-    self.followed_by = data['counts']['followed_by']
-    self.follows = data['counts']['follows']
-    self.media_amount = data['counts']['media']
+    self.insta_data data
     self.grabbed_at = Time.now
     self.save
 
