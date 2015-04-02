@@ -17,6 +17,9 @@ class Feedly < ActiveRecord::Base
     if resp['results'].size > 0
       result = resp['results'].first
 
+      exists_feed = self.where(feed_id: result['feedId']).first
+      record = exists_feed if exists_feed.present?
+
       record.website = url
       record.feed_id = result['feedId']
       record.subscribers_amount = result['subscribers'] || 0
