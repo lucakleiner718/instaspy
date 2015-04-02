@@ -93,7 +93,7 @@ class Tag < ActiveRecord::Base
       data = media_list.data
 
       media_found = Media.where(insta_id: data.map{|el| el['id']})
-      tags_found = Tag.where(name: data.map{|el| el['tags']}.flatten.uniq).select(:id, :name)
+      tags_found = Tag.where(name: data.map{|el| el['tags']}.flatten.uniq)
       users_found = User.where(insta_id: data.map{|el| el['user']['id']})
 
       data.each do |media_item|
@@ -207,6 +207,15 @@ class Tag < ActiveRecord::Base
   def publishers
     ids = self.media.pluck('distinct user_id')
     User.where(id: ids)
+  end
+
+  def media_amount
+    if self.media_count.blank? || self.media_count_updated_at < 3.days.ago
+      self.media_count = self.media.size
+      self.media_count_updated_at = Time.now
+      self.save
+    end
+    self.media_count
   end
 
 end
