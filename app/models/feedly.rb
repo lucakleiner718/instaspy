@@ -1,0 +1,33 @@
+class Feedly < ActiveRecord::Base
+
+  self.table_name = :feedly
+
+  def self.process url
+    record = self.where(website: url).first
+
+    return record if record && record.grabbed_at && record.grabbed_at > 3.days.ago
+
+    unless record
+      record = self.new
+    end
+
+    client = Feedlr::Client.new
+    resp = client.search_feeds url
+
+    if resp['results'].size > 0
+      result = resp['results'].first
+
+      record.website = url
+      record.feed_id = result['feedId']
+      record.subscribers_amount = result['subscribers'] || 0
+
+      record.grabbed_at = Time.now
+      record.save
+
+      record
+    else
+      false
+    end
+  end
+
+end

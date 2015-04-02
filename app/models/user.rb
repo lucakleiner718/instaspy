@@ -12,6 +12,7 @@ class User < ActiveRecord::Base
   scope :not_private, -> { where private: [nil, false] }
   scope :privates, -> { where private: true }
   scope :outdated, -> { where('grabbed_at is null OR grabbed_at < ? OR bio is null OR website is null of follows is null OR followed_by is null', 7.days.ago) }
+  scope :with_url, -> { where 'website is not null && website != ""' }
 
   before_save do
     # Catch email from bio
@@ -34,6 +35,10 @@ class User < ActiveRecord::Base
     if self.email_changed? && self.email.present?
       self.email = self.email.downcase
     end
+
+    # if self.website_changed? && self.website.present? && self.feedly_feed_id.blank? && self.feedly_updated_at.present?
+    #   self.feedly_updated_at = nil
+    # end
   end
 
   def full_name=(value)

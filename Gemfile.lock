@@ -1,3 +1,14 @@
+GIT
+  remote: git://github.com/khelll/feedlr.git
+  revision: 83180e5c213b47bfb5c6647c8c928d4b5125b316
+  specs:
+    feedlr (0.1.0)
+      faraday (~> 0.9)
+      faraday_middleware (~> 0.9)
+      hashie (~> 3.0)
+      multi_json (~> 1.0)
+      multi_xml (~> 0.5)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -376,6 +387,7 @@ DEPENDENCIES
   daemons
   dotenv (~> 0.11.1)
   dotenv-deployment
+  feedlr!
   fog
   geocoder
   god
