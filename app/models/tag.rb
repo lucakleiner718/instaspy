@@ -209,6 +209,10 @@ class Tag < ActiveRecord::Base
     User.where(id: ids)
   end
 
+  def update_media_count
+    self.update_column :media_count, self.media.length
+  end
+
   # def media_amount
   #   if self.media_count.blank? || self.media_count_updated_at < 3.days.ago
   #     self.media_count = self.media.size
