@@ -3,12 +3,12 @@ class Feedly < ActiveRecord::Base
   self.table_name = :feedly
 
   def self.process url
-    record = self.where(website: url).first
+    record = Feedly.where(website: url).first
 
     return record if record && record.grabbed_at && record.grabbed_at > 3.days.ago
 
     unless record
-      record = self.new
+      record = Feedly.new
     end
 
     client = Feedlr::Client.new
@@ -17,7 +17,7 @@ class Feedly < ActiveRecord::Base
     if resp['results'].size > 0
       result = resp['results'].first
 
-      exists_feed = self.where(feed_id: result['feedId']).first
+      exists_feed = Feedly.where(feed_id: result['feedId']).first
       record = exists_feed if exists_feed.present?
 
       record.website = url
