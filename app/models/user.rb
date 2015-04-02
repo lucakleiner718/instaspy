@@ -146,7 +146,7 @@ class User < ActiveRecord::Base
 
         # If account private - try to get info from public page via http
         # begin
-          self.update_private_account
+          self.update_via_http!
         # rescue => e
           # binding.pry
         # end
@@ -187,7 +187,7 @@ class User < ActiveRecord::Base
     true
   end
 
-  def update_private_account
+  def update_via_http!
     retries = 0
     begin
       resp = Curl::Easy.perform("http://instagram.com/#{self.username}/") do |curl|
@@ -214,19 +214,9 @@ class User < ActiveRecord::Base
     # content = html.search('script').select{|script| script.attr('src').blank? }.last.text.sub('window._sharedData = ', '').sub(/;$/, '')
     content = html.xpath('//script[contains(text(), "_sharedData")]').first.text.sub('window._sharedData = ', '').sub(/;$/, '')
     json = JSON.parse content
-    user = json['entry_data']['UserProfile'].first['user']
+    data = json['entry_data']['UserProfile'].first['user']
 
-    # self.full_name = resp.body.match(/"full_name":"([^"]+)"/)[1] if self.full_name.blank?
-    self.full_name = user['full_name']
-    self.bio = user['bio']
-    self.website = user['website']
-    # self.media_amount = resp.body.match(/"media":(\d+)/)[1] if self.media_amount.blank?
-    self.media_amount = user['counts']['media']
-    # self.followed_by = resp.body.match(/"followed_by":(\d+)/)[1] if self.followed_by.blank?
-    self.followed_by = user['counts']['followed_by']
-    # self.follows = resp.body.match(/"follows":(\d+)/)[1] if self.follows.blank?
-    self.follows = user['counts']['follows']
-
+    self.insta_data data
     self.save
   end
 
@@ -493,11 +483,17 @@ class User < ActiveRecord::Base
   end
 
   def insta_data data
+    self.full_name = data['full_name'] unless data['full_name'].nil?
     self.username = data['username']
     self.bio = data['bio'] unless data['bio'].nil?
     self.website = data['website'] unless data['website'].nil?
-    self.full_name = data['full_name'] unless data['full_name'].nil?
     self.insta_id = data['id'] if self.insta_id.blank?
+
+    if data['counts'].present?
+      self.media_amount = data['counts']['media'] if data['counts']['media'].present?
+      self.followed_by = data['counts']['followed_by'] if data['counts']['followed_by'].present?
+      self.follows = data['counts']['follows'] if data['counts']['follows'].present?
+    end
   end
 
   def self.add_by_username username

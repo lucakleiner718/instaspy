@@ -588,4 +588,14 @@ class Reporter
     Rails.env.production? ? "http://107.170.110.156/#{filepath}" : "http://localhost:3000/#{filepath}"
   end
 
+  def process_usernames_file filename
+    csv = CSV.read filename
+    csv.each_with_index do |row, i|
+      user = User.get row[0]
+      if user
+        csv[i][1] = user.insta_id
+      end
+    end
+  end
+
 end

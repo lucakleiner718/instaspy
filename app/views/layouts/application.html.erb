@@ -57,7 +57,7 @@
       <% if s %>
         <ul class="nav pull-right">
           <li class="api-limits-menu">
-            <% perc = (s['total_remining'] / s['total_limit'].to_f).round(2) * 100 %>
+            <% perc = (s['total_remining'] / s['total_limit'].to_f * 100).round %>
             API Limits: <span class="perc perc-<%= perc < 30 ? 'danger' : perc < 70 ? 'warning' : 'normal' %>"><%= perc %>%</span> (<%= s['total_remining'] %> / <%= s['total_limit'] %>)
           </li>
         </ul>

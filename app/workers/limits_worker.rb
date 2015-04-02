@@ -1,6 +1,8 @@
 class LimitsWorker
   include Sidekiq::Worker
 
+  sidekiq_options queue: :critical
+
   def perform
     total_remining = 0
     total_limit = 0
