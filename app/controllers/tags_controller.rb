@@ -22,11 +22,6 @@ class TagsController < ApplicationController
   end
 
   def observed
-    @tags = Tag.observed.includes(:observed_tag).order(:name).page(params[:page]).per(20)
-    @tags.map do |t|
-      if t.media_count < 100
-        t.update_column :media_count, t.media.length
-      end
-    end
+    redirect_to tags_path(filter: :observed)
   end
 end
