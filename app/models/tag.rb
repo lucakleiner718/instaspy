@@ -63,11 +63,16 @@ class Tag < ActiveRecord::Base
   def recent_media *args
     options = args.extract_options!
 
-    max_tag_id = options[:offset].present? ? options[:offset].to_i * 1_000_000 : nil
+    if options[:offset].present?
+      m = Media.where('created_time >= ? && created_time <= ?', options[:offset] - 10.minutes, options[:offset] + 10.minutes).first
+      if m
+        max_tag_id = m.insta_id.match(/^(\d+)_/)[1]
+      end
+    end
 
     total_added = 0
-    options[:total_limit] ||= 2_000
-    start_media_amount = self.media.size if options[:media_atleast]
+    options[:total_limit] ||= 5_000
+    start_media_amount = self.media.length if options[:media_atleast]
     created_time_list = []
 
     while true
