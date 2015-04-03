@@ -38,24 +38,11 @@ class Tag < ActiveRecord::Base
     self.media.order('created_time asc').first
   end
 
-  def get_old_media
-    self.recent_media max_id: self.oldest_media.insta_id
-  end
-
   def self.get_new_media
     Tag.observed.each do |tag|
       tag.get_new_media
     end
   end
-
-  def get_new_media
-    self.recent_media max_id: self.newest_media.insta_id
-  end
-
-  # @depricated
-  # def self.recent_media
-  #   Media.recent_media
-  # end
 
   # offset (DateTime) - start point of user grabbing
   # total_limit (integer) - amount of media, stop grabbing when code receive provided amount
@@ -71,6 +58,7 @@ class Tag < ActiveRecord::Base
     end
 
     total_added = 0
+    total_processed = 0
     options[:total_limit] ||= 5_000
     start_media_amount = self.media.length if options[:media_atleast]
     created_time_list = []
@@ -125,6 +113,7 @@ class Tag < ActiveRecord::Base
       end
 
       total_added += added
+      total_processed += media_list.data.size
 
       break if media_list.data.size == 0
 
@@ -132,7 +121,7 @@ class Tag < ActiveRecord::Base
       median_created_time = created_time_list.size % 2 == 0 ? (created_time_list[(created_time_list.size/2-1)..(created_time_list.size/2+1)].sum / 3) : (created_time_list[(created_time_list.size/2)..(created_time_list.size/2+1)].sum / 2)
 
       time_end = Time.now
-      logger.debug "#{">>".green} [#{self.name.green}] / #{media_list.data.size}/#{added.to_s.blue}/#{total_added.to_s.cyan} / MT: #{((Time.at median_created_time).strftime('%d/%m/%y %H:%M:%S')).to_s.yellow} / IG: #{(ig_time_end-time_start).to_f.round(2)}s / T: #{(time_end - time_start).to_f.round(2)}s"
+      logger.debug "#{">>".green} [#{self.name.green}] / #{media_list.data.size}/#{total_processed} #{added.to_s.blue}/#{total_added.to_s.cyan} / MT: #{((Time.at median_created_time).strftime('%d/%m/%y %H:%M:%S')).to_s.yellow} / IG: #{(ig_time_end-time_start).to_f.round(2)}s / T: #{(time_end - time_start).to_f.round(2)}s"
 
       move_next = false
 

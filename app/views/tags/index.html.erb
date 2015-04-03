@@ -10,8 +10,8 @@
 <table class="table">
   <thead>
   <tr>
-    <th>Tag name</th>
-    <th>Media in db</th>
+    <th><%= sortable :name, 'Tag name' %></th>
+    <th><%= sortable :media_count, 'Media amount in db' %></th>
     <% if params[:filter] == 'observed' %>
       <th>Started tracking</th>
     <% end %>
