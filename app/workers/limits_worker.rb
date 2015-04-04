@@ -20,10 +20,9 @@ class LimitsWorker
       end
     end
 
-    total_remaining = ig_accounts.size * 5_000 if total_remaining == 0
+    total_limit = ig_accounts.size * 5_000 if total_limit == 0
 
     s = Stat.where(key: 'ig_limit').first_or_initialize
     s.value = { total_limit: total_limit, total_remaining: total_remaining }.to_json
-    s.save
   end
 end
