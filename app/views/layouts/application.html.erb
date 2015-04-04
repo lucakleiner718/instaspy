@@ -54,7 +54,7 @@
       </ul>
 
       <% s = Stat.where(key: 'ig_limit').first; s ? s = JSON.parse(s.value) : nil %>
-      <% if s %>
+      <% if s && s['total_remaining'] && s['total_limit'] && s['total_limit'] > 0 %>
         <ul class="nav pull-right">
           <li class="api-limits-menu">
             <% perc = (s['total_remaining'] / s['total_limit'].to_f * 100).round %>
