@@ -856,7 +856,7 @@ class User < ActiveRecord::Base
     end
   end
 
-  def update_avg_data *args
+  def update_avg_data! *args
     options = args.extract_options!
     media = self.media.order(created_time: :desc).where('created_time < ?', 1.day.ago)
 

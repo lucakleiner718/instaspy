@@ -6,33 +6,7 @@ class UserAvgLikesWorker
 
   def perform users_ids
     User.where(id: users_ids).each do |user|
-      media = user.media
-
-      if media.size > 0
-        likes_total = 0
-        comments_total = 0
-        media_amount = 0
-
-        media.where('created_time < ?', 1.day.ago).each do |media_item|
-          if media_item.updated_at - media_item.created_time < 3.days || media_item.likes_amount.blank?
-            media_item.update_info!
-          end
-
-          if media_item.likes_amount.present?
-            likes_total += media_item.likes_amount
-            comments_total += media_item.comments_amount
-            media_amount += 1
-          end
-        end
-
-        if media_amount > 0
-          user.avg_likes = likes_total / media_amount
-          user.avg_likes_updated_at = Time.now
-          user.avg_comments = comments_total / media_amount
-          user.avg_comments_updated_at = Time.now
-          user.save
-        end
-      end
+      user.update_avg_data!
     end
   end
 

@@ -328,7 +328,7 @@ class Reporter
 
       # update user's avg likes and comments
       users.each do |user|
-        user.update_avg_data if user.avg_likes_updated_at.blank? || user.avg_likes_updated_at < 1.month.ago
+        user.update_avg_data! if user.avg_likes_updated_at.blank? || user.avg_likes_updated_at < 1.month.ago
       end
 
       # leave in list users only with avg likes amount over or eq to 50

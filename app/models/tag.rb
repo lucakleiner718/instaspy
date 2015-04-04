@@ -179,6 +179,7 @@ class Tag < ActiveRecord::Base
     ot = t.observed_tag.present? ? t.observed_tag : t.build_observed_tag
     ot.export_csv = true
     ot.save
+    t.update_media_count!
   end
 
   def self.remove_from_csv tag_name
@@ -192,6 +193,7 @@ class Tag < ActiveRecord::Base
     t = Tag.where(name: tag_name).first_or_create
     ot = t.observed_tag.present? ? t.observed_tag : t.build_observed_tag
     ot.save
+    t.update_media_count!
   end
 
   def self.get tag_name
@@ -203,7 +205,7 @@ class Tag < ActiveRecord::Base
     User.where(id: ids)
   end
 
-  def update_media_count
+  def update_media_count!
     self.update_column :media_count, self.media.length
   end
 
