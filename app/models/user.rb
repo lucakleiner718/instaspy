@@ -860,7 +860,7 @@ class User < ActiveRecord::Base
     options = args.extract_options!
     media = self.media.order(created_time: :desc).where('created_time < ?', 1.day.ago)
 
-    return if self.avg_likes_updated_at > 1.month.ago && !options[:force]
+    return if self.avg_likes_updated_at && self.avg_likes_updated_at > 1.month.ago && !options[:force]
 
     likes_amount = 0
     comments_amount = 0
