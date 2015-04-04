@@ -860,6 +860,8 @@ class User < ActiveRecord::Base
     options = args.extract_options!
     media = self.media.order(created_time: :desc).where('created_time < ?', 1.day.ago)
 
+    return if self.avg_likes_updated_at > 1.month.ago && !options[:force]
+
     likes_amount = 0
     comments_amount = 0
     media_amount = 0
@@ -953,6 +955,11 @@ class User < ActiveRecord::Base
       ) as a
       WHERE a.eng > 0.015 && a.location_country in ('us', 'united states')
     ").to_a.map{|e| e[0]}
+  end
+
+  def engagement
+    return false unless self.avg_likes > 0 || self.followed_by > 0
+    (self.avg_likes/self.followed_by.to_f).round(2)
   end
 
 end
