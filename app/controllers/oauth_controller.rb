@@ -12,6 +12,8 @@ class OauthController < ApplicationController
       config.no_response_wrapper = true
     end
 
+    InstagramAccount.where(login_process: true).update_all(login_process: false)
+
     account.update_attribute :login_process, true
     session[:ig_account] = account.id
     redirect_to Instagram.authorize_url(redirect_uri: account.redirect_uri)
@@ -22,7 +24,10 @@ class OauthController < ApplicationController
       account = InstagramAccount.find(session[:ig_account])
     else
       account = InstagramAccount.where(login_process: true).first
+      account.update_column :login_process, false if account
     end
+
+    Rails.logger.info "Processing with account #{account.id}; session: #{session[:ig_account]};"
 
     raise unless account
 
