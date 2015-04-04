@@ -858,7 +858,7 @@ class User < ActiveRecord::Base
 
   def update_avg_data! *args
     options = args.extract_options!
-    media = self.media.order(created_time: :desc).where('created_time < ?', 1.day.ago)
+    media = self.media.order(created_time: :desc).where('created_time < ?', 1.day.ago).limit(100)
 
     return if self.avg_likes_updated_at && self.avg_likes_updated_at > 1.month.ago && !options[:force]
 
@@ -870,7 +870,7 @@ class User < ActiveRecord::Base
 
     if media.size < options[:total_limit]
       self.recent_media total_limit: options[:total_limit]
-      media = self.media.order(created_time: :desc).where('created_time < ?', 1.day.ago)
+      media = self.media.order(created_time: :desc).where('created_time < ?', 1.day.ago).limit(100)
     end
 
     return false if media.size == 0
