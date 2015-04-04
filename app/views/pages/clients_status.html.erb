@@ -4,31 +4,14 @@
   <tr>
     <th>Client ID</th>
     <th>Logged In Accounts</th>
-    <th>Calls Remaining</th>
+    <% if params[:remaining] %>
+      <th>Calls Remaining</th>
+    <% end %>
     <th></th>
   </tr>
   </thead>
   <tbody>
-  <% InstagramAccount.all.each do |account| %>
-    <%
-       resp = nil
-       limit = account.logins.size * 5_000
-       remaining = 0
-       account.logins.each do |login|
-         remaining += Rails.cache.fetch("insta_login_rate_#{login.id}", expires_in: 30.seconds) do
-           amount = 0
-           begin
-             client = InstaClient.new(login).client
-             resp = client.utils_raw_response
-             amount = resp.headers[:x_ratelimit_remaining].to_i
-           rescue => e
-             0
-           end
-
-           amount
-         end
-       end
-    %>
+  <% @accounts.each do |account| %>
     <tr>
       <td><%= account.client_id %></td>
       <td>
@@ -36,13 +19,40 @@
         <% account.logins.each do |login| %>
           <% usernames << login.user.username if login.user.present? %>
         <% end %>
-        <%= usernames.join(', ') %>
+        <% if usernames.size > 0 %>
+          <%= usernames.join(', ') %>
+        <% else %>
+          <i style="color: gray;">no logins</i>
+        <% end %>
       </td>
-      <td>
-        <%= remaining %> / <%= limit %>
-      </td>
+      <% if params[:remaining] %>
+        <td>
+          <%
+             resp = nil
+             limit = account.logins.size * 5_000
+             remaining = 0
+             account.logins.each do |login|
+               remaining += Rails.cache.fetch("insta_login_rate_#{login.id}", expires_in: 1.minute) do
+                 amount = 0
+                 begin
+                   client = InstaClient.new(login).client
+                   resp = client.utils_raw_response
+                   amount = resp.headers[:x_ratelimit_remaining].to_i
+                 rescue => e
+                   0
+                 end
+
+                 amount
+               end
+             end
+          %>
+          <%= remaining %> / <%= limit %>
+        </td>
+      <% end %>
       <td><%= link_to('Login', oauth_connect_path(key: account.client_id)) %></td>
     </tr>
   <% end %>
   </tbody>
 </table>
+
+<%= paginate @accounts %>

@@ -62,7 +62,7 @@ class PagesController < ApplicationController
   end
 
   def clients_status
-
+    @accounts = InstagramAccount.all.page(params[:page]).per(10)
   end
 
   def chart_amounts

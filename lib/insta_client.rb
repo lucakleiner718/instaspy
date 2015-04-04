@@ -3,6 +3,8 @@ class InstaClient
   def initialize login=nil
     @login = login || InstagramLogin.all.sample
 
+    raise unless @login
+
     Instagram.configure do |config|
       config.client_id = @login.account.client_id
       config.client_secret = @login.account.client_secret
