@@ -92,11 +92,11 @@ class Media < ActiveRecord::Base
 
     find_more = media_item['tags']
     if tags_found.size > 0
-      find_more -= tags_found.map(&:name)
+      find_more -= tags_found.map{|el| el.name.downcase}
     end
 
     if find_more.size > 0
-      tags_found += Tag.where(name: find_more)
+      tags_found.concat Tag.where(name: find_more).to_a
     end
 
     tags_list = []
