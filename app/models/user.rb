@@ -624,11 +624,13 @@ class User < ActiveRecord::Base
         media_list = client.user_recent_media self.insta_id, count: 100, max_id: max_id
       rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::InternalServerError, Instagram::GatewayTimeout,
         JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
+        Rails.logger.info "#{e.class}: #{e.message}"
         sleep 10
         retries += 1
         retry if retries <= 5
         raise e
       rescue Instagram::BadRequest => e
+        Rails.logger.info "#{e.class}: #{e.message}"
         if e.message =~ /you cannot view this resource/
           break
         elsif e.message =~ /this user does not exist/
@@ -650,6 +652,7 @@ class User < ActiveRecord::Base
 
       data.each do |media_item|
         logger.debug "#{">>".green} Start process #{media_item['id']}"
+        ts = Time.now
 
         media = media_found.select{|el| el.insta_id == media_item['id']}.first
         unless media
@@ -668,7 +671,7 @@ class User < ActiveRecord::Base
 
         avg_created_time += media['created_time'].to_i
 
-        logger.debug "#{">>".green} End process #{media_item['id']}"
+        logger.debug "#{">>".green} End process #{media_item['id']}. T:#{(Time.now - ts).to_f.round(2)}s"
       end
 
       break if media_list.data.size == 0
@@ -860,7 +863,7 @@ class User < ActiveRecord::Base
     options = args.extract_options!
     media = self.media.order(created_time: :desc).where('created_time < ?', 1.day.ago).limit(100)
 
-    return if self.avg_likes_updated_at && self.avg_likes_updated_at > 1.month.ago && !options[:force]
+    return true if self.avg_likes_updated_at && self.avg_likes_updated_at > 1.month.ago && !options[:force]
 
     likes_amount = 0
     comments_amount = 0
@@ -894,6 +897,8 @@ class User < ActiveRecord::Base
 
     avg_likes = likes_amount / media_amount
     avg_comments = comments_amount / media_amount
+
+    return false if self.destroyed?
 
     self.avg_likes = avg_likes
     self.avg_likes_updated_at = Time.now

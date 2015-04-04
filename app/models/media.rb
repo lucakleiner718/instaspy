@@ -80,10 +80,8 @@ class Media < ActiveRecord::Base
       raise e
     end
 
-    media_item = response.data
-
-    self.media_user media_item['user']
-    self.media_data media_item
+    self.media_user response.data['user']
+    self.media_data response.data
     self.updated_at = Time.now
 
     self.save
@@ -106,6 +104,15 @@ class Media < ActiveRecord::Base
 
     unless tags_found
       tags_found = self.tags
+    end
+
+    find_more = media_item['tags']
+    if tags_found.size > 0
+      find_more -= tags_found.map(&:name)
+    end
+
+    if find_more.size > 0
+      tags_found += Tag.where(name: find_more)
     end
 
     tags_list = []

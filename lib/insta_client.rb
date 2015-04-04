@@ -5,13 +5,10 @@ class InstaClient
 
     raise unless @login
 
-    Instagram.configure do |config|
-      config.client_id = @login.account.client_id
-      config.client_secret = @login.account.client_secret
-      config.no_response_wrapper = true
-    end
-
-    @client = Instagram.client(access_token: @login.access_token)
+    @client = Instagram.client access_token: @login.access_token,
+                               client_id: @login.account.client_id,
+                               client_secret: @login.account.client_secret,
+                               no_response_wrapper: true
   end
 
   def account
