@@ -1,26 +1,10 @@
 class Media < ActiveRecord::Base
 
-  has_and_belongs_to_many :tags
+  has_and_belongs_to_many :tags, after_add: :increment_some_tag, after_remove: :decrement_some_tag
   belongs_to :user
 
   scope :with_location, -> { where('location_lat is not null and location_lat != ""') }
   scope :without_location, -> { where('location_lat is null or location_lat != ""').where('location_present is null') }
-
-  after_create do
-    t = self.tags
-    self.class.connection.execute("update tags set media_count=media_count+1 where id in (#{t.map(&:id).join(',')})") if t.size > 0
-    # self.tags.each do |t|
-    #   t.update_column :media_count, t.media_count+1
-    # end
-  end
-
-  after_destroy do
-    t = self.tags
-    self.class.connection.execute("update tags set media_count=media_count-1 where id in (#{t.map(&:id).join(',')})") if t.size > 0
-    # self.tags.each do |t|
-    #   t.update_column :media_count, t.media_count-1
-    # end
-  end
 
   reverse_geocoded_by :location_lat, :location_lng
 
@@ -396,6 +380,29 @@ class Media < ActiveRecord::Base
       end
     end
     false
+  end
+
+  private
+
+  # after_create :increment_tag
+  # after_destroy :decrement_tag
+
+  # def increment_tag
+  #   t = self.tags
+  #   self.class.connection.execute("update tags set media_count=media_count+1 where id in (#{t.map(&:id).join(',')})") if t.size > 0
+  # end
+  #
+  # def decrement_tag
+  #   t = self.tags
+  #   self.class.connection.execute("update tags set media_count=media_count-1 where id in (#{t.map(&:id).join(',')})") if t.size > 0
+  # end
+
+  def increment_some_tag added_tag
+    self.class.connection.execute("update tags set media_count=media_count+1 where id=#{added_tag.id}")
+  end
+
+  def decrement_some_tag removed_tag
+    self.class.connection.execute("update tags set media_count=media_count-1 where id=#{removed_tag.id}")
   end
 
 end
