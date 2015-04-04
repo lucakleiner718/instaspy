@@ -77,6 +77,7 @@ class Media < ActiveRecord::Base
       sleep 10
       retries += 1
       retry if retries <= 5
+      raise e
     end
 
     media_item = response.data

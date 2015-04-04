@@ -152,7 +152,9 @@ class User < ActiveRecord::Base
 
         # If account private - try to get info from public page via http
         # begin
-          self.update_via_http!
+        resp = self.update_via_http!
+
+        return false unless resp
         # rescue => e
           # binding.pry
         # end
@@ -212,7 +214,9 @@ class User < ActiveRecord::Base
 
     html = Nokogiri::HTML(resp.body)
     # content = html.search('script').select{|script| script.attr('src').blank? }.last.text.sub('window._sharedData = ', '').sub(/;$/, '')
-    content = html.xpath('//script[contains(text(), "_sharedData")]').first.text.sub('window._sharedData = ', '').sub(/;$/, '')
+    shared_data_element = html.xpath('//script[contains(text(), "_sharedData")]').first
+    return false unless shared_data_element
+    content = shared_data_element.text.sub('window._sharedData = ', '').sub(/;$/, '')
     json = JSON.parse content
     data = json['entry_data']['UserProfile'].first['user']
 
@@ -735,7 +739,7 @@ class User < ActiveRecord::Base
 
   end
 
-  def popular_location *args
+  def update_location! *args
     options = args.extract_options!
 
     if self.location_updated_at && self.location_updated_at > 1.month.ago && self.location_country && !options[:force]
@@ -799,7 +803,7 @@ class User < ActiveRecord::Base
     self.location
   end
 
-  alias :update_location! :popular_location
+  alias :popular_location :update_location!
 
   def location
     {
@@ -938,6 +942,17 @@ class User < ActiveRecord::Base
 
   def actual?
     !self.outdated?
+  end
+
+  def self.by_engagement
+    users_ids = User.connection.execute("
+      SELECT a.id from (
+        SELECT id, avg_likes/followed_by as eng, location_country
+        FROM users
+        WHERE followed_by > 1000 && avg_likes is not null order by eng desc
+      ) as a
+      WHERE a.eng > 0.015 && a.location_country in ('us', 'united states')
+    ").to_a.map{|e| e[0]}
   end
 
 end
