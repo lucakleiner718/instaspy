@@ -4,7 +4,7 @@ class LimitsWorker
   sidekiq_options queue: :critical
 
   def perform
-    total_remining = 0
+    total_remaining = 0
     total_limit = 0
     ig_accounts = InstagramAccount.all
     ig_accounts.each do |account|
@@ -16,12 +16,14 @@ class LimitsWorker
       end
       if resp.present?
         total_limit += resp.headers[:x_ratelimit_limit].to_i
-        total_remining +=resp.headers[:x_ratelimit_remaining].to_i
+        total_remaining +=resp.headers[:x_ratelimit_remaining].to_i
       end
     end
 
+    total_remaining = ig_accounts.size * 5_000 if total_remaining == 0
+
     s = Stat.where(key: 'ig_limit').first_or_initialize
-    s.value = { total_limit: total_limit, total_remining: total_remining }.to_json
+    s.value = { total_limit: total_limit, total_remaining: total_remaining }.to_json
     s.save
   end
 end

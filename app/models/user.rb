@@ -87,8 +87,8 @@ class User < ActiveRecord::Base
       rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::BadRequest, Instagram::InternalServerError, Instagram::GatewayTimeout,
         JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
         logger.info "#{">> issue".red} #{e.class.name} :: #{e.message}"
-        sleep 10
         retries += 1
+        sleep 10*retries
         retry if retries <= 5
         raise e
       end
@@ -171,8 +171,8 @@ class User < ActiveRecord::Base
       return false
     rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::InternalServerError, Instagram::GatewayTimeout,
       JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
-      sleep 10
       retries += 1
+      sleep 10*retries
       retry if retries <= 5
       raise e
     end
@@ -198,9 +198,9 @@ class User < ActiveRecord::Base
         curl.follow_location = true
       end
     rescue Curl::Err::HostResolutionError, Curl::Err::SSLConnectError, Curl::Err::GotNothingError => e
-      sleep 10
       retries += 1
-      retry if retries < 5
+      sleep 10*retries
+      retry if retries <= 5
       return false
     end
 
