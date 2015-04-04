@@ -1,36 +1,47 @@
 <h3>Instagram Accounts</h3>
-<table style="width: 450px;">
+<table class="table">
   <thead>
   <tr>
     <th>Client ID</th>
+    <th>Logged In Accounts</th>
     <th>Calls Remaining</th>
+    <th></th>
   </tr>
   </thead>
   <tbody>
   <% InstagramAccount.all.each do |account| %>
     <%
        resp = nil
-       issue = false
-       if account.access_token.present?
-         begin
-           client = InstaClient.new(account).client
-           resp = client.utils_raw_response
-         rescue => e
-           issue = true
+       limit = account.logins.size * 5_000
+       remaining = 0
+       account.logins.each do |login|
+         remaining += Rails.cache.fetch("insta_login_rate_#{login.id}", expires_in: 30.seconds) do
+           amount = 0
+           begin
+             client = InstaClient.new(login).client
+             resp = client.utils_raw_response
+             amount = resp.headers[:x_ratelimit_remaining].to_i
+           rescue => e
+             0
+           end
+
+           amount
          end
        end
     %>
     <tr>
       <td><%= account.client_id %></td>
-      <td style="text-align: center;">
-        <% if resp.present? %>
-          <%= resp.headers[:x_ratelimit_remaining]%> / <%= resp.headers[:x_ratelimit_limit] %>
-        <% elsif issue %>
-          0 / 5000
-        <% else %>
-          <%= link_to('Login to Instagram', oauth_connect_path(key: account.client_id)) %>
+      <td>
+        <% usernames = [] %>
+        <% account.logins.each do |login| %>
+          <% usernames << login.user.username if login.user.present? %>
         <% end %>
+        <%= usernames.join(', ') %>
       </td>
+      <td>
+        <%= remaining %> / <%= limit %>
+      </td>
+      <td><%= link_to('Login', oauth_connect_path(key: account.client_id)) %></td>
     </tr>
   <% end %>
   </tbody>

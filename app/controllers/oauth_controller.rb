@@ -13,18 +13,32 @@ class OauthController < ApplicationController
     end
 
     account.update_attribute :login_process, true
+    session[:ig_account] = account.id
     redirect_to Instagram.authorize_url(redirect_uri: account.redirect_uri)
   end
 
   def signin
-    account = InstagramAccount.where(login_process: true).first
+    if session[:ig_account].present?
+      account = InstagramAccount.find(session[:ig_account])
+    else
+      account = InstagramAccount.where(login_process: true).first
+    end
+
+    raise unless account
 
     response = Instagram.get_access_token(params[:code], redirect_uri: account.redirect_uri)
 
+    login = InstagramLogin.where(account_id: account.id, ig_id: response.user.id).first_or_initialize
+    login.access_token = response.access_token
+    login.save
+
+    user = User.where(insta_id: response.user.id).first_or_initialize
+    user.insta_data response.user
+    user.save
+
     account.login_process = false
-    account.access_token = response.access_token
     account.save
 
-    redirect_to root_path
+    redirect_to clients_status_path
   end
 end
