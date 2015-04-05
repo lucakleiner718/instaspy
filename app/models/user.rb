@@ -872,7 +872,7 @@ class User < ActiveRecord::Base
     options[:total_limit] ||= 50
 
     if media.size < options[:total_limit]
-      self.recent_media total_limit: options[:total_limit]
+      self.recent_media ignore_exists: true, total_limit: options[:total_limit]
       media = self.media.order(created_time: :desc).where('created_time < ?', 1.day.ago).limit(100)
     end
 
