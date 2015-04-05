@@ -20,15 +20,6 @@ class Media < ActiveRecord::Base
     write_attribute(:location_name, value)
   end
 
-  def self.report starts=nil, ends=nil
-    Reporter.media_report starts, ends
-  end
-
-  # delete all media oldest than 12 weeks
-  def self.delete_old frame=12.weeks
-    Media.where('created_time < ?', frame.ago).destroy_all
-  end
-
   def location
     loc = []
     loc << self.location_country if self.location_country.present?
@@ -397,12 +388,16 @@ class Media < ActiveRecord::Base
   #   self.class.connection.execute("update tags set media_count=media_count-1 where id in (#{t.map(&:id).join(',')})") if t.size > 0
   # end
 
-  def increment_some_tag added_tag
-    self.class.connection.execute("update tags set media_count=media_count+1 where id=#{added_tag.id}")
+  def increment_some_tag tag
+    # tag.increment! :media_count
+    Tag.increment_counter :media_count, tag.id
+    # self.class.connection.execute("update tags set media_count=media_count+1 where id=#{added_tag.id}")
   end
 
-  def decrement_some_tag removed_tag
-    self.class.connection.execute("update tags set media_count=media_count-1 where id=#{removed_tag.id}")
+  def decrement_some_tag tag
+    # tag.decrement! :media_count
+    Tag.decrement_counter :media_count, tag.id
+    # self.class.connection.execute("update tags set media_count=media_count-1 where id=#{removed_tag.id}")
   end
 
 end
