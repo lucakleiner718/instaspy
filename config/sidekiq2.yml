@@ -4,4 +4,5 @@
 :pidfile: ./tmp/pids/sidekiq2.pid
 :timeout: 900
 :queues:
+  - [critical, 10]
   - [middle, 5]
