@@ -105,11 +105,13 @@ class Media < ActiveRecord::Base
               tag = Tag.unscoped.where(name: tag_name).first_or_create
             end
           rescue ActiveRecord::RecordNotUnique => e
+            Rails.logger.info "#{"Duplicated entry #{tag_name}".red} / 108"
             tag = Tag.unscoped.where(name: tag_name).first
           end
         end
         tags_list << tag if tag && tag.valid?
       rescue ActiveRecord::RecordNotUnique => e
+        Rails.logger.info "#{"Duplicated entry: #{tag_name}".red} / 115"
         retry
       end
     end
