@@ -98,13 +98,13 @@ class Media < ActiveRecord::Base
       end
       unless tag
         begin
-          if tags_found
-            tag = Tag.unscoped.where(name: tag_name).create
-          else
+          # if tags_found
+          #   tag = Tag.unscoped.where(name: tag_name).create
+          # else
             tag = Tag.unscoped.where(name: tag_name).first_or_create
-          end
+          # end
         rescue ActiveRecord::RecordNotUnique => e
-          Rails.logger.info "#{"Duplicated entry #{tag_name}".red} / #{tags_found.map{|el| el.name}.join(',')}"
+          # Rails.logger.info "#{"Duplicated entry #{tag_name}".red} / #{tags_found.map{|el| el.name}.join(',')}"
           tag = Tag.unscoped.where(name: tag_name).first
         end
       end
