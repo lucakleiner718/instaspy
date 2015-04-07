@@ -114,7 +114,7 @@ class Media < ActiveRecord::Base
       end
     end
 
-    self.tags = tags_list
+    self.tags = tags_list.uniq{|el| el.id}
   end
 
   def media_user media_item_user, users_found=nil
@@ -390,14 +390,18 @@ class Media < ActiveRecord::Base
 
   def increment_some_tag tag
     # tag.increment! :media_count
-    Tag.increment_counter :media_count, tag.id
-    # self.class.connection.execute("update tags set media_count=media_count+1 where id=#{added_tag.id}")
+    # Tag.transaction do
+    # Tag.increment_counter :media_count, tag.id
+    # end
+    self.class.connection.execute("update tags set media_count=media_count+1 where id=#{tag.id}")
   end
 
   def decrement_some_tag tag
     # tag.decrement! :media_count
-    Tag.decrement_counter :media_count, tag.id
-    # self.class.connection.execute("update tags set media_count=media_count-1 where id=#{removed_tag.id}")
+    # Tag.transaction do
+    # Tag.decrement_counter :media_count, tag.id
+    # end
+    self.class.connection.execute("update tags set media_count=media_count-1 where id=#{removed_tag.id}")
   end
 
 end

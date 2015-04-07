@@ -206,7 +206,10 @@ class Tag < ActiveRecord::Base
   end
 
   def update_media_count!
-    self.update_column :media_count, self.media.length
+    # self.update_column :media_count, self.media.length
+    # amount = Tag.connection.execute("select count(distinct(media_id)) from media_tags where tag_id=#{self.id}").to_a.first.first
+    amount = Tag.connection.execute("select count(media_id) from media_tags where tag_id=#{self.id}").to_a.first.first
+    self.update_attribute :media_count, amount if self.media_count != amount
   end
 
   # def media_amount

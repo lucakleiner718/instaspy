@@ -466,7 +466,7 @@ class Reporter
     files = []
 
     usernames.each do |username|
-      user = User.add_by_username(username)
+      user = User.get(username)
       next unless user
       csv_string = CSV.generate do |csv|
         csv << ['ID', 'Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followers', 'Email']
@@ -499,7 +499,7 @@ class Reporter
     files = []
 
     usernames.each do |username|
-      user = User.add_by_username(username)
+      user = User.get(username)
       next unless user
       csv_string = CSV.generate do |csv|
         csv << ['ID', 'Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followers', 'Email']

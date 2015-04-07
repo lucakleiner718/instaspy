@@ -79,10 +79,12 @@ class User < ActiveRecord::Base
 
     return true if self.actual? && !options[:force]
 
+    # if we know only username, but no insta id
     if self.insta_id.blank? && self.username.present?
       retries = 0
       begin
         client = InstaClient.new.client
+        # looking for username via search
         resp = client.user_search(self.username)
       rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::BadRequest, Instagram::InternalServerError, Instagram::GatewayTimeout,
         JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
@@ -96,6 +98,8 @@ class User < ActiveRecord::Base
       data = nil
       data = resp.data.select{|el| el['username'].downcase == self.username.downcase }.first if resp.data.size > 0
 
+      # if returned item only one and searched username different to returned one -
+      # than we know that account changed it's username
       if data.nil? && resp.data.size == 1
         d = resp.data.first
         u = User.where(username: d['username']).first
@@ -109,6 +113,7 @@ class User < ActiveRecord::Base
         data = d
       end
 
+      # if we have data - update, if we don't have data, than better remove this account from database
       if data
         self.insta_data data
       else
@@ -133,6 +138,7 @@ class User < ActiveRecord::Base
       if data['username'] != self.username
         exists_username = User.where(username: data['username']).first
         if exists_username
+          # set random username for it, later we will start update_info to get actual username
           exists_username.username = "#{exists_username.username}#{Time.now.to_i}"
           exists_username.save
         end
@@ -151,13 +157,8 @@ class User < ActiveRecord::Base
         self.grabbed_at = Time.now
 
         # If account private - try to get info from public page via http
-        # begin
         resp = self.update_via_http!
-
         return false unless resp
-        # rescue => e
-          # binding.pry
-        # end
 
         if self.destroyed?
           return false
@@ -228,7 +229,7 @@ class User < ActiveRecord::Base
   # Script stops if found more than 5 exists followers from list in database
   # Params
   # reload (boolean) - default: false, if reload is set to true, code will download whole list of followers and replace exists list by new one
-  # deep (boolean) - default: false, if need to updated info for each added user straight in code
+  # deep (boolean) - default: false, if need to updated info for each added user in background
   # ignore_exists (boolean) - default: false, iterates over all followers list
   def update_followers *args
     return false if self.insta_id.blank?
@@ -299,9 +300,7 @@ class User < ActiveRecord::Base
         end
         user.insta_data user_data
 
-        if options[:deep] && !user.private && (user.updated_at.blank? || user.updated_at < 1.month.ago || user.website.nil? || user.follows.blank? || user.followed_by.blank? || user.media_amount.blank?)
-          user.update_info!
-        end
+        UserWorker.perform_async(user.id, true) if options[:deep]
 
         begin
           user.save if user.changed?
@@ -943,7 +942,7 @@ class User < ActiveRecord::Base
   end
 
   def outdated?
-    self.grabbed_at.blank? || self.grabbed_at < 20.days.ago || self.bio.nil? || self.website.nil? || self.follows.blank? ||
+    self.grabbed_at.blank? || self.grabbed_at < 1.week.ago || self.bio.nil? || self.website.nil? || self.follows.blank? ||
       self.followed_by.blank? || self.full_name.nil?
   end
 

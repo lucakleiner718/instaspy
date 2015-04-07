@@ -3,10 +3,10 @@ class UserWorker
 
   sidekiq_options queue: :middle, unique: true, unique_args: -> (args) { [ args.first ] }
 
-  def perform users_ids
+  def perform users_ids, force=false
     User.where(id: users_ids).each do |u|
       next if u.actual?
-      u.update_info!
+      u.update_info! force
     end
   end
 
