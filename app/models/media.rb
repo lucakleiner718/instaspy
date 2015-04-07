@@ -401,7 +401,7 @@ class Media < ActiveRecord::Base
     # Tag.transaction do
     # Tag.decrement_counter :media_count, tag.id
     # end
-    self.class.connection.execute("update tags set media_count=media_count-1 where id=#{removed_tag.id}")
+    self.class.connection.execute("update tags set media_count=media_count-1 where id=#{tag.id}")
   end
 
 end
