@@ -92,28 +92,23 @@ class Media < ActiveRecord::Base
 
     tags_list = []
     media_item['tags'].each do |tag_name|
-      begin
-        tag = nil
-        if tags_found
-          tag = tags_found.select{|el| el.name.downcase == tag_name.downcase}.first
-        end
-        unless tag
-          begin
-            if tags_found
-              tag = Tag.unscoped.where(name: tag_name).create
-            else
-              tag = Tag.unscoped.where(name: tag_name).first_or_create
-            end
-          rescue ActiveRecord::RecordNotUnique => e
-            Rails.logger.info "#{"Duplicated entry #{tag_name}".red} / 108"
-            tag = Tag.unscoped.where(name: tag_name).first
-          end
-        end
-        tags_list << tag if tag && tag.valid?
-      rescue ActiveRecord::RecordNotUnique => e
-        Rails.logger.info "#{"Duplicated entry: #{tag_name}".red} / 115"
-        retry
+      tag = nil
+      if tags_found
+        tag = tags_found.select{|el| el.name.downcase == tag_name.downcase}.first
       end
+      unless tag
+        begin
+          if tags_found
+            tag = Tag.unscoped.where(name: tag_name).create
+          else
+            tag = Tag.unscoped.where(name: tag_name).first_or_create
+          end
+        rescue ActiveRecord::RecordNotUnique => e
+          Rails.logger.info "#{"Duplicated entry #{tag_name}".red} / #{tags_found.map{|el| el.name}.join(',')}"
+          tag = Tag.unscoped.where(name: tag_name).first
+        end
+      end
+      tags_list << tag if tag && tag.valid?
     end
 
     self.tags = tags_list.uniq{|el| el.id}
