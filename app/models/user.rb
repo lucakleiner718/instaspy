@@ -659,7 +659,7 @@ class User < ActiveRecord::Base
         end
 
         media.media_data media_item, tags_found
-        tags_found.concat(media.tags).uniq!
+        tags_found.concat(media.tags.to_a).uniq!{|el| el.id}
 
         added += 1 if media.new_record?
 
@@ -860,7 +860,6 @@ class User < ActiveRecord::Base
 
   def update_avg_data! *args
     options = args.extract_options!
-    media = self.media.order(created_time: :desc).where('created_time < ?', 1.day.ago).limit(100)
 
     return true if self.avg_likes_updated_at && self.avg_likes_updated_at > 1.month.ago && !options[:force]
 
@@ -869,10 +868,18 @@ class User < ActiveRecord::Base
     media_amount = 0
 
     options[:total_limit] ||= 50
+    media_limit = [options[:total_limit], 100].max
+
+    self.update_info! unless self.insta_id
+    return false if self.destroyed?
+
+    media = self.media.order(created_time: :desc).where('created_time < ?', 1.day.ago).limit(media_limit)
 
     if media.size < options[:total_limit]
+      Rails.logger.info "[#{"Update AVG Data".green}] [#{self.username.cyan}] Grabbing more media, current: #{media.size}"
       self.recent_media ignore_exists: true, total_limit: options[:total_limit]
-      media = self.media.order(created_time: :desc).where('created_time < ?', 1.day.ago).limit(100)
+      media = self.media.order(created_time: :desc).where('created_time < ?', 1.day.ago).limit(media_limit)
+      Rails.logger.info "[#{"Update AVG Data".green}] [#{self.username.cyan}] Grabbed more media, current: #{media.size}"
     end
 
     return false if media.size == 0
@@ -881,6 +888,7 @@ class User < ActiveRecord::Base
       # if diff between when media added to database and date when it was pasted less than 2 days ago
       # OR likes/comments amount is blank
       if media_item.updated_at - media_item.created_time < 2.days || media_item.likes_amount.blank? || media_item.comments_amount.blank?
+        Rails.logger.info "[#{"Update AVG Data".green}] [#{self.username.cyan}] Updating media #{media_item.id}"
         media_item.update_info!
       end
 
@@ -896,8 +904,6 @@ class User < ActiveRecord::Base
 
     avg_likes = likes_amount / media_amount
     avg_comments = comments_amount / media_amount
-
-    return false if self.destroyed?
 
     self.avg_likes = avg_likes
     self.avg_likes_updated_at = Time.now

@@ -205,11 +205,15 @@ class Tag < ActiveRecord::Base
     User.where(id: ids)
   end
 
-  def update_media_count!
+  def count_media
     # self.update_column :media_count, self.media.length
     # amount = Tag.connection.execute("select count(distinct(media_id)) from media_tags where tag_id=#{self.id}").to_a.first.first
     # amount = Tag.connection.execute("select count(media_id) from media_tags where tag_id=#{self.id}").to_a.first.first
-    amount = Tag.connection.execute("select count(*) from media_tags where tag_id=#{self.id}").to_a.first.first
+    Tag.connection.execute("select count(*) from media_tags where tag_id=#{self.id}").to_a[0][0]
+  end
+
+  def update_media_count!
+    amount = self.count_media
     self.update_attribute :media_count, amount if self.media_count != amount
   end
 
