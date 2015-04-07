@@ -390,7 +390,8 @@ class Media < ActiveRecord::Base
     # Tag.transaction do
     # Tag.increment_counter :media_count, tag.id
     # end
-    self.class.connection.execute("update tags set media_count=media_count+1 where id=#{tag.id}")
+    # self.class.connection.execute("update tags set media_count=media_count+1 where id=#{tag.id}")
+    TagMediaCounterWorker.perform_async tag.id, '+'
   end
 
   def decrement_some_tag tag
@@ -398,7 +399,8 @@ class Media < ActiveRecord::Base
     # Tag.transaction do
     # Tag.decrement_counter :media_count, tag.id
     # end
-    self.class.connection.execute("update tags set media_count=media_count-1 where id=#{tag.id}")
+    # self.class.connection.execute("update tags set media_count=media_count-1 where id=#{tag.id}")
+    TagMediaCounterWorker.perform_async tag.id, '-'
   end
 
 end
