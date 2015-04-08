@@ -545,9 +545,9 @@ class Reporter
 
     return false unless users
 
-    users = users.joins(:feedly) if options[:additional_columns].include? :feedly
+    # users = users.joins(:feedly) if options[:additional_columns].include? :feedly
 
-    header = ['ID', 'Username', 'Full name', 'Bio', 'Website', 'Follows', 'Followers', 'Email']
+    header = ['Instagram ID', 'Username', 'Full name', 'Bio', 'Website', 'Follows', 'Followers', 'Email']
     header += ['Country', 'State', 'City'] if options[:additional_columns].include? :location
     header += ['AVG Likes'] if options[:additional_columns].include? :likes
     header += ['Feedly Subscribers'] if options[:additional_columns].include? :feedly
