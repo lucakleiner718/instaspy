@@ -633,6 +633,7 @@ class User < ActiveRecord::Base
       rescue Instagram::BadRequest => e
         Rails.logger.info "#{e.class}: #{e.message}"
         if e.message =~ /you cannot view this resource/
+          self.update_info! force: true
           break
         elsif e.message =~ /this user does not exist/
           self.destroy
