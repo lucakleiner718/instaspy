@@ -545,14 +545,21 @@ class Reporter
 
     return false unless users
 
+    users = users.joins(:feedly) if options[:additional_columns].include? :feedly
+
     header = ['ID', 'Username', 'Full name', 'Bio', 'Website', 'Follows', 'Followers', 'Email']
     header += ['Country', 'State', 'City'] if options[:additional_columns].include? :location
     header += ['AVG Likes'] if options[:additional_columns].include? :likes
+    header += ['Feedly Subscribers'] if options[:additional_columns].include? :feedly
 
     process_user = Proc.new do |u, csv|
       row = [u.insta_id, u.username, u.full_name, u.bio, u.website, u.follows, u.followed_by, u.email]
       row += [u.location_country, u.location_state, u.location_city] if options[:additional_columns].include? :location
       row += [u.avg_likes] if options[:additional_columns].include? :likes
+      if options[:additional_columns].include? :feedly
+        feedly = u.feedly
+        row += [feedly ? feedly.subscribers_amount : '']
+      end
 
       csv << row
     end

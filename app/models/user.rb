@@ -8,6 +8,8 @@ class User < ActiveRecord::Base
   has_many :user_followees, class_name: 'Follower', foreign_key: :follower_id, dependent: :destroy
   has_many :followees, through: :user_followees
 
+  belongs_to :feedly, primary_key: :website, foreign_key: :website
+
   scope :not_grabbed, -> { where grabbed_at: nil }
   scope :not_private, -> { where private: [nil, false] }
   scope :privates, -> { where private: true }
@@ -972,7 +974,7 @@ class User < ActiveRecord::Base
     (self.avg_likes/self.followed_by.to_f).round(2)
   end
 
-  def feedly
+  def get_feedly
     return false if self.website.blank?
     f = Feedly.where('feedly_url = :w OR website = :w', w: self.website).first
     unless f
