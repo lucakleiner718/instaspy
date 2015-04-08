@@ -972,4 +972,13 @@ class User < ActiveRecord::Base
     (self.avg_likes/self.followed_by.to_f).round(2)
   end
 
+  def feedly
+    return false if self.website.blank?
+    f = Feedly.where('feedly_url = :w OR website = :w', w: self.website).first
+    unless f
+      f = Feedly.process self.website
+    end
+    f
+  end
+
 end

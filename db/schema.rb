@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150404072114) do
+ActiveRecord::Schema.define(version: 20150408061612) do
 
   create_table "feedly", force: true do |t|
     t.string   "website"
@@ -20,6 +20,7 @@ ActiveRecord::Schema.define(version: 20150404072114) do
     t.datetime "grabbed_at"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string   "feedly_url"
   end
 
   add_index "feedly", ["feed_id"], name: "index_feedly_on_feed_id", unique: true, using: :btree
