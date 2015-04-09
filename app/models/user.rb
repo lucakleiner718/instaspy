@@ -874,7 +874,6 @@ class User < ActiveRecord::Base
     media_limit = [options[:total_limit], 100].max
 
     self.update_info! unless self.insta_id
-    return false if self.destroyed?
 
     media = self.media.order(created_time: :desc).where('created_time < ?', 1.day.ago).limit(media_limit)
 
@@ -885,7 +884,7 @@ class User < ActiveRecord::Base
       Rails.logger.info "[#{"Update AVG Data".green}] [#{self.username.cyan}] Grabbed more media, current: #{media.size}"
     end
 
-    return false if media.size == 0
+    return false if media.size == 0 || self.destroyed?
 
     media.each do |media_item|
       # if diff between when media added to database and date when it was pasted less than 2 days ago
