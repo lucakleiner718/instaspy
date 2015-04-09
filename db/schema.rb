@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150408061612) do
+ActiveRecord::Schema.define(version: 20150409040652) do
 
   create_table "feedly", force: true do |t|
     t.string   "website"
@@ -52,6 +52,8 @@ ActiveRecord::Schema.define(version: 20150408061612) do
     t.datetime "created_at"
     t.datetime "updated_at"
   end
+
+  add_index "instagram_logins", ["account_id", "ig_id"], name: "index_instagram_logins_on_account_id_and_ig_id", unique: true, using: :btree
 
   create_table "media", force: true do |t|
     t.string   "insta_id"
@@ -97,6 +99,8 @@ ActiveRecord::Schema.define(version: 20150408061612) do
     t.datetime "updated_at"
   end
 
+  add_index "observed_tags", ["tag_id"], name: "index_observed_tags_on_tag_id", unique: true, using: :btree
+
   create_table "proxies", force: true do |t|
     t.string   "url"
     t.string   "login"
@@ -136,6 +140,8 @@ ActiveRecord::Schema.define(version: 20150408061612) do
     t.datetime "created_at"
     t.datetime "updated_at"
   end
+
+  add_index "track_users", ["user_id"], name: "index_track_users_on_user_id", unique: true, using: :btree
 
   create_table "users", force: true do |t|
     t.integer  "insta_id"
