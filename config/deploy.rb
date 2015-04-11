@@ -11,7 +11,7 @@ set :pty, false
 
 set :log_level, :info #:debug
 
-set :linked_files, %w{config/database.yml config/mongoid.yml .env config/procs.god}
+set :linked_files, %w{config/database.yml config/mongoid.yml .env config/procs.god config/sidekiq.yml config/sidekiq2.yml}
 set :linked_dirs, %w{bin log tmp/pids tmp/cache tmp/sockets vendor/bundle public/system public/reports}
 
 set :keep_releases, 5

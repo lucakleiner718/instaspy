@@ -1,23 +1,6 @@
 God.pid_file_directory = File.expand_path(File.join(File.dirname(__FILE__),'..')) + '/tmp/pids'
 CURRENT_DIR = File.expand_path(File.join(File.dirname(__FILE__),'..'))
 
-God::Contacts::Email.defaults do |d|
-  d.from_email = "dev@antonzaytsev.com"
-  d.from_name = 'God'
-  d.delivery_method = :smtp
-  d.server_host = 'smtp.yandex.ru'
-  d.server_port = 25
-  d.server_user = "dev@antonzaytsev.com"
-  d.server_password = "DEVantonZPassword1"
-  d.server_auth = :plain
-end
-
-God.contact(:email) do |c|
-  c.name = 'Anton'
-  c.group = 'developers'
-  c.to_email = 'dev@antonzaytsev.com'
-end
-
 God.watch do |w|
   w.name = 'clockwork'
   w.interval = 30.seconds
