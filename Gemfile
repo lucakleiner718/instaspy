@@ -69,3 +69,5 @@ gem 'rgeo'
 gem 'rgeo-shapefile'
 
 gem 'feedlr', github: 'khelll/feedlr'
+
+gem 'newrelic_rpm'
