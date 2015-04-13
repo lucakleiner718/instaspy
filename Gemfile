@@ -38,9 +38,12 @@ gem 'pry-rails'
 gem 'instagram'
 gem 'httparty'
 gem 'render_csv'
+
 gem 'sidekiq', '~> 3.3.2'
 gem 'sidekiq-failures'
 gem 'sidekiq-unique-jobs'
+gem 'sidekiq-status'
+
 gem 'sinatra', require: false # Web interface of Sidekiq processes
 gem 'slim'
 gem 'dotenv', '~> 0.11.1'
@@ -71,3 +74,4 @@ gem 'rgeo-shapefile'
 gem 'feedlr', github: 'khelll/feedlr'
 
 gem 'newrelic_rpm'
+gem 'simple_form'

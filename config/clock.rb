@@ -47,6 +47,14 @@ module Clockwork
     DailyMediaStatWorker.spawn
   }
 
+  every(5.minutes, 'ReportProcessNewWorker') {
+    ReportProcessNewWorker.spawn
+  }
+
+  every(5.minutes, 'ReportProcessProgressWorker') {
+    ReportProcessProgressWorker.spawn
+  }
+
   # every(30.minutes, 'media.ny.location.1') {
   #   Media.get_by_location 40.74226964, -74.007271584 if Time.now < Time.at('2015/02/21 00:00:00 UTC')
   # }

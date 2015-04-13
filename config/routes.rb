@@ -15,6 +15,10 @@ Rails.application.routes.draw do
   get 'chart_tag_data' => 'pages#chart_tag_data'
   get 'chart/amounts' => 'pages#chart_amounts'
 
+  get 'reports' => 'reports#index'
+  get 'reports/new' => 'reports#new', as: :new_report
+  post 'reports' => 'reports#create'
+
   get 'reports/followers'
   post 'reports/followers' => 'reports#followers_report'
 

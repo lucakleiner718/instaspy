@@ -25,7 +25,7 @@ class FollowersReportMailer < ActionMailer::Base
   end
 
   def full origin
-    followers_ids = origin.user_followers.pluck(:foloower_id)
+    followers_ids = origin.user_followers.pluck(:follower_id)
 
     csv_string = CSV.generate do |csv|
       csv << ['Username', 'Name', 'Bio', 'Website', 'Follows', 'Followers', 'Media amount', 'Email']
