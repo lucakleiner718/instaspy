@@ -266,10 +266,12 @@ class User < ActiveRecord::Base
         resp = client.user_followed_by self.insta_id, cursor: next_cursor, count: 100
       rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::InternalServerError, Instagram::GatewayTimeout,
         JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
-        sleep 10
+        Rails.logger.debug e.message
+        sleep 10*retries
         retries += 1
         retry if retries <= 5
       rescue Instagram::BadRequest => e
+        Rails.logger.debug e.message
         if e.message =~ /you cannot view this resource/
           break
         elsif e.message =~ /this user does not exist/
@@ -351,7 +353,6 @@ class User < ActiveRecord::Base
           follower_ids_list << user.id
         end
 
-        user = nil # trying to save some RAM but nulling variable
         logger.debug "Row #{user_data['username']} end"
       end
 
@@ -359,7 +360,7 @@ class User < ActiveRecord::Base
       total_added += added
 
       finish = Time.now
-      logger.debug ">> [#{self.username.green}] followers:#{follower_ids_list.size}/#{followed} request:#{(finish-start).to_f.round(2)}s :: IG request: #{(end_ig-start).to_f.round(2)} / exists: #{exists} (#{total_exists.to_s.light_black}) / added: #{added} (#{total_added.to_s.light_black})"
+      logger.debug ">> [#{self.username.green}] followers:#{follower_ids_list.size}/#{followed} request: #{(finish-start).to_f.round(2)}s :: IG request: #{(end_ig-start).to_f.round(2)}s / exists: #{exists} (#{total_exists.to_s.light_black}) / added: #{added} (#{total_added.to_s.light_black})"
 
       break if !options[:ignore_exists] && exists >= 5
 

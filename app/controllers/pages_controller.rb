@@ -4,7 +4,9 @@ class PagesController < ApplicationController
 
   after_action :allow_iframe, only: :chart
 
-  http_basic_authenticate_with name: "rob", password: "awesomeLA", only: :home
+  if Rails.env.production?
+    http_basic_authenticate_with name: "rob", password: "awesomeLA", only: :home
+  end
 
   def home
 

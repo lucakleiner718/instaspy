@@ -1,11 +1,11 @@
 class UserWorker
   include Sidekiq::Worker
 
-  sidekiq_options queue: :middle, unique: true, unique_args: -> (args) { [ args.first ] }
+  sidekiq_options queue: :middle, unique: true, unique_args: -> (args) { [ args.first ] },
+    unique_unlock_order: :before_yield
 
   def perform users_ids, force=false
     User.where(id: users_ids).each do |u|
-      next if u.actual?
       u.update_info! force
     end
   end
