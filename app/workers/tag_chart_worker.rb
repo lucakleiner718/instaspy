@@ -1,6 +1,8 @@
 class TagChartWorker
   include Sidekiq::Worker
 
+  sidekiq_options unique: true, unique_args: -> (args) { [ args.first ] }, unique_job_expiration: 3*60*60, retry: false
+
   def perform tag_id, amount_of_days=Tag::CHART_DAYS
     tag = Tag.where('id = :tag_id OR name = :tag_id', tag_id: tag_id).first
     values = tag.chart_data amount_of_days
