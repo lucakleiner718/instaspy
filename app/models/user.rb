@@ -200,7 +200,8 @@ class User < ActiveRecord::Base
         curl.verbose = Rails.env.development?
         curl.follow_location = true
       end
-    rescue Curl::Err::HostResolutionError, Curl::Err::SSLConnectError, Curl::Err::GotNothingError => e
+    rescue Curl::Err::HostResolutionError, Curl::Err::SSLConnectError, Curl::Err::GotNothingError,
+      Curl::Err::TimeoutError => e
       retries += 1
       sleep 10*retries
       retry if retries <= 5
