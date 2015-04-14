@@ -38,10 +38,10 @@ class ReportsController < ApplicationController
         end
       end
 
-      Dir.mkdir(Rails.root.join("public/reports_data")) unless Dir.exist?(Rails.root.join("public/reports_data"))
-      File.write(Rails.root.join("public/reports_data/report-#{@report.id}.csv"), csv_string)
+      Dir.mkdir(Rails.root.join("public/reports/reports_data")) unless Dir.exist?(Rails.root.join("public/reports/reports_data"))
+      File.write(Rails.root.join("public/reports/reports_data/report-#{@report.id}.csv"), csv_string)
 
-      @report.update_attribute :input_data, "reports_data/report-#{@report.id}.csv"
+      @report.update_attribute :input_data, "reports/reports_data/report-#{@report.id}.csv"
       ReportProcessNewWorker.perform_async @report.id
       redirect_to reports_path
     else
