@@ -15,9 +15,18 @@ class Feedly < ActiveRecord::Base
     end
 
     client = Feedlr::Client.new
-    resp = client.search_feeds url
 
-    if resp['results'].size > 0
+    retries = 0
+    begin
+      resp = client.search_feeds url
+    rescue Feedlr::Error => e
+      retries += 1
+      sleep 10*retries
+      retry if retries <= 5
+      raise e
+    end
+
+    if resp['results'] && resp['results'].size > 0
       result = resp['results'].first
 
       exists_feed = Feedly.where(feed_id: result['feedId']).first

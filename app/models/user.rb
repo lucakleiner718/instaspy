@@ -367,6 +367,8 @@ class User < ActiveRecord::Base
 
       next_cursor = resp.pagination['next_cursor']
 
+      binding.pry
+
       break unless next_cursor
     end
 
@@ -750,7 +752,7 @@ class User < ActiveRecord::Base
     options = args.extract_options!
 
     if self.location_updated_at && self.location_updated_at > 1.month.ago && self.location_country && !options[:force]
-      self.location
+      return self.location
     end
 
     self.update_info! if !self.private? && (self.media_amount.blank? || self.grabbed_at.blank? || self.grabbed_at < 7.days.ago)
