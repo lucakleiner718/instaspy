@@ -984,4 +984,23 @@ class User < ActiveRecord::Base
     f
   end
 
+  def self.from_usernames usernames
+    users = User.where(username: usernames).to_a
+
+    not_processed = []
+    not_found = usernames - users.map{|u| u.username}
+    if not_found.size > 0
+      not_found.each do |username|
+        user = User.get username
+        if user
+          users << user
+        else
+          not_processed << username
+        end
+      end
+    end
+
+    users
+  end
+
 end

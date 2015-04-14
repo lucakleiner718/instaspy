@@ -81,11 +81,10 @@ class Reporter
 
     Rails.logger.info "#{"[Media Report]".cyan} Started with #{Tag.exportable.size.to_s.red} tags"
 
-    header = ['Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followed By', 'Media Amount', 'Added to Instaspy', 'Media URL', 'Media likes', 'Media comments']
     csv_files = []
     Tag.exportable.each do |tag|
       csv_string = CSV.generate do |csv|
-        csv << header
+        csv << ['Insta ID', 'Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followed By', 'Media Amount', 'Added to Instaspy', 'Media URL', 'Media likes', 'Media comments']
 
         start_time = Time.now
         # catching all users, which did post media with specified tag
@@ -160,8 +159,9 @@ class Reporter
 
             next unless media
             csv << [
-              user.username, user.full_name, user.website, user.bio, user.follows, user.followed_by, user.media_amount,
-              user.created_at.strftime('%m/%d/%Y'), media.link, media.likes_amount, media.comments_amount
+              user.insta_id, user.username, user.full_name, user.website, user.bio, user.follows, user.followed_by,
+              user.media_amount, user.created_at.strftime('%m/%d/%Y'), media.link, media.likes_amount,
+              media.comments_amount
             ]
 
             time_end = Time.now
@@ -245,13 +245,14 @@ class Reporter
     media_list = media_list.where('created_time >= ?', options[:created_till]) if options[:created_till].present?
 
     csv_string = CSV.generate do |csv|
-      csv << ['Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followed By', 'Media Amount', 'Email', 'Added to Instaspy', 'Media URL', 'Media likes', 'Media comments', 'Media date posted']
+      csv << ['Insta ID', 'Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followed By', 'Media Amount', 'Email', 'Added to Instaspy', 'Media URL', 'Media likes', 'Media comments', 'Media date posted']
 
       media_list.find_each do |media|
         user = media.user
         user.update_info! if user.outdated?
         # media.update_location! if media.location_present? && media.location_lat.present? && media.location.blank?
         csv << [
+          user.insta_id,
           user.username, user.full_name, user.website, user.bio, user.follows, user.followed_by, user.media_amount,
           user.email, user.created_at.strftime('%m/%d/%Y'), media.link, media.likes_amount, media.comments_amount,
           media.created_time.strftime('%m/%d/%Y %H:%M:%S')

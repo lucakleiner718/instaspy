@@ -4,9 +4,9 @@ class FollowersReportMailer < ActionMailer::Base
     followers = origin.followers
 
     csv_string = CSV.generate do |csv|
-      csv << ['Name', 'Username', 'Website', 'Follows', 'Followers', 'Media amount', 'Private account']
+      csv << ['Insta ID', 'Username', 'Name', 'Website', 'Follows', 'Followers', 'Media amount', 'Private account']
       followers.find_each do |user|
-        csv << [user.full_name, user.username, user.website, user.follows, user.followed_by, user.media_amount, (user.private ? 'Yes' : 'No')]
+        csv << [user.insta_id, user.username, user.full_name, user.website, user.follows, user.followed_by, user.media_amount, (user.private ? 'Yes' : 'No')]
       end
     end
 
@@ -28,11 +28,11 @@ class FollowersReportMailer < ActionMailer::Base
     followers_ids = origin.user_followers.pluck(:follower_id)
 
     csv_string = CSV.generate do |csv|
-      csv << ['Username', 'Name', 'Bio', 'Website', 'Follows', 'Followers', 'Media amount', 'Email']
+      csv << ['Insta ID', 'Username', 'Name', 'Bio', 'Website', 'Follows', 'Followers', 'Media amount', 'Email']
       followers_ids.in_groups_of(10_000, false) do |group|
         User.where(id: group).each do |user|
           user.update_info! if user.outdated?
-          csv << [user.username, user.full_name, user.bio, user.website, user.follows, user.followed_by, user.media_amount, user.email]
+          csv << [user.insta_id, user.username, user.full_name, user.bio, user.website, user.follows, user.followed_by, user.media_amount, user.email]
         end
       end
     end
@@ -67,12 +67,12 @@ class FollowersReportMailer < ActionMailer::Base
       followers = followers.includes(:follower).where('followers.created_at >= :start AND followers.created_at <= :finish', start: @start, finish: @finish)
 
       csv_string = CSV.generate do |csv|
-        csv << ['Username', 'Name', 'Bio', 'Website', 'Follows', 'Followers', 'Media amount', 'Email']
+        csv << ['Insta ID', 'Username', 'Name', 'Bio', 'Website', 'Follows', 'Followers', 'Media amount', 'Email']
         followers.find_each do |follower|
           user = follower.follower
           begin
             user.update_info!
-            csv << [user.username, user.full_name, user.bio, user.website, user.follows, user.followed_by, user.media_amount, user.email]
+            csv << [user.insta_id, user.username, user.full_name, user.bio, user.website, user.follows, user.followed_by, user.media_amount, user.email]
           rescue => e
             # somehow we don't have user record, just delete link-follower
             puts "Catched error #{e.message.red}"
