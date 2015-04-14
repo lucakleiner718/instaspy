@@ -367,8 +367,6 @@ class User < ActiveRecord::Base
 
       next_cursor = resp.pagination['next_cursor']
 
-      binding.pry
-
       break unless next_cursor
     end
 

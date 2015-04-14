@@ -19,6 +19,7 @@
   <tr>
     <th><%= sortable :format, 'Format' %></th>
     <th>Usernames file</th>
+    <th>Notify Email</th>
     <th>Status</th>
     <th>Progress</th>
     <th>Created</th>
@@ -32,6 +33,7 @@
     <tr>
       <td><%= report.format %> for <%= report.usernames.size %> usernames</td>
       <td><%= link_to "Download usernames", "#{root_url}#{report.input_data}", target: :_blank %></td>
+      <td><%= report.notify_email %></td>
       <td><span class="label label-<%= {'new' => 'info', 'in_process' => 'primary', 'finished' => 'success'}[report.status] %>"><%= report.status.titleize %></span></td>
       <td>
         <div class="progress">
