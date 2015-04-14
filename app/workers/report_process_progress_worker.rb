@@ -68,7 +68,7 @@ class ReportProcessProgressWorker
           report.save
         end
 
-        ReportMailer.finished(report.id).deliver
+        ReportMailer.finished(report.id).deliver if report.notify_email.present?
       end
       report.save
     end

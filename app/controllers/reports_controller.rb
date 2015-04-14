@@ -72,6 +72,6 @@ class ReportsController < ApplicationController
   end
 
   def report_params
-    params.require(:report).permit(:input, :format)
+    params.require(:report).permit(:input, :format, :notify_email)
   end
 end
