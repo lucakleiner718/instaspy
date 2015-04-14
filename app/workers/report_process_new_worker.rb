@@ -25,7 +25,7 @@ class ReportProcessNewWorker
           csv << row
         end
       end
-      File.write(Rails.root.join("public/#{report.input_csv}"), csv_string)
+      File.write(Rails.root.join("public", report.input_data), csv_string)
 
       csv_data.select{|r| r[1].present?}.each do |row|
         user = User.find(row[2])
