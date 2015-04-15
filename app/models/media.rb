@@ -77,41 +77,69 @@ class Media < ActiveRecord::Base
     self.link = media_item['link']
     self.created_time = Time.at media_item['created_time'].to_i
 
-    unless tags_found
-      tags_found = self.tags
+    self.save if self.new_record?
+
+    # unless tags_found
+    #   tags_found = self.tags
+    # end
+
+    # find_more = media_item['tags']
+    # if tags_found.size > 0
+    #   find_more -= tags_found.map{|el| el.name.downcase}
+    # end
+
+    # if find_more.size > 0
+    #   tags_found.concat Tag.where(name: find_more).to_a
+    # end
+
+    # tags_list = []
+    tags_to_create = media_item['tags']
+    if tags_found && tags_found.class.name == 'Array' && tags_found.size > 0
+      tags_to_create = tags_to_create.map{|tname| tname.downcase} - tags_found.map{|t| t.name.downcase}
     end
 
-    find_more = media_item['tags']
-    if tags_found.size > 0
-      find_more -= tags_found.map{|el| el.name.downcase}
+    if tags_to_create.size > 0
+      Tag.connection.execute("INSERT IGNORE INTO tags (name) VALUES #{tags_to_create.map{|t_name| "(#{Tag.connection.quote t_name})"}.join(',')}")
+    end
+    tags_ids = Tag.where(name: media_item['tags']).pluck(:id)
+
+    # media_item['tags'].each do |tag_name|
+    #   tag = nil
+    #   if tags_found
+    #     tag = tags_found.select{|el| el.name.downcase == tag_name.downcase}.first
+    #   end
+    #   unless tag
+    #     begin
+    #       # if tags_found
+    #       #   tag = Tag.unscoped.where(name: tag_name).create
+    #       # else
+    #         tag = Tag.unscoped.where(name: tag_name).first_or_create
+    #       # end
+    #     rescue ActiveRecord::RecordNotUnique => e
+    #       # Rails.logger.info "#{"Duplicated entry #{tag_name}".red} / #{tags_found.map{|el| el.name}.join(',')}"
+    #       tag = Tag.unscoped.where(name: tag_name).first
+    #     end
+    #   end
+    #   tags_list << tag if tag && tag.valid?
+    # end
+
+    current_tags_ids = Tag.connection.execute("SELECT tag_id FROM media_tags WHERE media_id=#{self.id}").to_a.map(&:first).uniq
+    # deleted_tags = current_tags_ids - new_tags_ids
+    added_tags = tags_ids - current_tags_ids
+
+    # binding.pry
+
+    # if deleted_tags.size > 0
+    #   Tag.connection.execute("DELETE FROM media_tags WHERE media_id=#{self.id} AND tag_id IN(#{deleted_tags.join(',')})")
+    #   Tag.connection.execute("UPDATE tags SET media_count=media_count-1 WHERE id in (#{deleted_tags.join(',')})")
+    # end
+    if added_tags.size > 0
+      Media.connection.execute("INSERT IGNORE INTO media_tags (media_id, tag_id) VALUES #{added_tags.map{|tid| "(#{self.id}, #{tid})"}.join(',')}")
+      Media.connection.execute("UPDATE tags SET media_count=media_count+1 WHERE id in (#{added_tags.join(',')})")
     end
 
-    if find_more.size > 0
-      tags_found.concat Tag.where(name: find_more).to_a
-    end
-
-    tags_list = []
-    media_item['tags'].each do |tag_name|
-      tag = nil
-      if tags_found
-        tag = tags_found.select{|el| el.name.downcase == tag_name.downcase}.first
-      end
-      unless tag
-        begin
-          # if tags_found
-          #   tag = Tag.unscoped.where(name: tag_name).create
-          # else
-            tag = Tag.unscoped.where(name: tag_name).first_or_create
-          # end
-        rescue ActiveRecord::RecordNotUnique => e
-          # Rails.logger.info "#{"Duplicated entry #{tag_name}".red} / #{tags_found.map{|el| el.name}.join(',')}"
-          tag = Tag.unscoped.where(name: tag_name).first
-        end
-      end
-      tags_list << tag if tag && tag.valid?
-    end
-
-    self.tags = tags_list.uniq{|el| el.id}
+    binding.pry
+    # self.tags = tags_list.uniq{|el| el.id}
   end
 
   def media_user media_item_user, users_found=nil
@@ -182,7 +210,7 @@ class Media < ActiveRecord::Base
         retry if retries <= 5
         return false
       rescue Geocoder::InvalidRequest => e
-        raise e
+        return false
       rescue Geocoder::OverQueryLimitError => e
         lookup_list = lookup_list - [lookup]
         retry
