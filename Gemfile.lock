@@ -104,6 +104,8 @@ GEM
     eventmachine (1.0.6)
     excon (0.44.1)
     execjs (2.2.1)
+    factory_girl (4.5.0)
+      activesupport (>= 3.0.0)
     faraday (0.9.1)
       multipart-post (>= 1.2, < 3)
     faraday_middleware (0.9.1)
@@ -411,6 +413,7 @@ DEPENDENCIES
   daemons
   dotenv (~> 0.11.1)
   dotenv-deployment
+  factory_girl
   feedlr!
   fog
   geocoder
