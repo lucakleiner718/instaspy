@@ -251,19 +251,21 @@ class User < ActiveRecord::Base
 
     puts "Speed: #{speed}"
 
+    jobs = []
+
     start = Time.now.to_i
     amount = (self.followed_by/1_000).ceil
     amount.times do |i|
-      # start_cursor = start-i*speed*100
-      # finish_cursor = i+1 < amount ? start-(i+1)*speed*100 : nil
+      start_cursor = start-i*speed*100
+      finish_cursor = i+1 < amount ? start-(i+1)*speed*100 : nil
       # puts "#{Time.at(start_cursor)} - #{Time.at(finish_cursor) if finish_cursor}"
-      UserFollowersWorker.perform_async self.id, start_cursor: start_cursor, finish_cursor: finish_cursor, ignore_exists: true
+      jobs << UserFollowersWorker.perform_async(self.id, start_cursor: start_cursor, finish_cursor: finish_cursor, ignore_exists: true)
       # a = Follower.where(user_id: self.id).where('followed_at < ?', Time.at(start_cursor.to_i))
       # a = a.where('followed_at >= ?', Time.at(finish_cursor.to_i)) if finish_cursor
       # puts "#{i}: #{a.size}"
     end
 
-    true
+    jobs
   end
 
   # Script stops if found more than 5 exists followers from list in database
@@ -271,16 +273,17 @@ class User < ActiveRecord::Base
   # reload (boolean) - default: false, if reload is set to true, code will download whole list of followers and replace exists list by new one
   # deep (boolean) - default: false, if need to updated info for each added user in background
   # ignore_exists (boolean) - default: false, iterates over all followers list
-  # start_cursor (timestamp)
-  # finish_cursor (timestamp)
+  # start_cursor (timestamp) - start time for followers lookup
+  # finish_cursor (timestamp) - end time for followers lookup
+  # continue (boolean) - find oldest follower and start looking for followers from it
   def update_followers *args
     return false if self.insta_id.blank?
 
     options = args.extract_options!
     options = Hash[options.map{ |k, v| [k.to_sym, v] }]
 
-    cursor = options[:start_cursor] ? options[:start_cursor].to_f.round(3).to_i * 1000 : nil
-    finish_cursor = options[:finish_cursor] ?  options[:finish_cursor].to_f.round(3).to_i * 1000 : nil
+    cursor = options[:start_cursor] ? options[:start_cursor].to_f.round(3).to_i * 1_000 : nil
+    finish_cursor = options[:finish_cursor] ?  options[:finish_cursor].to_f.round(3).to_i * 1_000 : nil
 
     self.update_info!
 
@@ -288,6 +291,13 @@ class User < ActiveRecord::Base
 
     followed = self.followed_by
     logger.debug ">> [#{self.username.green}] followed by: #{followed}"
+
+    if options[:continue]
+      last_follow_time = Follower.where(user_id: self.id).where('followed_at is not null').order(followed_at: :asc).first
+      if last_follow_time
+        cursor = last_follow_time.followed_at.to_i * 1_000
+      end
+    end
 
     if options[:reload]
       self.follower_ids = []
