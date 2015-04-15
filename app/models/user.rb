@@ -229,10 +229,33 @@ class User < ActiveRecord::Base
     self.save
   end
 
+  # what the avg interval between followers
+  def follow_speed
+    dates = self.user_followers.where('followed_at is not null').order(followed_at: :asc).pluck(:followed_at)
+    ((dates.last - dates.first) / dates.size.to_f).round(2)
+  end
+
   def update_followers_batch *args
     self.update_info! force: true
 
-    self.followed_by
+    if self.followed_by < 2000
+      UserFollowersWorker.perform_async self.id
+      return true
+    end
+
+    if self.user_followers.where('followed_at is not null').size > 2
+      speed = self.follow_speed
+    else
+      speed = 10_000
+    end
+
+    start = Time.now.to_i
+    amount = (self.followed_by/1000).ceil
+    amount.times do |i|
+      UserFollowersWorker.perform_async self.id, start_cursor: start-i*speed, finish_cursor: (i+1 < amount ? start-(i+1)*speed : nil), ignore_exists: true
+    end
+
+    true
   end
 
   # Script stops if found more than 5 exists followers from list in database
@@ -240,12 +263,16 @@ class User < ActiveRecord::Base
   # reload (boolean) - default: false, if reload is set to true, code will download whole list of followers and replace exists list by new one
   # deep (boolean) - default: false, if need to updated info for each added user in background
   # ignore_exists (boolean) - default: false, iterates over all followers list
+  # start_cursor (timestamp)
+  # finish_cursor (timestamp)
   def update_followers *args
     return false if self.insta_id.blank?
 
     options = args.extract_options!
+    options = Hash[options.map{ |k, v| [k.to_sym, v] }]
 
-    next_cursor = nil
+    cursor = options[:start_cursor] ? options[:start_cursor].to_f.round(3).to_i * 1000 : nil
+    finish_cursor = options[:finish_cursor] ?  options[:finish_cursor].to_f.round(3).to_i * 1000 : nil
 
     self.update_info!
 
@@ -270,9 +297,10 @@ class User < ActiveRecord::Base
 
       begin
         client = InstaClient.new.client
-        resp = client.user_followed_by self.insta_id, cursor: next_cursor, count: 100
-      rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::InternalServerError, Instagram::GatewayTimeout,
-        JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
+        resp = client.user_followed_by self.insta_id, cursor: cursor, count: 100
+      rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::InternalServerError,
+             Instagram::GatewayTimeout, JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError,
+             Errno::EPIPE => e
         Rails.logger.debug e.message
         sleep 10*retries
         retries += 1
@@ -331,7 +359,7 @@ class User < ActiveRecord::Base
         end
 
         followed_at = Time.now
-        followed_at = Time.at(next_cursor.to_i/1000) if next_cursor
+        followed_at = Time.at(cursor.to_i/1000) if cursor
 
         if new_record
           Follower.create(user_id: self.id, follower_id: user.id, followed_at: followed_at)
@@ -387,12 +415,19 @@ class User < ActiveRecord::Base
 
       break if !options[:ignore_exists] && exists >= 5
 
-      next_cursor = resp.pagination['next_cursor']
+      cursor = resp.pagination['next_cursor']
 
-      break unless next_cursor
+      break unless cursor
+
+      if finish_cursor && cursor.to_i < finish_cursor
+        Rails.logger.debug "#{"Stopped".red} by finish_cursor point finish_cursor: #{Time.at(finish_cursor/1000)} (#{finish_cursor}) / cursor: #{Time.at(cursor.to_i/1000)} (#{cursor})"
+        break
+      end
     end
 
     self.save
+
+    true
   end
 
 
