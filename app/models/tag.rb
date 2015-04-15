@@ -102,7 +102,7 @@ class Tag < ActiveRecord::Base
         media.media_data media_item
 
         begin
-          media.save unless media.new_record? && Media.where(insta_id: media_item['id']).size == 1
+          media.save
         rescue ActiveRecord::RecordNotUnique => e
           media = Media.where(insta_id: media_item['id']).first
         end
