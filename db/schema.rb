@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150414111437) do
+ActiveRecord::Schema.define(version: 20150415081145) do
 
   create_table "feedly", force: true do |t|
     t.string   "website"
@@ -29,6 +29,7 @@ ActiveRecord::Schema.define(version: 20150414111437) do
     t.integer  "user_id"
     t.integer  "follower_id"
     t.datetime "created_at"
+    t.datetime "followed_at"
   end
 
   add_index "followers", ["follower_id"], name: "index_followers_on_follower_id", using: :btree

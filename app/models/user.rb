@@ -325,26 +325,42 @@ class User < ActiveRecord::Base
           end
         end
 
+        followed_at = Time.now
+        followed_at = Time.at(next_cursor.to_i/1000) if next_cursor
+
         if new_record
-          Follower.create(user_id: self.id, follower_id: user.id)
+          Follower.create(user_id: self.id, follower_id: user.id, followed_at: followed_at)
           added += 1
         else
           fol = Follower.where(user_id: self.id, follower_id: user.id)
 
           if options[:reload]
-            fol.first_or_create
+            fol.first_or_initialize
+            if fol.followed_at.blank? || fol.followed_at > followed_at
+              fol.followed_at = followed_at
+              fol.save
+            end
             added += 1
           else
             fol_exists = fols.select{|el| el.follower_id == user.id }.first
 
             if fol_exists
+              if fol_exists.followed_at.blank? || fol_exists.followed_at > followed_at
+                fol_exists.followed_at = followed_at
+                fol_exists.save
+              end
               exists += 1
             else
               fol = fol.first_or_initialize
               if fol.new_record?
+                fol.followed_at = followed_at
                 fol.save
                 added += 1
               else
+                if fol.followed_at.blank? || fol.followed_at > followed_at
+                  fol.followed_at = followed_at
+                  fol.save
+                end
                 exists += 1
               end
             end
