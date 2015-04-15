@@ -182,6 +182,7 @@ class User < ActiveRecord::Base
 
     self.insta_data data
     self.grabbed_at = Time.now
+    self.private = false if self.private?
     self.save
 
     if exists_username
@@ -625,15 +626,15 @@ class User < ActiveRecord::Base
       begin
         client = InstaClient.new.client
         media_list = client.user_recent_media self.insta_id, count: 100, max_id: max_id
-      rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::InternalServerError, Instagram::GatewayTimeout,
-        JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
-        Rails.logger.info "#{e.class}: #{e.message}"
-        sleep 10
+      rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::InternalServerError,
+             Instagram::GatewayTimeout, JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError,
+             Errno::EPIPE => e
         retries += 1
+        sleep 10*retries
         retry if retries <= 5
         raise e
       rescue Instagram::BadRequest => e
-        Rails.logger.info "#{e.class}: #{e.message}"
+        # looks likes account became private
         if e.message =~ /you cannot view this resource/
           self.update_info! force: true
           break
@@ -800,6 +801,8 @@ class User < ActiveRecord::Base
     country = countries.to_a.sort{|a,b| a[1]<=>b[1]}.last
     state = states.to_a.sort{|a,b| a[1]<=>b[1]}.last
     city = cities.to_a.sort{|a,b| a[1]<=>b[1]}.last
+
+    return false if self.destroyed?
 
     self.location_country = country && country[0]
     self.location_state = state && state[0].join(', ')
