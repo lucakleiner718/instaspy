@@ -138,7 +138,7 @@ class Media < ActiveRecord::Base
       Media.connection.execute("UPDATE tags SET media_count=media_count+1 WHERE id in (#{added_tags.join(',')})")
     end
 
-    binding.pry
+    # binding.pry
     # self.tags = tags_list.uniq{|el| el.id}
   end
 
