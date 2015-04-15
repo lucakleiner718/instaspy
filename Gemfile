@@ -28,6 +28,10 @@ group :development do
   gem 'thin'
 end
 
+group :development, :test do
+  gem 'rspec-rails', '~> 3.0'
+end
+
 group :production do
   gem 'puma', '~> 2.8.2'                                    # Production Web Server
   # gem 's3-mysql-backup', require: false
