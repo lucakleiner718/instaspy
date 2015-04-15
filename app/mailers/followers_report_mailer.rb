@@ -86,7 +86,6 @@ class FollowersReportMailer < ActionMailer::Base
       if followers.size < 10
         attachments["#{origin.username}-followers.csv"] = csv_string
       else
-        Dir.mkdir('public/reports') unless Dir.exists?('public/reports')
         file_path = "reports/#{origin.username}-followers-#{Time.now.to_i}.csv"
         @files << [origin, "#{root_url}#{file_path}"]
         File.open("public/#{file_path}", 'w') do |f|

@@ -229,6 +229,11 @@ class User < ActiveRecord::Base
     self.save
   end
 
+  def update_followers_batch *args
+    self.update_info! force: true
+
+    self.followed_by
+  end
 
   # Script stops if found more than 5 exists followers from list in database
   # Params
