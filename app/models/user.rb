@@ -238,7 +238,7 @@ class User < ActiveRecord::Base
   def update_followers_batch *args
     self.update_info! force: true
 
-    if self.followed_by < 2000
+    if self.followed_by < 2_000
       UserFollowersWorker.perform_async self.id
       return true
     end
@@ -246,13 +246,21 @@ class User < ActiveRecord::Base
     if self.user_followers.where('followed_at is not null').size > 2
       speed = self.follow_speed
     else
-      speed = 10_000
+      speed = 2_000
     end
 
+    puts "Speed: #{speed}"
+
     start = Time.now.to_i
-    amount = (self.followed_by/1000).ceil
+    amount = (self.followed_by/1_000).ceil
     amount.times do |i|
-      UserFollowersWorker.perform_async self.id, start_cursor: start-i*speed, finish_cursor: (i+1 < amount ? start-(i+1)*speed : nil), ignore_exists: true
+      # start_cursor = start-i*speed*100
+      # finish_cursor = i+1 < amount ? start-(i+1)*speed*100 : nil
+      # puts "#{Time.at(start_cursor)} - #{Time.at(finish_cursor) if finish_cursor}"
+      UserFollowersWorker.perform_async self.id, start_cursor: start_cursor, finish_cursor: finish_cursor, ignore_exists: true
+      # a = Follower.where(user_id: self.id).where('followed_at < ?', Time.at(start_cursor.to_i))
+      # a = a.where('followed_at >= ?', Time.at(finish_cursor.to_i)) if finish_cursor
+      # puts "#{i}: #{a.size}"
     end
 
     true
@@ -420,7 +428,7 @@ class User < ActiveRecord::Base
       break unless cursor
 
       if finish_cursor && cursor.to_i < finish_cursor
-        Rails.logger.debug "#{"Stopped".red} by finish_cursor point finish_cursor: #{Time.at(finish_cursor/1000)} (#{finish_cursor}) / cursor: #{Time.at(cursor.to_i/1000)} (#{cursor})"
+        Rails.logger.info "#{"Stopped".red} by finish_cursor point finish_cursor: #{Time.at(finish_cursor/1000)} (#{finish_cursor}) / cursor: #{Time.at(cursor.to_i/1000)} (#{cursor}) / added: #{total_added}"
         break
       end
     end

@@ -57,6 +57,7 @@ class Media < ActiveRecord::Base
 
     self.media_user response.data['user']
     self.media_data response.data
+    self.media_tags response.data['tags'], self.tags.to_a
     self.updated_at = Time.now
 
     self.save
@@ -76,8 +77,6 @@ class Media < ActiveRecord::Base
     self.comments_amount = media_item['comments']['count']
     self.link = media_item['link']
     self.created_time = Time.at media_item['created_time'].to_i
-
-    self.save if self.new_record?
   end
 
   def media_user media_item_user, users_found=nil
