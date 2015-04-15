@@ -86,7 +86,7 @@ class Tag < ActiveRecord::Base
       data = media_list.data
 
       media_found = Media.where(insta_id: data.map{|el| el['id']})
-      tags_found = Tag.where(name: data.map{|el| el['tags']}.flatten.uniq)
+      tags_found = Tag.where(name: data.map{|el| el['tags']}.flatten.uniq).to_a
       users_found = User.where(insta_id: data.map{|el| el['user']['id']})
 
       data.each do |media_item|
@@ -99,14 +99,17 @@ class Tag < ActiveRecord::Base
         added += 1 if media.new_record?
 
         media.media_user media_item['user'], users_found
-        media.media_data media_item, tags_found
-
-        tags_found.concat(media.tags).uniq!
+        media.media_data media_item
 
         begin
           media.save unless media.new_record? && Media.where(insta_id: media_item['id']).size == 1
         rescue ActiveRecord::RecordNotUnique => e
+          media = Media.where(insta_id: media_item['id']).first
         end
+
+        media.media_tags media_item['tags'], tags_found
+
+        tags_found.concat(media.tags).uniq!
 
         created_time_list << media['created_time'].to_i
         logger.debug "#{">>".green} End process #{media_item['id']}"

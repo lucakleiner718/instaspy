@@ -653,7 +653,7 @@ class User < ActiveRecord::Base
       data = media_list.data
 
       media_found = Media.where(insta_id: data.map{|el| el['id']})
-      tags_found = Tag.where(name: data.map{|el| el['tags']}.flatten.uniq).select(:id, :name)
+      tags_found = Tag.where(name: data.map{|el| el['tags']}.flatten.uniq).select(:id, :name).to_a
 
       data.each do |media_item|
         logger.debug "#{">>".green} Start process #{media_item['id']}"
@@ -664,15 +664,18 @@ class User < ActiveRecord::Base
           media = Media.new(insta_id: media_item['id'], user_id: self.id)
         end
 
-        media.media_data media_item, tags_found
-        tags_found.concat(media.tags.to_a).uniq!{|el| el.id}
+        media.media_data media_item
 
         added += 1 if media.new_record?
 
         begin
           media.save
         rescue ActiveRecord::RecordNotUnique => e
+          media = Media.where(insta_id: media_item['id']).first
         end
+
+        media.media_tags media_item['tags'], tags_found
+        tags_found.concat(media.tags.to_a).uniq!{|el| el.id}
 
         avg_created_time += media['created_time'].to_i
 
@@ -709,7 +712,7 @@ class User < ActiveRecord::Base
       max_id = media_list.pagination.next_max_id
     end
 
-    self.media
+    true
   end
 
   def media_frequency last=nil
