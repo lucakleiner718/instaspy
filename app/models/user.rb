@@ -339,7 +339,7 @@ class User < ActiveRecord::Base
       users = User.where(insta_id: resp.data.map{|el| el['id']})
       fols = Follower.where(user_id: self.id, follower_id: users.map{|el| el.id}).to_a
 
-      follower_ids_list = Follower.where(user_id: self.id).pluck(:follower_id)
+      # follower_ids_list = Follower.where(user_id: self.id).pluck(:follower_id)
 
       resp.data.each do |user_data|
         logger.debug "Row #{user_data['username']} start"
@@ -419,9 +419,9 @@ class User < ActiveRecord::Base
           end
         end
 
-        unless follower_ids_list.include?(user.id)
-          follower_ids_list << user.id
-        end
+        # unless follower_ids_list.include?(user.id)
+        #   follower_ids_list << user.id
+        # end
 
         logger.debug "Row #{user_data['username']} end / time: #{(Time.now - row_start).round(2)}s"
       end
@@ -430,7 +430,8 @@ class User < ActiveRecord::Base
       total_added += added
 
       finish = Time.now
-      logger.debug ">> [#{self.username.green}] followers:#{follower_ids_list.size}/#{followed} request: #{(finish-start).to_f.round(2)}s :: IG request: #{(end_ig-start).to_f.round(2)}s / exists: #{exists} (#{total_exists.to_s.light_black}) / added: #{added} (#{total_added.to_s.light_black})"
+      # logger.debug ">> [#{self.username.green}] followers:#{follower_ids_list.size}/#{followed} request: #{(finish-start).to_f.round(2)}s :: IG request: #{(end_ig-start).to_f.round(2)}s / exists: #{exists} (#{total_exists.to_s.light_black}) / added: #{added} (#{total_added.to_s.light_black})"
+      logger.debug ">> [#{self.username.green}] followers:#{followed} request: #{(finish-start).to_f.round(2)}s :: IG request: #{(end_ig-start).to_f.round(2)}s / exists: #{exists} (#{total_exists.to_s.light_black}) / added: #{added} (#{total_added.to_s.light_black})"
 
       break if !options[:ignore_exists] && exists >= 5
 
