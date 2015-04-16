@@ -833,7 +833,7 @@ class User < ActiveRecord::Base
       return self.location
     end
 
-    self.update_info! if !self.private? && (self.media_amount.blank? || self.grabbed_at.blank? || self.grabbed_at < 7.days.ago)
+    self.update_info!
 
     return false if self.destroyed?
 
@@ -1035,7 +1035,7 @@ class User < ActiveRecord::Base
 
   def outdated?
     self.grabbed_at.blank? || self.grabbed_at < 1.week.ago || self.bio.nil? || self.website.nil? || self.follows.blank? ||
-      self.followed_by.blank? || self.full_name.nil?
+      self.followed_by.blank? || self.full_name.nil? || self.insta_id.blank? || self.username.blank?
   end
 
   def actual?
