@@ -9,8 +9,8 @@
   <tbody>
   <tr>
     <td><%= @report.usernames.size %></td>
-    <td><%= @report.input_csv.select{|r| r[2].present?}.size %></td>
-    <td><%= (@report.usernames.map(&:downcase) - @report.input_csv.select{|r| r[2].present?}.map{|r| r[0]}).join(', ') %></td>
+    <td><%= @report.processed_ids.size %></td>
+    <td><%= @report.not_processed.join(', ') %></td>
   </tr>
   </tbody>
 </table>

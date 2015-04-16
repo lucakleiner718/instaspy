@@ -28,23 +28,18 @@ class ReportsController < ApplicationController
 
   def create
     @report = Report.new report_params
-    @report.progress = 0
-    @report.format = 'followers'
+    @report.output_data.select!{|r| r.present?}
     @report.status = 'new'
 
     if @report.save
-      usernames = report_params[:input].split("\r\n").map{|el| el.split("\r")}.flatten.map{|el| el.split("\n")}.flatten
-      csv_string = CSV.generate do |csv|
-        usernames.each do |username|
-          csv << [username]
-        end
-      end
+      session['report_notify_email'] = @report.notify_email if @report.notify_email.present?
+      csv_string = Report.process_input report_params[:input]
 
       Dir.mkdir(Rails.root.join("public/reports/reports_data")) unless Dir.exist?(Rails.root.join("public/reports/reports_data"))
-      File.write(Rails.root.join("public/reports/reports_data/report-#{@report.id}.csv"), csv_string)
+      File.write(Rails.root.join("public/reports/reports_data/report-#{@report.id}-original-input.csv"), csv_string)
 
-      @report.update_attribute :input_data, "reports/reports_data/report-#{@report.id}.csv"
-      ReportProcessNewWorker.perform_async @report.id
+      @report.update_attribute :original_input, "reports/reports_data/report-#{@report.id}-original-input.csv"
+      # ReportProcessNewWorker.perform_async @report.id.to_s
       redirect_to reports_path
     else
       render :new
@@ -74,6 +69,6 @@ class ReportsController < ApplicationController
   end
 
   def report_params
-    params.require(:report).permit(:input, :format, :notify_email)
+    params.require(:report).permit(:input, :format, :notify_email, output_data: [])
   end
 end

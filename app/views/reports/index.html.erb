@@ -18,7 +18,7 @@
   <thead>
   <tr>
     <th><%= sortable :format, 'Format' %></th>
-    <th>Usernames file</th>
+    <th>Original Input</th>
     <th>Notify Email</th>
     <th>Status</th>
     <th>Progress</th>
@@ -32,7 +32,7 @@
   <% @reports.each do |report| %>
     <tr>
       <td><%= report.format %> for <%= report.usernames.size %> usernames</td>
-      <td><%= link_to "Download usernames", "#{root_url}#{report.input_data}", target: :_blank %></td>
+      <td><%= link_to "Open", "#{root_url}#{report.original_input}", target: :_blank %></td>
       <td><%= report.notify_email %></td>
       <td><span class="label label-<%= {'new' => 'info', 'in_process' => 'primary', 'finished' => 'success'}[report.status] %>"><%= report.status.titleize %></span></td>
       <td>

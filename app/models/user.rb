@@ -13,8 +13,11 @@ class User < ActiveRecord::Base
   scope :not_grabbed, -> { where grabbed_at: nil }
   scope :not_private, -> { where private: [nil, false] }
   scope :privates, -> { where private: true }
-  scope :outdated, -> { where('grabbed_at is null OR grabbed_at < ? OR bio is null OR website is null of follows is null OR followed_by is null', 7.days.ago) }
+  scope :outdated, -> { where('grabbed_at is null OR grabbed_at < ? OR bio is null OR website is null OR follows is null OR followed_by is null OR media_amount IS NULL', 7.days.ago) }
   scope :with_url, -> { where 'website is not null && website != ""' }
+  scope :without_likes, -> { where('avg_likes IS NULL OR avg_likes_updated_at is null OR avg_likes_updated_at < ?', 1.month.ago) }
+  scope :without_location, -> { where('location_updated_at IS NULL OR location_updated_at < ?', 3.months.ago) }
+  scope :with_media, -> { where('media_amount > 0').where(private: false) }
 
   before_save do
     # Catch email from bio
@@ -968,12 +971,20 @@ class User < ActiveRecord::Base
       Rails.logger.info "[#{"Update AVG Data".green}] [#{self.username.cyan}] Grabbed more media, current: #{media.size}"
     end
 
-    return false if media.size == 0 || self.destroyed?
+    return false if self.destroyed?
+
+    less_day_media = false
+    if media.size == 0
+      media = self.media.order(created_time: :desc).limit(media_limit)
+      less_day_media = true
+    end
+
+    return false if media.size == 0
 
     media.each do |media_item|
       # if diff between when media added to database and date when it was pasted less than 2 days ago
       # OR likes/comments amount is blank
-      if media_item.updated_at - media_item.created_time < 2.days || media_item.likes_amount.blank? || media_item.comments_amount.blank?
+      if !less_day_media && (media_item.updated_at - media_item.created_time < 2.days || media_item.likes_amount.blank? || media_item.comments_amount.blank?)
         Rails.logger.info "[#{"Update AVG Data".green}] [#{self.username.cyan}] Updating media #{media_item.id}"
         media_item.update_info!
       end

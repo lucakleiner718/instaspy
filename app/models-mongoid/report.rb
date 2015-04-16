@@ -1,16 +1,25 @@
 class Report
   include Mongoid::Document
-  include Mongoid::Timestamps
 
   field :format, type: String
-  field :input_data, type: String
+  field :original_input, type: String
+  field :processed_input, type: String
   field :status, type: String
   field :progress, type: Integer, default: 0
-  field :jobs, type: String
+  field :jobs, type: Hash
   field :started_at, type: DateTime
   field :finished_at, type: DateTime
   field :result_data, type: String
   field :notify_email, type: String
+  field :output_data, type: Array, default: []
+  field :not_processed, type: Array, default: []
+  field :steps, type: Array, default: []
+  include Mongoid::Timestamps
+
+  # probably not best way
+  def id
+    self.read_attribute(:id).to_s
+  end
 
   def input
     @input
@@ -20,12 +29,21 @@ class Report
     @input = input
   end
 
-  def usernames
-    self.input_csv.map{|r| r[0]}
+  def processed_usernames
+    self.original_csv.map{|r| r[0]}
+  end
+  alias :usernames :processed_usernames
+
+  def processed_ids
+    self.processed_csv.map{|r| r[1]}
   end
 
-  def input_csv
-    CSV.read(Rails.root.join('public', self.input_data))
+  def original_csv
+    CSV.read(Rails.root.join('public', self.original_input))
+  end
+
+  def processed_csv
+    CSV.read(Rails.root.join('public', self.processed_input))
   end
 
   def new?
@@ -38,6 +56,17 @@ class Report
 
   def finished?
     self.status.to_s == 'finished'
+  end
+
+  def self.process_input data
+    rows = data.split("\r\n").map{|el| el.split("\r")}.flatten.map{|el| el.split("\n")}.flatten
+    csv_string = CSV.generate do |csv|
+      rows.each do |row|
+        csv << [row.strip.gsub(/\//, '')]
+      end
+    end
+
+    csv_string
   end
 
 end
