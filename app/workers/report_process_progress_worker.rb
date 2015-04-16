@@ -8,8 +8,11 @@ class ReportProcessProgressWorker
 
     return unless report
 
-    if report.format == 'followers'
-      Report::Followers.reports_in_process report
+    case report.format
+      when 'followers'
+        Report::Followers.reports_in_process report
+      when 'users'
+        Report::Users.reports_in_process report
     end
   end
 

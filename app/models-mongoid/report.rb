@@ -29,10 +29,10 @@ class Report
     @input = input
   end
 
-  def processed_usernames
+  def original_usernames
     self.original_csv.map{|r| r[0]}
   end
-  alias :usernames :processed_usernames
+  alias :usernames :original_usernames
 
   def processed_ids
     self.processed_csv.map{|r| r[1]}

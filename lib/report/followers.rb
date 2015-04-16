@@ -44,11 +44,16 @@ module Report::Followers
 
     unless report.steps.include?('user_info')
       not_updated = User.where(id: report.processed_ids).where('grabbed_at < ?', 6.hours.ago).pluck(:id)
-      not_updated.each do |uid|
-        UserWorker.perform_async uid, true
-      end
 
-      progress += not_updated / report.processed_ids.to_f / parts_amount
+      if not_updated.size == 0
+        report.steps << 'user_info'
+      else
+        not_updated.each do |uid|
+          UserWorker.perform_async uid, true
+        end
+
+        progress += not_updated.size / report.processed_ids.size.to_f / parts_amount
+      end
     end
 
     if report.steps.include?('user_info')
@@ -156,6 +161,6 @@ module Report::Followers
       report.save
     end
 
-    ReportMailer.finished(report.id).deliver if report.notify_email.present?
+    ReportMailer.followers(report.id).deliver if report.notify_email.present?
   end
 end

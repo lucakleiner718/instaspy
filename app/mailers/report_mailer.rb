@@ -11,16 +11,15 @@ class ReportMailer < ActionMailer::Base
     end
   end
 
-  def finished report_id
+  def followers report_id
     @report = Report.find(report_id)
-
     attachments[File.basename(@report.result_data)] = File.read(Rails.root.join('public', @report.result_data))
+    mail to: @report.notify_email, subject: "Requested InstaSpy followers report"
+  end
 
-    subject = "Requested InstaSpy followers report"
-    # if ENV['insta_debug'] || Rails.env.development?
-      mail to: @report.notify_email, subject: subject
-    # else
-    #   mail to: "rob@ladylux.com", bcc: 'me@antonzaytsev.com', subject: subject
-    # end
+  def users report_id
+    @report = Report.find(report_id)
+    attachments[File.basename(@report.result_data)] = File.read(Rails.root.join('public', @report.result_data))
+    mail to: @report.notify_email, subject: "Requested InstaSpy users report"
   end
 end

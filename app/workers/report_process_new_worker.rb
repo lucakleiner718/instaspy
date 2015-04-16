@@ -8,8 +8,11 @@ class ReportProcessNewWorker
 
     return unless report
 
-    if report.format == 'followers'
-      Report::Followers.reports_new report
+    case report.format
+      when 'followers'
+        Report::Followers.reports_new report
+      when 'users'
+        Report::Users.reports_new report
     end
   end
 

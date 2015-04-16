@@ -1,0 +1,16 @@
+<table>
+  <thead>
+  <tr>
+    <th>Input users amount</th>
+    <th>Processed usernames amount</th>
+    <th>Not processed</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td><%= @report.original_csv.size %></td>
+    <td><%= @report.processed_ids.size %></td>
+    <td><%= @report.not_processed.join(', ') %></td>
+  </tr>
+  </tbody>
+</table>
