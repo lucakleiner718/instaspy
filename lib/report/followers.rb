@@ -58,48 +58,83 @@ module Report::Followers
 
     if report.steps.include?('user_info')
       unless report.steps.include?('followers')
-        followers_jobs = report.jobs['followers'].split(',')
-        followers_jobs.map! do |job_id|
-          Sidekiq::Status::get_all job_id
-        end
+        followers_jobs = report.jobs['followers']
+        followers_jobs.map! { |job_id| Sidekiq::Status::get_all job_id }
         followers_job_progress = followers_jobs.map{|r| r['status'] == 'complete'}.size / followers_jobs.size.to_f * 100
         if followers_job_progress == 100
           report.steps << 'followers'
         end
       end
 
-      followers_ids = Follower.where(user_id: report.processed_ids).pluck(:follower_id)
+      # ids of ALL followers of provided users
+      followers_ids = Follower.where(user_id: report.processed_ids).pluck(:follower_id).uniq
 
+      # update info for not updated followers
       unless report.steps.include?('followers_info')
-        not_updated = User.where(id: followers_ids).outdated.pluck(:id)
+        not_updated = []
+        followers_ids.in_groups_of(5_000, false) do |ids|
+          not_updated.concat User.where(id: ids).outdated.pluck(:id)
+        end
         if not_updated.size == 0
           report.steps << 'followers_info'
         else
           not_updated.each { |uid| UserWorker.perform_async uid, true }
+          progress += not_updated.size / followers_ids.size.to_f / parts_amount
         end
       end
 
+      # after followers list grabbed and all followers updated
       if report.steps.include?('followers') && report.steps.include?('followers_info')
+
+        # if we need avg likes data and it is not yet grabbed
         if report.output_data.include?('likes') && !report.steps.include?('likes')
-          get_likes = User.where(id: followers_ids).without_likes.with_media.pluck(:id)
+          get_likes = []
+          followers_ids.in_groups_of(5_000, false) do |ids|
+            get_likes.concat User.where(id: ids).without_likes.with_media.pluck(:id)
+          end
           if get_likes.size == 0
             report.steps << 'likes'
           else
             get_likes.each { |uid| UserAvgLikesWorker.perform_async uid }
+            progress += get_likes.size / followers_ids.size.to_f / parts_amount
           end
         end
 
+        # if we need location data and it is not yet grabbed
         if report.output_data.include?('location') && !report.steps.include?('location')
-          get_location = User.where(id: followers_ids).without_location.with_media.pluck(:id)
+          get_location = []
+          followers_ids.in_groups_of(5_000, false) do |ids|
+            get_location.concat User.where(id: ids).without_location.with_media.pluck(:id)
+          end
           if get_location.size == 0
             report.steps << 'location'
           else
-            get_location.each { |uid| UserLocationWorker.perform_async uid }
+            get_location.each { |uid| UserLocationWorker.perform_async(uid) }
+            progress += get_location.size / followers_ids.size.to_f / parts_amount
           end
         end
 
+        # if we need feedly subscribers amount and it is not yet grabbed
         if report.output_data.include?('feedly') && !report.steps.include?('feedly')
+          if report.jobs['feedly']
+            jobs = report.jobs['feedly']
+            jobs.map! { |job_id| Sidekiq::Status::get_all job_id }
+            if jobs.select{|j| j['status'] == 'complete'}.size == jobs.size
+              # complete
+              report.steps << 'feedly'
+            else
+              # waiting and changing progress amount
+              progress += (jobs.size - jobs.select{|j| j['status'] == 'complete'}.size) / jobs.size.to_f / parts_amount
+            end
+          else
+            jobs_ids = []
+            # adding workers
+            User.where(id: report.processed_ids).with_url.find_each do |u|
+              jobs_ids << FeedlyWorker.perform_async(u.website)
+            end
 
+            report.jobs['feedly'] = jobs_ids
+          end
         end
       end
     end

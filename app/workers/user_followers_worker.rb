@@ -17,6 +17,5 @@ class UserFollowersWorker
 
   def perform user_id, *args
     User.find(user_id).update_followers *args
-    store user_id: user_id
   end
 end

@@ -2,12 +2,16 @@ class UserAvgLikesWorker
 
   include Sidekiq::Worker
 
-  sidekiq_options queue: :low
+  sidekiq_options queue: :low, unique: true, unique_args: -> (args) { [ args.first ] }
 
-  def perform users_ids
-    User.where(id: users_ids).each do |user|
-      user.update_avg_data!
+  def perform user_id
+    begin
+      user = User.find(user_id)
+    rescue ActiveRecord::RecordNotFound => e
+      return true
     end
+
+    user.update_avg_data!
   end
 
   def self.spawn in_batch=100

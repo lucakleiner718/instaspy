@@ -6,7 +6,7 @@ class Report
   field :processed_input, type: String
   field :status, type: String
   field :progress, type: Integer, default: 0
-  field :jobs, type: Hash
+  field :jobs, type: Hash, default: {}
   field :started_at, type: DateTime
   field :finished_at, type: DateTime
   field :result_data, type: String
