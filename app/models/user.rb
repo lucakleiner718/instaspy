@@ -280,7 +280,7 @@ class User < ActiveRecord::Base
     return false if self.insta_id.blank?
 
     options = args.extract_options!
-    options = Hash[options.map{ |k, v| [k.to_sym, v] }]
+    options = Hash[options.map{ |k, v| [k.to_sym, v] }] # convert all string keys to symbols
 
     cursor = options[:start_cursor] ? options[:start_cursor].to_f.round(3).to_i * 1_000 : nil
     finish_cursor = options[:finish_cursor] ?  options[:finish_cursor].to_f.round(3).to_i * 1_000 : nil
@@ -319,12 +319,12 @@ class User < ActiveRecord::Base
       rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::InternalServerError,
              Instagram::GatewayTimeout, JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError,
              Errno::EPIPE => e
-        Rails.logger.debug e.message
+        Rails.logger.info e.message
         sleep 10*retries
         retries += 1
         retry if retries <= 5
       rescue Instagram::BadRequest => e
-        Rails.logger.debug e.message
+        Rails.logger.info e.message
         if e.message =~ /you cannot view this resource/
           break
         elsif e.message =~ /this user does not exist/
@@ -337,12 +337,13 @@ class User < ActiveRecord::Base
       end_ig = Time.now
 
       users = User.where(insta_id: resp.data.map{|el| el['id']})
-      fols = Follower.where(user_id: self.id, follower_id: users.map{|el| el.id})
+      fols = Follower.where(user_id: self.id, follower_id: users.map{|el| el.id}).to_a
 
-      follower_ids_list = self.follower_ids.to_a
+      follower_ids_list = Follower.where(user_id: self.id).pluck(:follower_id)
 
       resp.data.each do |user_data|
         logger.debug "Row #{user_data['username']} start"
+        row_start = Time.now
 
         new_record = false
 
@@ -422,7 +423,7 @@ class User < ActiveRecord::Base
           follower_ids_list << user.id
         end
 
-        logger.debug "Row #{user_data['username']} end"
+        logger.debug "Row #{user_data['username']} end / time: #{(Time.now - row_start).round(2)}s"
       end
 
       total_exists += exists
@@ -1075,6 +1076,25 @@ class User < ActiveRecord::Base
         user = User.get username
         if user
           users << user
+        else
+          not_processed << username
+        end
+      end
+    end
+
+    users
+  end
+
+  def self.from_usernames_ids usernames
+    users = User.where(username: usernames).pluck(:id, :username)
+
+    not_processed = []
+    not_found = usernames - users.map{|u| u[1]}
+    if not_found.size > 0
+      not_found.each do |username|
+        user = User.get username
+        if user
+          users << [user.id, user.username]
         else
           not_processed << username
         end

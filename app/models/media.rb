@@ -141,6 +141,44 @@ class Media < ActiveRecord::Base
     end
   end
 
+  # def media_tags2 tags_names, tags_found=nil
+  #   unless tags_found
+  #     tags_found = self.tags
+  #   end
+  #
+  #   find_more = media_item['tags']
+  #   if tags_found.size > 0
+  #     find_more -= tags_found.map{|el| el.name.downcase}
+  #   end
+  #
+  #   if find_more.size > 0
+  #     tags_found.concat Tag.where(name: find_more).to_a
+  #   end
+  #
+  #   tags_list = []
+  #   tags_names.each do |tag_name|
+  #     tag = nil
+  #     if tags_found
+  #       tag = tags_found.select{|el| el.name.downcase == tag_name.downcase}.first
+  #     end
+  #     unless tag
+  #       begin
+  #         # if tags_found
+  #         #   tag = Tag.unscoped.where(name: tag_name).create
+  #         # else
+  #         tag = Tag.unscoped.where(name: tag_name).first_or_create
+  #           # end
+  #       rescue ActiveRecord::RecordNotUnique => e
+  #         # Rails.logger.info "#{"Duplicated entry #{tag_name}".red} / #{tags_found.map{|el| el.name}.join(',')}"
+  #         tag = Tag.unscoped.where(name: tag_name).first
+  #       end
+  #     end
+  #     tags_list << tag if tag && tag.valid?
+  #   end
+  #
+  #   self.tags = tags_list.uniq{|el| el.id}
+  # end
+
 
   def set_location *args
     options = args.extract_options!
