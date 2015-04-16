@@ -1,4 +1,6 @@
-class Report < ActiveRecord::Base
+class ReportAr < ActiveRecord::Base
+
+  self.table_name = 'reports'
 
   def input
     @input

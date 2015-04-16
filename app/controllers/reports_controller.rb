@@ -11,7 +11,8 @@ class ReportsController < ApplicationController
       when 'new', 'in_process', 'finished'
         @reports = @reports.where(status: params[:format])
       else
-        @reports = @reports.where(status: ['new', 'in_process'])
+        # @reports = @reports.where(status: ['new', 'in_process'])
+        @reports = @reports.in(status: ['new', 'in_process'])
     end
 
     if params[:sort]
@@ -29,6 +30,7 @@ class ReportsController < ApplicationController
     @report = Report.new report_params
     @report.progress = 0
     @report.format = 'followers'
+    @report.status = 'new'
 
     if @report.save
       usernames = report_params[:input].split("\r\n").map{|el| el.split("\r")}.flatten.map{|el| el.split("\n")}.flatten

@@ -433,7 +433,7 @@ DEPENDENCIES
   puma (~> 2.8.2)
   quiet_assets
   rails (= 4.1.5)
-  redis
+  redis (~> 3.2.1)
   redis-rails
   render_csv
   rgeo
