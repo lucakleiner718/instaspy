@@ -7,7 +7,7 @@ set :repo_url, 'git@github.com:luxagency/instaspy.git'
 set :branch, :master
 set :scm, :git
 set :format, :pretty
-set :pty, false
+set :pty, true
 
 set :log_level, :info #:debug
 
@@ -19,6 +19,7 @@ set :keep_releases, 5
 set :deploy_to, '/home/app/instaspy'
 
 set :puma_conf, "#{shared_path}/puma.rb"
+set :puma_state, "#{shared_path}/tmp/pids/puma.state"
 set :puma_role, :app
 set :puma_workers, 2
 set :puma_preload_app, false
