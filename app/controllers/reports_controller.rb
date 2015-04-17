@@ -30,8 +30,8 @@ class ReportsController < ApplicationController
     @report = Report.new report_params
     @report.output_data.select!{|r| r.present?}
     @report.status = 'new'
-    @report.date_from = Date.strptime(report_params['date_from'], '%m/%d/%Y') if report_params['date_from'].present?
-    @report.date_to = Date.strptime(report_params['date_to'], '%m/%d/%Y') if report_params['date_to'].present?
+    @report.date_from = DateTime.strptime(report_params['date_from'], '%m/%d/%Y') if report_params['date_from'].present?
+    @report.date_to = DateTime.strptime(report_params['date_to'], '%m/%d/%Y').end_of_day if report_params['date_to'].present?
 
     if @report.save
       session['report_notify_email'] = @report.notify_email if @report.notify_email.present?
