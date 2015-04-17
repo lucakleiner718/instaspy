@@ -22,4 +22,10 @@ FactoryGirl.define do
     avg_comments 4
     avg_comments_updated_at "2015-04-17 10:11:12"
   end
+
+  factory :user_with_email, class: :User do
+    insta_id 891079859
+    username "beth__winter"
+    bio "This is just my account email@gmail.com | 123"
+  end
 end

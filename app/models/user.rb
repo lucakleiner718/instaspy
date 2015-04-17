@@ -79,6 +79,7 @@ class User < ActiveRecord::Base
   end
 
 
+  # force (boolean) - if false and user not outdated, user will not be updated with fresh request to IG
   def update_info! *args
     options = args.extract_options!
 
@@ -198,24 +199,31 @@ class User < ActiveRecord::Base
 
   def update_via_http!
     retries = 0
-    begin
-      resp = Curl::Easy.perform("http://instagram.com/#{self.username}/") do |curl|
-        curl.headers["User-Agent"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.93 Safari/537.36"
-        curl.verbose = Rails.env.development?
-        curl.follow_location = true
+    # begin
+      resp = Faraday.new(:url => 'http://instagram.com') do |f|
+        f.use FaradayMiddleware::FollowRedirects
+        f.adapter :net_http
+      end.get("/#{self.username}/") do |req|
+        req.headers["User-Agent"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.93 Safari/537.36"
       end
-    rescue Curl::Err::HostResolutionError, Curl::Err::SSLConnectError, Curl::Err::GotNothingError,
-      Curl::Err::TimeoutError => e
-      retries += 1
-      sleep 10*retries
-      retry if retries <= 5
-      return false
-    end
+
+      # resp = Curl::Easy.perform("/#{self.username}/") do |curl|
+      #   curl.headers["User-Agent"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.93 Safari/537.36"
+      #   curl.verbose = Rails.env.development?
+      #   curl.follow_location = true
+      # end
+    # rescue Curl::Err::HostResolutionError, Curl::Err::SSLConnectError, Curl::Err::GotNothingError,
+    #   Curl::Err::TimeoutError => e
+    #   retries += 1
+    #   sleep 10*retries
+    #   retry if retries <= 5
+    #   return false
+    # end
 
     # accounts is private and username is changed
     # so we don't have any way to get new username for user
     # that's why we delete it from database
-    if resp.response_code == 404
+    if resp.status == 404
       self.destroy
       return false
     end
@@ -635,9 +643,12 @@ class User < ActiveRecord::Base
   end
 
   def self.get username
-    if username.numeric?
+    return false if username.blank? || username.size > 30
+
+    if username.numeric? && username.to_i > 0
       User.where(insta_id: username).first_or_create
     else
+      username = username.to_s.strip
       User.add_by_username(username)
     end
   end

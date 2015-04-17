@@ -36,7 +36,7 @@ group :development, :test do
   gem 'rb-fsevent' if `uname` =~ /Darwin/
   gem 'vcr'
   gem 'database_cleaner'
-  gem 'webmock'
+  gem 'webmock', require: false
 end
 
 group :production do

@@ -1,0 +1,149 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: https://api.instagram.com/v1/users/1446641248.json?access_token=35938880.1580f11.53c87da9327c4ea7bff07a2cea3602ca
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept:
+      - application/json; charset=utf-8
+      User-Agent:
+      - Instagram Ruby Gem 1.1.3
+      Authorization:
+      - Token token="35938880.1580f11.53c87da9327c4ea7bff07a2cea3602ca"
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Server:
+      - nginx
+      Date:
+      - Fri, 17 Apr 2015 14:48:07 GMT
+      Content-Type:
+      - application/json; charset=utf-8
+      X-Ratelimit-Remaining:
+      - '4373'
+      Content-Language:
+      - en
+      Expires:
+      - Sat, 01 Jan 2000 00:00:00 GMT
+      Vary:
+      - Cookie, Accept-Language, Accept-Encoding
+      X-Ratelimit-Limit:
+      - '5000'
+      Pragma:
+      - no-cache
+      Cache-Control:
+      - private, no-cache, no-store, must-revalidate
+      Set-Cookie:
+      - csrftoken=93d5c00d63155d4026b33e3c482931e1; expires=Fri, 15-Apr-2016 14:48:07
+        GMT; Max-Age=31449600; Path=/
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '359'
+    body:
+      encoding: UTF-8
+      string: '{"meta":{"code":200},"data":{"username":"thesocialsesh","bio":"Let''s
+        get social\nLifestyle \u0026BeautyVloggers\nTwitter: @thesocialsesh\nYouTube
+        : YouTube.com\/thesocialsesh \nEmail :thesocialsesh@gmail.com\nBritt\u0026Brina
+        \u2661","website":"http:\/\/brittandbrina.blogspot.com","profile_picture":"https:\/\/igcdn-photos-e-a.akamaihd.net\/hphotos-ak-xpa1\/t51.2885-19\/1799762_316542158517100_1078458788_a.jpg","full_name":"TheSocialSesh","counts":{"media":106,"followed_by":70,"follows":377},"id":"1446641248"}}'
+    http_version: 
+  recorded_at: Fri, 17 Apr 2015 14:48:09 GMT
+- request:
+    method: get
+    uri: https://api.instagram.com/v1/users/1446641248/followed-by.json?access_token=35938880.1580f11.53c87da9327c4ea7bff07a2cea3602ca&count=100&cursor=
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept:
+      - application/json; charset=utf-8
+      User-Agent:
+      - Instagram Ruby Gem 1.1.3
+      Authorization:
+      - Token token="35938880.1580f11.53c87da9327c4ea7bff07a2cea3602ca"
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Server:
+      - nginx
+      Date:
+      - Fri, 17 Apr 2015 14:48:08 GMT
+      Content-Type:
+      - application/json; charset=utf-8
+      X-Ratelimit-Remaining:
+      - '4372'
+      Content-Language:
+      - en
+      Expires:
+      - Sat, 01 Jan 2000 00:00:00 GMT
+      Vary:
+      - Cookie, Accept-Language, Accept-Encoding
+      X-Ratelimit-Limit:
+      - '5000'
+      Pragma:
+      - no-cache
+      Cache-Control:
+      - private, no-cache, no-store, must-revalidate
+      Set-Cookie:
+      - csrftoken=1c993843afd42caa4cc559f3d0a5b7f4; expires=Fri, 15-Apr-2016 14:48:08
+        GMT; Max-Age=31449600; Path=/
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '3838'
+    body:
+      encoding: UTF-8
+      string: '{"pagination":{},"meta":{"code":200},"data":[{"username":"ndnkundi","profile_picture":"https:\/\/igcdn-photos-e-a.akamaihd.net\/hphotos-ak-xpf1\/t51.2885-19\/10584782_758155670897196_799338302_a.jpg","id":"520145451","full_name":"Shawn
+        Thottu"},{"username":"the.nora","profile_picture":"https:\/\/igcdn-photos-d-a.akamaihd.net\/hphotos-ak-xaf1\/t51.2885-19\/10729338_671382342959099_1364633931_a.jpg","id":"273914706","full_name":"Elnora
+        Allen"},{"username":"cjeez0714","profile_picture":"https:\/\/instagramimages-a.akamaihd.net\/profiles\/profile_436011898_75sq_1373059248.jpg","id":"436011898","full_name":"Candace
+        Jewell"},{"username":"thezhan425","profile_picture":"https:\/\/instagramimages-a.akamaihd.net\/profiles\/profile_145973870_75sq_1388616634.jpg","id":"145973870","full_name":"Juan
+        Aguilar"},{"username":"newoldshades","profile_picture":"https:\/\/instagramimages-a.akamaihd.net\/profiles\/profile_595508293_75sq_1384869162.jpg","id":"595508293","full_name":"Vintage
+        Sunglasses"},{"username":"mslyssxv","profile_picture":"https:\/\/igcdn-photos-h-a.akamaihd.net\/hphotos-ak-xaf1\/t51.2885-19\/10990590_795709953844703_987768276_a.jpg","id":"24568487","full_name":"MsLyss\u2122"},{"username":"deshon_dixon","profile_picture":"https:\/\/igcdn-photos-f-a.akamaihd.net\/hphotos-ak-xfa1\/t51.2885-19\/10890875_1396631100635037_332171752_a.jpg","id":"1635007242","full_name":"Deshon"},{"username":"confessionsofasugg","profile_picture":"https:\/\/igcdn-photos-h-a.akamaihd.net\/hphotos-ak-xfa1\/t51.2885-19\/10848164_353475994825303_1999867365_a.jpg","id":"1528398956","full_name":".\u2022
+        Mi And An \u2022."},{"username":"lord_potato54","profile_picture":"https:\/\/igcdn-photos-a-a.akamaihd.net\/hphotos-ak-xfa1\/t51.2885-19\/10899206_1543618862544688_1777569480_a.jpg","id":"1571696484","full_name":"..."},{"username":"mickey_t","profile_picture":"https:\/\/igcdn-photos-f-a.akamaihd.net\/hphotos-ak-xaf1\/t51.2885-19\/11116735_1581939618726637_940412215_a.jpg","id":"1110199075","full_name":"Mckayla
+        Townsend"},{"username":"nobuhle7","profile_picture":"https:\/\/igcdn-photos-f-a.akamaihd.net\/hphotos-ak-xfa1\/t51.2885-19\/11098337_781340751961365_199381951_a.jpg","id":"557320384","full_name":"Nobuhle
+        Maphatane"},{"username":"rawremedyjuicebar","profile_picture":"https:\/\/igcdn-photos-h-a.akamaihd.net\/hphotos-ak-xaf1\/t51.2885-19\/11098633_1585370088367687_562049859_a.jpg","id":"404439013","full_name":"Raw
+        Remedy Organic Juice Bar"},{"username":"_yenyenn","profile_picture":"https:\/\/igcdn-photos-h-a.akamaihd.net\/hphotos-ak-xaf1\/t51.2885-19\/11137765_829570220455895_1100756546_a.jpg","id":"187561448","full_name":"Cheyenne
+        Moten"},{"username":"nocluefreefollow","profile_picture":"https:\/\/instagramimages-a.akamaihd.net\/profiles\/anonymousUser.jpg","id":"1202771226","full_name":""},{"username":"_lexa33","profile_picture":"https:\/\/igcdn-photos-a-a.akamaihd.net\/hphotos-ak-xfa1\/t51.2885-19\/10899215_778759832204192_342955564_a.jpg","id":"41870328","full_name":"Alexa
+        \ud83d\udc51"},{"username":"im_nehemiah","profile_picture":"https:\/\/igcdn-photos-f-a.akamaihd.net\/hphotos-ak-xap1\/t51.2885-19\/1599504_1643468705883405_1266912939_a.jpg","id":"1339071740","full_name":"Nehemiah\ud83c\udfbc"},{"username":"now__grazy","profile_picture":"https:\/\/igcdn-photos-e-a.akamaihd.net\/hphotos-ak-xaf1\/t51.2885-19\/10986226_735283813251892_189233051_a.jpg","id":"1486807808","full_name":"G\u0433\u03b1\u03b6\u03b9\u03b1\u03b7\u03b1
+        \u0421\u03b1\u0433\u0433\u03b9\u03b5\u0433\u03b9\ud83d\ude48"},{"username":"xomegan_nicole","profile_picture":"https:\/\/igcdn-photos-g-a.akamaihd.net\/hphotos-ak-xfa1\/t51.2885-19\/10948646_1450954868460342_730816536_a.jpg","id":"28343482","full_name":"Meg"},{"username":"simplyabbii","profile_picture":"https:\/\/igcdn-photos-e-a.akamaihd.net\/hphotos-ak-xpf1\/t51.2885-19\/10735259_349055358602012_1910825858_a.jpg","id":"1544306856","full_name":"\u2764
+        abbi \u2764"},{"username":"babykayy__","profile_picture":"https:\/\/igcdn-photos-d-a.akamaihd.net\/hphotos-ak-xfa1\/t51.2885-19\/11055968_1563027140651611_876064744_a.jpg","id":"997637493","full_name":"Kay"},{"username":"jessicacamella","profile_picture":"https:\/\/igcdn-photos-f-a.akamaihd.net\/hphotos-ak-xaf1\/t51.2885-19\/11008243_685292571579773_77239800_a.jpg","id":"30554845","full_name":"Jessica
+        Camella"},{"username":"alice_dimitrova","profile_picture":"https:\/\/igcdn-photos-h-a.akamaihd.net\/hphotos-ak-xfa1\/t51.2885-19\/10881857_688741441238183_1656936718_a.jpg","id":"1519999357","full_name":"Alice
+        Dimitrova"},{"username":"dance.acr0","profile_picture":"https:\/\/instagramimages-a.akamaihd.net\/profiles\/anonymousUser.jpg","id":"1365988221","full_name":""},{"username":"nick.foerster02","profile_picture":"https:\/\/igcdn-photos-a-a.akamaihd.net\/hphotos-ak-xpa1\/t51.2885-19\/10655111_307148632825016_269685740_a.jpg","id":"1503058586","full_name":"Nick
+        303"},{"username":"consumercuts","profile_picture":"https:\/\/igcdn-photos-h-a.akamaihd.net\/hphotos-ak-xap1\/t51.2885-19\/10724226_682025358571127_2098805818_a.jpg","id":"1507369730","full_name":"Nehemiah\u2702\ufe0f"},{"username":"peachdaisychain","profile_picture":"https:\/\/igcdn-photos-g-a.akamaihd.net\/hphotos-ak-xpa1\/t51.2885-19\/10299694_604617099649182_342425564_a.jpg","id":"1498986063","full_name":"Chloe"},{"username":"reperkussionstudios","profile_picture":"https:\/\/igcdn-photos-a-a.akamaihd.net\/hphotos-ak-xpf1\/t51.2885-19\/10584615_627576480690864_78985612_a.jpg","id":"344410506","full_name":"GLE
+        PHOTOGRAPHER"},{"username":"glowonthegoillinois","profile_picture":"https:\/\/igcdn-photos-h-a.akamaihd.net\/hphotos-ak-xap1\/t51.2885-19\/10525513_868064326554423_739524310_a.jpg","id":"1441808563","full_name":"Missy"},{"username":"raeann_34","profile_picture":"https:\/\/igcdn-photos-d-a.akamaihd.net\/hphotos-ak-xpa1\/t51.2885-19\/925613_1377772349196979_1256437047_a.jpg","id":"55262689","full_name":"\u25b6Rae\u25c0"},{"username":"__sc.xci","profile_picture":"https:\/\/igcdn-photos-b-a.akamaihd.net\/hphotos-ak-xap1\/t51.2885-19\/10661293_873740209312249_966093299_a.jpg","id":"1499012758","full_name":""},{"username":"dfalcon13","profile_picture":"https:\/\/igcdn-photos-b-a.akamaihd.net\/hphotos-ak-xap1\/t51.2885-19\/10683748_342471782544281_387465098_a.jpg","id":"1488982742","full_name":"Dani
+        Falcon"},{"username":"gourmet_candle","profile_picture":"https:\/\/igcdn-photos-c-a.akamaihd.net\/hphotos-ak-xpa1\/t51.2885-19\/10354361_286780224832818_305698273_a.jpg","id":"775116067","full_name":"Gourmet
+        Candle"},{"username":"seven10","profile_picture":"https:\/\/igcdn-photos-a-a.akamaihd.net\/hphotos-ak-xfa1\/t51.2885-19\/11056025_449315181899384_1991550840_a.jpg","id":"20891466","full_name":"Justin
+        Marin"},{"username":"lashscandal","profile_picture":"https:\/\/igcdn-photos-c-a.akamaihd.net\/hphotos-ak-xfa1\/t51.2885-19\/10413988_1495985540631634_826109878_a.jpg","id":"1390123370","full_name":"3d
+        fiber lash mascara and more"},{"username":"youniquebykm","profile_picture":"https:\/\/igcdn-photos-d-a.akamaihd.net\/hphotos-ak-xfp1\/t51.2885-19\/10584777_615890461842211_1604357940_a.jpg","id":"506081762","full_name":"Kristen
+        Morton"},{"username":"volvocowgirl99","profile_picture":"https:\/\/igcdn-photos-a-a.akamaihd.net\/hphotos-ak-xap1\/t51.2885-19\/10808600_636799109762024_1103096204_a.jpg","id":"1483018935","full_name":"Ms
+        Robots"},{"username":"monteprays","profile_picture":"https:\/\/igcdn-photos-g-a.akamaihd.net\/hphotos-ak-xpf1\/t51.2885-19\/10666171_371331873015926_2076881447_a.jpg","id":"1453811078","full_name":"Vermont"},{"username":"_8thwonderoftheworld","profile_picture":"https:\/\/igcdn-photos-a-a.akamaihd.net\/hphotos-ak-xfp1\/t51.2885-19\/10723849_728276347241880_1180543429_a.jpg","id":"144147345","full_name":"\u03b1ndy
+        \u0192ernandes"},{"username":"foreignsmack","profile_picture":"https:\/\/igcdn-photos-a-a.akamaihd.net\/hphotos-ak-xfp1\/t51.2885-19\/10598485_720429868011304_2085953598_a.jpg","id":"1450896228","full_name":""},{"username":"floreselle","profile_picture":"https:\/\/igcdn-photos-h-a.akamaihd.net\/hphotos-ak-xaf1\/t51.2885-19\/10838593_1580847435460975_899420228_a.jpg","id":"46411115","full_name":"Ellesse"},{"username":"inipretty18","profile_picture":"https:\/\/igcdn-photos-g-a.akamaihd.net\/hphotos-ak-xaf1\/t51.2885-19\/10979656_711867855601606_109598816_a.jpg","id":"1419871550","full_name":"Ini-obong
+        Umoh"},{"username":"zendaya_fandom","profile_picture":"https:\/\/igcdn-photos-b-a.akamaihd.net\/hphotos-ak-xpf1\/t51.2885-19\/10616927_1530255727204337_2117687765_a.jpg","id":"1455618183","full_name":"~\u2661Zendaya\u2661~"},{"username":"cutiehk","profile_picture":"https:\/\/igcdn-photos-b-a.akamaihd.net\/hphotos-ak-xap1\/t51.2885-19\/926502_660799260674161_1140713911_a.jpg","id":"749513181","full_name":""},{"username":"min_herrera21","profile_picture":"https:\/\/igcdn-photos-g-a.akamaihd.net\/hphotos-ak-xap1\/t51.2885-19\/10731798_1481863648769814_938765749_a.jpg","id":"200924818","full_name":"Yasmin
+        Herrera"},{"username":"pestalent","profile_picture":"https:\/\/igcdn-photos-g-a.akamaihd.net\/hphotos-ak-xap1\/t51.2885-19\/10724682_706620732763958_1549158092_a.jpg","id":"1388398466","full_name":"Promotional
+        Event Staffing"},{"username":"occupiedppl","profile_picture":"https:\/\/igcdn-photos-g-a.akamaihd.net\/hphotos-ak-xfp1\/t51.2885-19\/10387765_1464852540419838_1066523397_a.jpg","id":"260282200","full_name":""},{"username":"swag_sheizaf","profile_picture":"https:\/\/igcdn-photos-a-a.akamaihd.net\/hphotos-ak-xaf1\/t51.2885-19\/10747848_1394315090829200_579426196_a.jpg","id":"1206474431","full_name":"Swag\ud83d\ude0e"},{"username":"khalid_ahmed96","profile_picture":"https:\/\/instagramimages-a.akamaihd.net\/profiles\/profile_419397541_75sq_1374095084.jpg","id":"419397541","full_name":"Khalid
+        Ahmed"},{"username":"puste_blume87","profile_picture":"https:\/\/igcdn-photos-a-a.akamaihd.net\/hphotos-ak-xap1\/t51.2885-19\/10691923_1462501397365720_271784698_a.jpg","id":"259496575","full_name":"Luise\ud83c\udf80"},{"username":"dance_dancer5678","profile_picture":"https:\/\/igcdn-photos-f-a.akamaihd.net\/hphotos-ak-xpa1\/t51.2885-19\/10584617_1476760439244533_1187538171_a.jpg","id":"1453302667","full_name":""},{"username":"johhntrx","profile_picture":"https:\/\/igcdn-photos-a-a.akamaihd.net\/hphotos-ak-xap1\/t51.2885-19\/10560993_1541416729405200_209617767_a.jpg","id":"1457330315","full_name":"Johnnny
+        \ud83d\ude1c"},{"username":"human.nature_","profile_picture":"https:\/\/instagramimages-a.akamaihd.net\/profiles\/profile_276549047_75sq_1396831237.jpg","id":"276549047","full_name":""},{"username":"overdoseonray","profile_picture":"https:\/\/igcdn-photos-c-a.akamaihd.net\/hphotos-ak-xpf1\/t51.2885-19\/10584689_295715480610698_1149010511_a.jpg","id":"1452443062","full_name":""},{"username":"fashion_cj","profile_picture":"https:\/\/igcdn-photos-d-a.akamaihd.net\/hphotos-ak-xfa1\/t51.2885-19\/10608022_617485045039091_1536104817_a.jpg","id":"1452943520","full_name":"FASHION
+        \/ MAKEUP \/ BEAUTY"},{"username":"viirginia22","profile_picture":"https:\/\/igcdn-photos-f-a.akamaihd.net\/hphotos-ak-xfa1\/t51.2885-19\/10549784_1548285252104141_1195629397_a.jpg","id":"532832460","full_name":""},{"username":"attackofthelashes","profile_picture":"https:\/\/igcdn-photos-c-a.akamaihd.net\/hphotos-ak-xfp1\/t51.2885-19\/10375776_316899635128098_250236449_a.jpg","id":"1308210667","full_name":"Attack
+        Of The Lashes"},{"username":"voteshead","profile_picture":"https:\/\/igcdn-photos-d-a.akamaihd.net\/hphotos-ak-xap1\/t51.2885-19\/10535000_470820913020659_427366736_a.jpg","id":"1425696208","full_name":"Angela
+        Shead \ud83d\udc99\ud83d\udc8b\ud83d\udc85\ud83d\udc84\ud83d\udc60\ud83c\udf39"},{"username":"jasmineplum","profile_picture":"https:\/\/igcdn-photos-g-a.akamaihd.net\/hphotos-ak-xpa1\/t51.2885-19\/927437_352729108228774_1789394987_a.jpg","id":"1449736279","full_name":"Jasmine
+        Plum"},{"username":"ceejaye_love","profile_picture":"https:\/\/igcdn-photos-g-a.akamaihd.net\/hphotos-ak-xfa1\/t51.2885-19\/10995224_1420971384869630_2011135574_a.jpg","id":"331258797","full_name":"Courtney
+        Michelle"},{"username":"nothingszhg","profile_picture":"https:\/\/instagramimages-a.akamaihd.net\/profiles\/anonymousUser.jpg","id":"835426508","full_name":"MissAnyWay"},{"username":"libyrivero","profile_picture":"https:\/\/igcdn-photos-a-a.akamaihd.net\/hphotos-ak-xaf1\/t51.2885-19\/11123866_563056970502544_1135220156_a.jpg","id":"280280095","full_name":"Lisbeth
+        Rivero"},{"username":"ashlyndanielle91","profile_picture":"https:\/\/instagramimages-a.akamaihd.net\/profiles\/profile_192425447_75sq_1392051575.jpg","id":"192425447","full_name":"Ashlyn"},{"username":"carlymodeling16","profile_picture":"https:\/\/igcdn-photos-b-a.akamaihd.net\/hphotos-ak-xfp1\/t51.2885-19\/10424488_310473202446481_94438303_a.jpg","id":"1451024015","full_name":"Carly"},{"username":"essiegrams_","profile_picture":"https:\/\/igcdn-photos-h-a.akamaihd.net\/hphotos-ak-xpf1\/t51.2885-19\/10598749_287405654776255_699367586_a.jpg","id":"1449899731","full_name":""},{"username":"siennaklynch","profile_picture":"https:\/\/igcdn-photos-g-a.akamaihd.net\/hphotos-ak-xaf1\/t51.2885-19\/10963803_589826724481070_641677212_a.jpg","id":"574096419","full_name":"Sienna
+        Lynch \u2764\ufe0f"},{"username":"kaylakduplessis","profile_picture":"https:\/\/igcdn-photos-g-a.akamaihd.net\/hphotos-ak-xaf1\/t51.2885-19\/11098204_447634835410582_1608214810_a.jpg","id":"672399641","full_name":"KaylaAnn"},{"username":"boswood91","profile_picture":"https:\/\/igcdn-photos-a-a.akamaihd.net\/hphotos-ak-xaf1\/t51.2885-19\/11138050_1592604714327344_1959850592_a.jpg","id":"1421070731","full_name":"Brandi
+        Oswood"},{"username":"vintagebeauty1992","profile_picture":"https:\/\/igcdn-photos-h-a.akamaihd.net\/hphotos-ak-xpa1\/t51.2885-19\/10731529_977879615561975_466224624_a.jpg","id":"507667696","full_name":"Beauty"},{"username":"sabrinaannmarie92","profile_picture":"https:\/\/igcdn-photos-d-a.akamaihd.net\/hphotos-ak-xfp1\/t51.2885-19\/1390123_1057795827567787_831108931_a.jpg","id":"249386491","full_name":"Sabrina
+        DiGiovanni"},{"username":"dollface21xo","profile_picture":"https:\/\/igcdn-photos-g-a.akamaihd.net\/hphotos-ak-xaf1\/t51.2885-19\/10809954_1571463016408022_947738567_a.jpg","id":"439044334","full_name":"D
+        O L L F A C E \u2665"}]}'
+    http_version: 
+  recorded_at: Fri, 17 Apr 2015 14:48:09 GMT
+recorded_with: VCR 2.9.3

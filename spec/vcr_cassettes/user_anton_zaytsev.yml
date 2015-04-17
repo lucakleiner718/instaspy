@@ -1,0 +1,95 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: https://api.instagram.com/v1/users/search.json?access_token=35938880.1580f11.53c87da9327c4ea7bff07a2cea3602ca&q=anton_zaytsev
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept:
+      - application/json; charset=utf-8
+      User-Agent:
+      - Instagram Ruby Gem 1.1.3
+      Authorization:
+      - Token token="35938880.1580f11.53c87da9327c4ea7bff07a2cea3602ca"
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Server:
+      - nginx
+      Date:
+      - Fri, 17 Apr 2015 14:14:35 GMT
+      Content-Type:
+      - application/json; charset=utf-8
+      X-Ratelimit-Remaining:
+      - '4415'
+      Content-Language:
+      - en
+      Expires:
+      - Sat, 01 Jan 2000 00:00:00 GMT
+      Vary:
+      - Cookie, Accept-Language, Accept-Encoding
+      X-Ratelimit-Limit:
+      - '5000'
+      Pragma:
+      - no-cache
+      Cache-Control:
+      - private, no-cache, no-store, must-revalidate
+      Set-Cookie:
+      - csrftoken=0730a5280216c7ab984e063ad4aa7fce; expires=Fri, 15-Apr-2016 14:14:35
+        GMT; Max-Age=31449600; Path=/
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '2105'
+    body:
+      encoding: UTF-8
+      string: '{"meta":{"code":200},"data":[{"username":"anton_zaytsev","profile_picture":"https:\/\/instagramimages-a.akamaihd.net\/profiles\/profile_35938880_75sq_1388841906.jpg","id":"35938880","full_name":"Anton
+        Zaytsev"},{"username":"antonzaytsev","profile_picture":"https:\/\/igcdn-photos-d-a.akamaihd.net\/hphotos-ak-xap1\/t51.2885-19\/925962_706668179382243_1376308820_a.jpg","id":"9834484","full_name":"Antosha"},{"username":"iamzaytsev","profile_picture":"https:\/\/igcdn-photos-h-a.akamaihd.net\/hphotos-ak-xpa1\/t51.2885-19\/10691654_1465147510439711_1622589997_a.jpg","id":"399397783","full_name":"A
+        n t o n Z a y t s e v"},{"username":"antonios_7","profile_picture":"https:\/\/igcdn-photos-f-a.akamaihd.net\/hphotos-ak-xap1\/t51.2885-19\/10809630_1556711404564069_649857158_a.jpg","id":"690642450","full_name":"Anton
+        Zaytsev"},{"username":"anton_zaytsev_","profile_picture":"https:\/\/igcdn-photos-e-a.akamaihd.net\/hphotos-ak-xfa1\/t51.2885-19\/11004980_1008867932475044_1529010418_a.jpg","id":"378455169","full_name":""},{"username":"graspiko","profile_picture":"https:\/\/instagramimages-a.akamaihd.net\/profiles\/profile_50660873_75sq_1384644077.jpg","id":"50660873","full_name":"Anton
+        Zaytsev"},{"username":"antonzaytsevsochi","profile_picture":"https:\/\/instagramimages-a.akamaihd.net\/profiles\/profile_514844127_75sq_1390222221.jpg","id":"514844127","full_name":"\u0417\u0430\u0439\u0446\u0435\u0432
+        \u0410\u043d\u0442\u043e\u043d"},{"username":"zai4ez","profile_picture":"https:\/\/igcdn-photos-c-a.akamaihd.net\/hphotos-ak-xap1\/t51.2885-19\/10598732_1448659052067978_1089946882_a.jpg","id":"320507358","full_name":"\u0410\u043d\u0442\u043e\u043d
+        \u0417\u0430\u0439\u0446\u0435\u0432"},{"username":"antoshkazay","profile_picture":"https:\/\/instagramimages-a.akamaihd.net\/profiles\/profile_25148461_75sq_1362212393.jpg","id":"25148461","full_name":"\u0410\u043d\u0442\u043e\u043d
+        \u0417\u0430\u0439\u0446\u0435\u0432"},{"username":"zaycev98","profile_picture":"https:\/\/igcdn-photos-d-a.akamaihd.net\/hphotos-ak-xaf1\/t51.2885-19\/10903596_1537061016570803_1300958221_a.jpg","id":"379217479","full_name":"\u0410\u043d\u0442\u043e\u043d
+        \u0417\u0430\u0439\u0446\u0435\u0432"},{"username":"anton__zaytsev","profile_picture":"https:\/\/instagramimages-a.akamaihd.net\/profiles\/profile_1239900738_75sq_1396686153.jpg","id":"1239900738","full_name":""},{"username":"mr.krill","profile_picture":"https:\/\/igcdn-photos-f-a.akamaihd.net\/hphotos-ak-xap1\/t51.2885-19\/10735071_1495512030734461_1878451569_a.jpg","id":"1532526189","full_name":"\u0410\u043d\u0442\u043e\u043d
+        \u0417\u0430\u0439\u0446\u0435\u0432"},{"username":"zaycev_anton","profile_picture":"https:\/\/igcdn-photos-h-a.akamaihd.net\/hphotos-ak-xpa1\/t51.2885-19\/10299685_1479415502343831_725465832_a.jpg","id":"1363862799","full_name":"\u0410\u043d\u0442\u043e\u043d
+        \u0417\u0430\u0439\u0446\u0435\u0432"},{"username":"zaya_zaykin","profile_picture":"https:\/\/igcdn-photos-d-a.akamaihd.net\/hphotos-ak-xaf1\/t51.2885-19\/11033067_689203874523611_1069148042_a.jpg","id":"1764365958","full_name":"\u0417\u0430\u0439\u0446\u0435\u0432
+        \u0410\u043d\u0442\u043e\u043d"},{"username":"anton_tha_creator","profile_picture":"https:\/\/igcdn-photos-h-a.akamaihd.net\/hphotos-ak-xaf1\/t51.2885-19\/10919230_594308330669215_1523989726_a.jpg","id":"279701315","full_name":"\u0410\u043d\u0442\u043e\u043d
+        \u0417\u0430\u0439\u0446\u0435\u0432"},{"username":"i_am_zaicev","profile_picture":"https:\/\/igcdn-photos-e-a.akamaihd.net\/hphotos-ak-xaf1\/t51.2885-19\/11023288_1415985328704276_1497345211_a.jpg","id":"530015970","full_name":"Anton
+        Zaicev \u00ae"},{"username":"antonzaicev87","profile_picture":"https:\/\/igcdn-photos-e-a.akamaihd.net\/hphotos-ak-xaf1\/t51.2885-19\/10808982_1565168747035420_967021482_a.jpg","id":"589805181","full_name":"\u0410\u043d\u0442\u043e\u043d
+        \u0417\u0430\u0439\u0446\u0435\u0432"},{"username":"antoha060191","profile_picture":"https:\/\/igcdn-photos-a-a.akamaihd.net\/hphotos-ak-xfp1\/t51.2885-19\/10691677_597806667008288_1642361242_a.jpg","id":"1510251135","full_name":"\u0410\u043d\u0442\u043e\u043d
+        \u0417\u0430\u0439\u0446\u0435\u0432"},{"username":"anton.zaytsev","profile_picture":"https:\/\/igcdn-photos-a-a.akamaihd.net\/hphotos-ak-xfp1\/t51.2885-19\/10666038_765310920250896_1949700174_a.jpg","id":"1772123562","full_name":"\u0410\u043d\u0442\u043e\u043d"},{"username":"antonnzaytsev","profile_picture":"https:\/\/igcdn-photos-e-a.akamaihd.net\/hphotos-ak-xfa1\/t51.2885-19\/10948637_1623709101196852_149809330_a.jpg","id":"1627516609","full_name":"Anton
+        Zaytsev"},{"username":"zaycev_ak","profile_picture":"https:\/\/igcdn-photos-g-a.akamaihd.net\/hphotos-ak-xaf1\/t51.2885-19\/10957303_392770027514590_1860681908_a.jpg","id":"1387074514","full_name":"\u0417\u0430\u0439\u0446\u0435\u0432
+        \u0410\u043d\u0442\u043e\u043d"},{"username":"anton_alexandrovich92","profile_picture":"https:\/\/igcdn-photos-e-a.akamaihd.net\/hphotos-ak-xpa1\/t51.2885-19\/10296694_339392509597836_1130265286_a.jpg","id":"1414551520","full_name":"\u0410\u043d\u0442\u043e\u043d
+        \u0417\u0430\u0439\u0446\u0435\u0432"},{"username":"anton_zvs","profile_picture":"https:\/\/instagramimages-a.akamaihd.net\/profiles\/anonymousUser.jpg","id":"1637821975","full_name":"\u0410\u043d\u0442\u043e\u043d
+        \u0417\u0430\u0439\u0446\u0435\u0432"},{"username":"tonizaytsev","profile_picture":"https:\/\/igcdn-photos-a-a.akamaihd.net\/hphotos-ak-xaf1\/t51.2885-19\/10899553_1377756592529952_172663076_a.jpg","id":"330263699","full_name":"\u0410\u043d\u0442\u043e\u043d
+        \u0417\u0430\u0439\u0446\u0435\u0432"},{"username":"antoha280","profile_picture":"https:\/\/igcdn-photos-g-a.akamaihd.net\/hphotos-ak-xfa1\/t51.2885-19\/10401616_680984038640806_1477185304_a.jpg","id":"1380218289","full_name":"Anton
+        Zaytsev"},{"username":"ant440","profile_picture":"https:\/\/igcdn-photos-a-a.akamaihd.net\/hphotos-ak-xpa1\/t51.2885-19\/10453934_725331010838816_1759111260_a.jpg","id":"208880671","full_name":"Anton
+        Zaytsev"},{"username":"hardl54rus","profile_picture":"https:\/\/instagramimages-a.akamaihd.net\/profiles\/profile_1080833538_75sq_1391965690.jpg","id":"1080833538","full_name":"\u0410\u043d\u0442\u043e\u043d
+        \u0417\u0430\u0439\u0446\u0435\u0432"},{"username":"anton_zaytsev99","profile_picture":"https:\/\/igcdn-photos-g-a.akamaihd.net\/hphotos-ak-xfa1\/t51.2885-19\/10903685_794157377330926_420729194_a.jpg","id":"1501026559","full_name":""},{"username":"bugss05","profile_picture":"https:\/\/instagramimages-a.akamaihd.net\/profiles\/anonymousUser.jpg","id":"1448823738","full_name":"\u0410\u043d\u0442\u043e\u043d
+        \u0417\u0430\u0439\u0446\u0435\u0432"},{"username":"69tox94","profile_picture":"https:\/\/igcdn-photos-c-a.akamaihd.net\/hphotos-ak-xpa1\/t51.2885-19\/926261_1525309091032154_197031705_a.jpg","id":"998047122","full_name":"\u0410\u043d\u0442\u043e\u043d
+        \u0417\u0430\u0439\u0446\u0435\u0432"},{"username":"antonzbravo","profile_picture":"https:\/\/instagramimages-a.akamaihd.net\/profiles\/profile_242914201_75sq_1351278164.jpg","id":"242914201","full_name":"Anton  Zaytsev"},{"username":"zaytsevanton","profile_picture":"https:\/\/igcdn-photos-f-a.akamaihd.net\/hphotos-ak-xaf1\/t51.2885-19\/11123664_462757593876621_991349992_a.jpg","id":"1346039255","full_name":"Anton
+        Zaytsev"},{"username":"antoshka_zaytsev","profile_picture":"https:\/\/instagramimages-a.akamaihd.net\/profiles\/profile_1004052806_75sq_1390336085.jpg","id":"1004052806","full_name":"\u0410\u043d\u0442\u043e\u043d"},{"username":"band_eross","profile_picture":"https:\/\/instagramimages-a.akamaihd.net\/profiles\/profile_301150845_75sq_1360087544.jpg","id":"301150845","full_name":"\u0410\u043d\u0442\u043e\u043d
+        \u0417\u0430\u0439\u0446\u0435\u0432"},{"username":"azytut","profile_picture":"https:\/\/instagramimages-a.akamaihd.net\/profiles\/profile_286969245_75sq_1357939733.jpg","id":"286969245","full_name":"Anton
+        Zaytsev"},{"username":"_anton_zaytsev_","profile_picture":"https:\/\/igcdn-photos-h-a.akamaihd.net\/hphotos-ak-xpa1\/t51.2885-19\/10748180_952614298086071_1886355623_a.jpg","id":"1470459134","full_name":"\u041f\u0440\u0438\u0432\u0435\u0442"},{"username":"evil_hare","profile_picture":"https:\/\/igcdn-photos-d-a.akamaihd.net\/hphotos-ak-xfa1\/t51.2885-19\/11143070_901464053249963_515698234_a.jpg","id":"1595492061","full_name":"\u0417\u0430\u0439\u0446\u0435\u0432
+        \u0410\u043d\u0442\u043e\u043d"},{"username":"toxa737777","profile_picture":"https:\/\/igcdn-photos-b-a.akamaihd.net\/hphotos-ak-xpa1\/t51.2885-19\/10518095_1424654581144017_775400583_a.jpg","id":"1426386091","full_name":"\u0410\u043d\u0442\u043e\u043d
+        \u0417\u0430\u0439\u0446\u0435\u0432"},{"username":"toshechka__kartoshechka","profile_picture":"https:\/\/instagramimages-a.akamaihd.net\/profiles\/anonymousUser.jpg","id":"1551913416","full_name":"\u0410\u043d\u0442\u043e\u043d
+        \u0417\u0430\u0439\u0446\u0435\u0432"},{"username":"anton_zaytsev555","profile_picture":"https:\/\/igcdn-photos-a-a.akamaihd.net\/hphotos-ak-xaf1\/t51.2885-19\/10986037_909308725785896_564026409_a.jpg","id":"1701671648","full_name":"\u0410\u043d\u0442\u043e\u043d
+        \u0417\u0430\u0439\u0446\u0435\u0432"},{"username":"osiris0atlant","profile_picture":"https:\/\/igcdn-photos-f-a.akamaihd.net\/hphotos-ak-xap1\/t51.2885-19\/928827_555979337836461_1366714450_a.jpg","id":"580895386","full_name":"Anton
+        Zaytsev"},{"username":"antonzaysev","profile_picture":"https:\/\/igcdn-photos-b-a.akamaihd.net\/hphotos-ak-xpf1\/t51.2885-19\/10358177_390527724419337_73720908_a.jpg","id":"29155215","full_name":"Anton
+        Zaytsev"},{"username":"antzaytsev","profile_picture":"https:\/\/instagramimages-a.akamaihd.net\/profiles\/profile_143558539_75sq_1337205499.jpg","id":"143558539","full_name":"Anton
+        Zaytsev"},{"username":"anton_zaytsev7","profile_picture":"https:\/\/igcdn-photos-f-a.akamaihd.net\/hphotos-ak-xfp1\/t51.2885-19\/10665912_307973542715829_1376401823_a.jpg","id":"42553207","full_name":""},{"username":"antonioz1984","profile_picture":"https:\/\/igcdn-photos-f-a.akamaihd.net\/hphotos-ak-xpa1\/t51.2885-19\/10387865_497529163724781_1037811118_a.jpg","id":"1426137871","full_name":"\u0410\u043d\u0442\u043e\u043d
+        \u0417\u0430\u0439\u0446\u0435\u0432"},{"username":"zaycprotiv","profile_picture":"https:\/\/instagramimages-a.akamaihd.net\/profiles\/profile_292529659_75sq_1373201613.jpg","id":"292529659","full_name":"\u0410\u043d\u0442\u043e\u043d
+        \u0417\u0430\u0439\u0446\u0435\u0432"},{"username":"zaycevanton","profile_picture":"https:\/\/instagramimages-a.akamaihd.net\/profiles\/profile_489989007_75sq_1375361163.jpg","id":"489989007","full_name":"\u0410\u043d\u0442\u043e\u043d
+        \u0417\u0430\u0439\u0446\u0435\u0432"},{"username":"sigmund483","profile_picture":"https:\/\/igcdn-photos-g-a.akamaihd.net\/hphotos-ak-xpa1\/t51.2885-19\/10693640_557433931049902_421905484_a.jpg","id":"1491831098","full_name":"\u0417\u0430\u0439\u0446\u0435\u0432
+        \u0410\u043d\u0442\u043e\u043d"},{"username":"toxaaaaaaaa","profile_picture":"https:\/\/igcdn-photos-h-a.akamaihd.net\/hphotos-ak-xfp1\/t51.2885-19\/10413088_252152461655311_985321756_a.jpg","id":"1077556253","full_name":"\u0410\u043d\u0442\u043e\u043d
+        \u0417\u0430\u0439\u0446\u0435\u0432"},{"username":"anton243756","profile_picture":"https:\/\/instagramimages-a.akamaihd.net\/profiles\/profile_310008396_75sq_1361193875.jpg","id":"310008396","full_name":"Anton  Zaytsev"}]}'
+    http_version: 
+  recorded_at: Fri, 17 Apr 2015 14:14:36 GMT
+recorded_with: VCR 2.9.3
