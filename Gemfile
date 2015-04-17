@@ -35,9 +35,9 @@ end
 
 group :production do
   gem 'puma', '~> 2.8.2'                                    # Production Web Server
-  # gem 's3-mysql-backup', require: false
 end
 
+gem 'jquery-ui-rails'
 gem 'mysql2'                              # Use mysql as the database for Active Record
 gem 'pry-rails'
 gem 'instagram'

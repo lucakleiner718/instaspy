@@ -30,9 +30,12 @@ class ReportsController < ApplicationController
     @report = Report.new report_params
     @report.output_data.select!{|r| r.present?}
     @report.status = 'new'
+    @report.date_from = Date.strptime(report_params['date_from'], '%m/%d/%Y') if report_params['date_from'].present?
+    @report.date_to = Date.strptime(report_params['date_to'], '%m/%d/%Y') if report_params['date_to'].present?
 
     if @report.save
       session['report_notify_email'] = @report.notify_email if @report.notify_email.present?
+
       csv_string = Report.process_input report_params[:input]
 
       Dir.mkdir(Rails.root.join("public/reports/reports_data")) unless Dir.exist?(Rails.root.join("public/reports/reports_data"))
@@ -69,6 +72,6 @@ class ReportsController < ApplicationController
   end
 
   def report_params
-    params.require(:report).permit(:input, :format, :notify_email, output_data: [])
+    params.require(:report).permit(:input, :format, :notify_email, :date_from, :date_to, output_data: [])
   end
 end

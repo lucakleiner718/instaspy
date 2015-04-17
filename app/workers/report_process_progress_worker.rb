@@ -13,6 +13,8 @@ class ReportProcessProgressWorker
         Report::Followers.reports_in_process report
       when 'users'
         Report::Users.reports_in_process report
+      when 'tags'
+        Report::Tags.reports_in_process report
     end
   end
 
