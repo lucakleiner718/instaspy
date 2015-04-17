@@ -6,7 +6,7 @@ class UserWorker
 
   def perform users_ids, force=false
     User.where(id: users_ids).each do |u|
-      u.update_info! force
+      u.update_info! force: force
     end
   end
 
