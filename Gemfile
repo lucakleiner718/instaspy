@@ -32,8 +32,8 @@ group :development, :test do
   gem 'rspec-rails', '~> 3.0'
   gem 'factory_girl_rails'
   gem 'spring-commands-rspec'
-  gem 'guard-rspec'
-  gem 'rb-fsevent' if `uname` =~ /Darwin/
+  gem 'guard-rspec', require: false
+  # gem 'rb-fsevent' if `uname` =~ /Darwin/
   gem 'vcr'
   gem 'database_cleaner'
   gem 'webmock', require: false
