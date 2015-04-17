@@ -136,8 +136,9 @@ class Media < ActiveRecord::Base
     #   Tag.connection.execute("UPDATE tags SET media_count=media_count-1 WHERE id in (#{deleted_tags.join(',')})")
     # end
     if added_tags.size > 0
-      Media.connection.execute("INSERT IGNORE INTO media_tags (media_id, tag_id) VALUES #{added_tags.map{|tid| "(#{self.id}, #{tid})"}.join(',')}")
-      Media.connection.execute("UPDATE tags SET media_count=media_count+1 WHERE id in (#{added_tags.join(',')})")
+      UpdateTagMediaCounterWorker.perform_async self.id, added_tags
+      # Media.connection.execute("INSERT IGNORE INTO media_tags (media_id, tag_id) VALUES #{added_tags.map{|tid| "(#{self.id}, #{tid})"}.join(',')}")
+      # Media.connection.execute("UPDATE tags SET media_count=media_count+1 WHERE id in (#{added_tags.join(',')})")
     end
   end
 
