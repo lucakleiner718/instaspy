@@ -607,7 +607,7 @@ class Reporter
     Rails.env.production? ? "http://107.170.110.156/#{filepath}" : "http://localhost:3000/#{filepath}"
   end
 
-  def process_usernames_file filename
+  def self.process_usernames_file filename
     csv = CSV.read filename
     csv.each_with_index do |row, i|
       user = User.get row[0]
@@ -615,6 +615,22 @@ class Reporter
         csv[i][1] = user.insta_id
       end
     end
+  end
+
+  def self.influencers
+    User.where('followed_by > ?', 1_000).where(private: false).where('media_amount > 0').where('avg_likes is null')
+    User.where('followed_by > ?', 1_000).where(private: false).where('media_amount > 0').where('avg_likes is not null')
+
+    ids = User.connection.execute("
+      SELECT a.id
+      FROM (
+        SELECT avg_likes/followed_by as eng, id
+        FROM users
+        WHERE followed_by > 1000 AND avg_likes is not null
+      ) AS a
+      WHERE a.eng > 0.015
+    ").to_a.map(&:first)
+
   end
 
 end
