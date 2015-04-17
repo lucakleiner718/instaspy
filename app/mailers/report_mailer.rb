@@ -22,4 +22,10 @@ class ReportMailer < ActionMailer::Base
     attachments[File.basename(@report.result_data)] = File.read(Rails.root.join('public', @report.result_data))
     mail to: @report.notify_email, subject: "Requested InstaSpy users report"
   end
+
+  def tags report_id
+    @report = Report.find(report_id)
+    attachments[File.basename(@report.result_data)] = File.read(Rails.root.join('public', @report.result_data))
+    mail to: @report.notify_email, subject: "Requested InstaSpy tags publishers report"
+  end
 end

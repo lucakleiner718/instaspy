@@ -3,7 +3,7 @@ jQuery ($) ->
     maxDate: '0'
 
   $('#report_format').on 'change', ->
-    if $(this).val() == 'tags'
+    if $(this).val() == 'tags' || $(this).val() == 'followers'
       $('.report_date_from, .report_date_to').show()
     else
       $('.report_date_from, .report_date_to').hide()
