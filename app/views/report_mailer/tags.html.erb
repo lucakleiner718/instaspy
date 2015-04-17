@@ -1,11 +1,15 @@
 <table>
   <thead>
   <tr>
+    <th>Date from</th>
+    <th>Date to</th>
     <th>Input tags amount</th>
   </tr>
   </thead>
   <tbody>
   <tr>
+    <td><%= @report.date_from.strftime('%m/%d/%Y') if @report.date_from %></td>
+    <td><%= @report.date_to.strftime('%m/%d/%Y') if @report.date_to %></td>
     <td><%= @report.processed_csv.size %></td>
   </tr>
   </tbody>
