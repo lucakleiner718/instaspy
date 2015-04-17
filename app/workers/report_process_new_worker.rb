@@ -13,6 +13,8 @@ class ReportProcessNewWorker
         Report::Followers.reports_new report
       when 'users'
         Report::Users.reports_new report
+      when 'tags'
+        Report::Tags.reports_new report
     end
   end
 

@@ -67,7 +67,10 @@ module Report::Followers
       end
 
       # ids of ALL followers of provided users
-      followers_ids = Follower.where(user_id: report.processed_ids).pluck(:follower_id).uniq
+      followers_ids = Follower.where(user_id: report.processed_ids)
+      followers_ids = followers_ids.where('followed_at >= ?', report.date_from) if report.date_from
+      followers_ids = followers_ids.where('followed_at <= ?', report.date_to) if report.date_to
+      followers_ids = followers_ids.pluck(:follower_id).uniq
 
       # update info for not updated followers
       unless report.steps.include?('followers_info')

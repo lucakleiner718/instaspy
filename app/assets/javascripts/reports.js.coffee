@@ -1,3 +1,11 @@
-# Place all the behaviors and hooks related to the matching controller here.
-# All this logic will automatically be available in application.js.
-# You can use CoffeeScript in this file: http://coffeescript.org/
+jQuery ($) ->
+  $('.report_date_range').datepicker
+    maxDate: '0'
+
+  $('#report_format').on 'change', ->
+    if $(this).val() == 'tags' || $(this).val() == 'followers'
+      $('.report_date_from, .report_date_to').show()
+    else
+      $('.report_date_from, .report_date_to').hide()
+
+  $('#report_format').trigger('change')

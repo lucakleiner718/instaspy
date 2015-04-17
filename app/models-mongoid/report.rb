@@ -14,6 +14,8 @@ class Report
   field :output_data, type: Array, default: []
   field :not_processed, type: Array, default: []
   field :steps, type: Array, default: []
+  field :date_from, type: DateTime
+  field :date_to, type: DateTime
   include Mongoid::Timestamps
 
   # probably not best way

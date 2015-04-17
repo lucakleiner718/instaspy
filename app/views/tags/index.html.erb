@@ -15,6 +15,7 @@
     <% if params[:filter] == 'observed' %>
       <th>Started tracking</th>
     <% end %>
+    <th></th>
   </tr>
   </thead>
   <tbody>
@@ -25,6 +26,7 @@
       <% if params[:filter] == 'observed' %>
         <td><%= tag.observed_tag.created_at.strftime('%m/%d/%Y') %></td>
       <% end %>
+      <td><%= link_to 'Report', new_report_path(params: {format: 'tags', input: tag.name }), target: :_blank %></td>
     </tr>
   <% end %>
   </tbody>
