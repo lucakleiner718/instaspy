@@ -21,7 +21,9 @@ RSpec.describe Media, type: :model do
 
   it "should update media" do
     media = FactoryGirl.create(:media2)
-    media.update_info!
+    VCR.use_cassette("media_#{media.insta_id}") do
+      media.update_info!
+    end
 
     expect(media.created_time).to_not be_nil
     expect(media.created_at).to_not be_nil
@@ -41,6 +43,22 @@ RSpec.describe Media, type: :model do
       expect(media.location_lat).to be_nil
       expect(media.location_lng).to be_nil
     end
+  end
+
+  it "should update location" do
+    media = FactoryGirl.create(:media_location)
+    VCR.use_cassette("media_#{media.insta_id}_location") do
+      media.update_location!
+    end
+
+    expect(['US', 'United States']).to include media.location_country
+    expect(['FL', 'Florida']).to include media.location_state
+    expect(['Hollywood', 'Broward']).to include media.location_city
+  end
+
+  it "should return media" do
+    media = FactoryGirl.create(:media2)
+    expect(Media.get(media.insta_id).id).to eq media.id
   end
 
 end
