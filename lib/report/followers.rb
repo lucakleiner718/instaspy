@@ -196,8 +196,10 @@ module Report::Followers
       filepath = "reports/users-followers-#{files.size}-#{Time.now.to_i}.zip"
       File.write("public/#{filepath}", binary_data)
       report.result_data = filepath
-      report.save
     end
+
+    report.finished_at = Time.now
+    report.save
 
     ReportMailer.followers(report.id).deliver if report.notify_email.present?
   end

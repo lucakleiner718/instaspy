@@ -146,8 +146,10 @@ module Report::Users
       filepath = "reports/#{basename}.zip"
       File.write("public/#{filepath}", binary_data)
       report.result_data = filepath
-      report.save
     end
+
+    report.finished_at = Time.now
+    report.save
 
     ReportMailer.users(report.id).deliver if report.notify_email.present?
   end
