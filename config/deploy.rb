@@ -12,7 +12,7 @@ set :pty, false
 set :log_level, :info #:debug
 
 set :linked_files, %w{config/database.yml config/mongoid.yml .env config/procs.god config/sidekiq.yml config/sidekiq2.yml}
-set :linked_dirs, %w{bin log tmp/pids tmp/cache tmp/sockets vendor/bundle public/system public/reports}
+set :linked_dirs, %w{log tmp/pids tmp/cache tmp/sockets vendor/bundle public/system public/reports}
 
 set :keep_releases, 5
 
@@ -28,6 +28,8 @@ set :sidekiq_timeout, 60
 set :sidekiq_run_in_background, false
 
 set :rvm_ruby_version, '2.1.1@instaspy'
+
+set :bundle_binstubs, nil
 
 namespace :deploy do
 
