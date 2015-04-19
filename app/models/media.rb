@@ -137,7 +137,7 @@ class Media < ActiveRecord::Base
     # end
     if added_tags.size > 0
       begin
-        Media.connection.execute("INSERT IGNORE INTO media_tags (media_id, tag_id) VALUES #{tags_ids.map{|tid| "(#{media_id}, #{tid})"}.join(',')}")
+        Media.connection.execute("INSERT IGNORE INTO media_tags (media_id, tag_id) VALUES #{tags_ids.map{|tid| "(#{self.id}, #{tid})"}.join(',')}")
         Media.connection.execute("UPDATE tags SET media_count=media_count+1 WHERE id in (#{tags_ids.join(',')})")
       rescue Mysql2::Error => e
         if e =~ /Lock wait timeout exceeded/
