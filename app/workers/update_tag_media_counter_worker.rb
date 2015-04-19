@@ -1,7 +1,7 @@
 class UpdateTagMediaCounterWorker
   include Sidekiq::Worker
 
-  sidekiq_options queue: :middle
+  sidekiq_options queue: :middle, retry: 3
 
   def perform media_id, tags_ids
     ActiveRecord::Base.transaction do
