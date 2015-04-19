@@ -30,20 +30,6 @@ class Tag < ActiveRecord::Base
     self.media.limit(limit).map{|media_item| media_item.user}.uniq
   end
 
-  def oldest_media
-    self.media.order('created_time asc').first
-  end
-
-  def newest_media
-    self.media.order('created_time asc').first
-  end
-
-  def self.get_new_media
-    Tag.observed.each do |tag|
-      tag.get_new_media
-    end
-  end
-
   # offset (DateTime) - start point of user grabbing
   # total_limit (integer) - amount of media, stop grabbing when code receive provided amount
   # created_from (DateTime) - last point, until code should grab data
