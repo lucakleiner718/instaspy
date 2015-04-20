@@ -1,7 +1,6 @@
 module Report::Followers
 
   def self.reports_new report
-    ids = []
     processed_input = report.original_csv
     processed_input.map! do |row|
       user = User.get(row[0])
@@ -22,13 +21,7 @@ module Report::Followers
     File.write(Rails.root.join("public", "reports/reports_data/report-#{report.id}-processed-input.csv"), csv_string)
     report.update_attribute :processed_input, "reports/reports_data/report-#{report.id}-processed-input.csv"
 
-    processed_input.each do |row|
-      user = User.find(row[1])
-      ids << UserFollowersWorker.perform_async(user.id, ignore_exists: true)
-    end
-
     report.status = :in_process
-    report.jobs = { followers: ids }
     report.started_at = Time.now
     report.save
   end
@@ -58,10 +51,13 @@ module Report::Followers
 
     if report.steps.include?('user_info')
       unless report.steps.include?('followers')
-        followers_jobs = report.jobs['followers']
-        followers_jobs.map! { |job_id| Sidekiq::Status::get_all job_id }
-        followers_job_progress = followers_jobs.map{|r| r['status'] == 'complete'}.size / followers_jobs.size.to_f * 100
-        if followers_job_progress == 100
+        users = User.where(id: report.processed_ids).map{|u| [u.id, u.followed_by, u.followers.size]}
+        for_update = users.select{|r| r[2]/r[1].to_f < 0.95}
+
+        for_update.each do |row|
+          UserFollowersWorker.perform_async(row[0], ignore_exists: true)
+        end
+        if for_update.size == 0
           report.steps << 'followers'
         end
       end
