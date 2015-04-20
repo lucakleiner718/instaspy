@@ -199,26 +199,19 @@ class User < ActiveRecord::Base
 
   def update_via_http!
     retries = 0
-    # begin
+    begin
       resp = Faraday.new(:url => 'http://instagram.com') do |f|
         f.use FaradayMiddleware::FollowRedirects
         f.adapter :net_http
       end.get("/#{self.username}/") do |req|
         req.headers["User-Agent"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.93 Safari/537.36"
       end
-
-      # resp = Curl::Easy.perform("/#{self.username}/") do |curl|
-      #   curl.headers["User-Agent"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.93 Safari/537.36"
-      #   curl.verbose = Rails.env.development?
-      #   curl.follow_location = true
-      # end
-    # rescue Curl::Err::HostResolutionError, Curl::Err::SSLConnectError, Curl::Err::GotNothingError,
-    #   Curl::Err::TimeoutError => e
-    #   retries += 1
-    #   sleep 10*retries
-    #   retry if retries <= 5
-    #   return false
-    # end
+    rescue Faraday::ConnectionFailed => e
+      retries += 1
+      sleep 10*retries
+      retry if retries <= 5
+      return false
+    end
 
     # accounts is private and username is changed
     # so we don't have any way to get new username for user

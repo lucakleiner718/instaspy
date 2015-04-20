@@ -118,5 +118,8 @@ RSpec.describe User, type: :model do
     expect(user.email).to eq 'email@gmail.com'
   end
 
+  it 'should update location!' do
+
+  end
 
 end
