@@ -13,19 +13,19 @@ class ReportMailer < ActionMailer::Base
 
   def followers report_id
     @report = Report.find(report_id)
-    attachments[File.basename(@report.result_data)] = File.read(Rails.root.join('public', @report.result_data))
+    @file = "http://#{Rails.env.production? ? "107.170.110.156" : "localhost:3000"}/#{@report.result_data}"
     mail to: @report.notify_email, subject: "Requested InstaSpy followers report"
   end
 
   def users report_id
     @report = Report.find(report_id)
-    attachments[File.basename(@report.result_data)] = File.read(Rails.root.join('public', @report.result_data))
+    @file = "http://#{Rails.env.production? ? "107.170.110.156" : "localhost:3000"}/#{@report.result_data}"
     mail to: @report.notify_email, subject: "Requested InstaSpy users report"
   end
 
   def tags report_id
     @report = Report.find(report_id)
-    attachments[File.basename(@report.result_data)] = File.read(Rails.root.join('public', @report.result_data))
+    @file = "http://#{Rails.env.production? ? "107.170.110.156" : "localhost:3000"}/#{@report.result_data}"
     mail to: @report.notify_email, subject: "Requested InstaSpy tags publishers report"
   end
 end
