@@ -68,11 +68,12 @@ module Report::Followers
       followers_ids = followers_ids.where('followed_at <= ?', report.date_to) if report.date_to
       followers_ids = followers_ids.pluck(:follower_id).uniq
 
-      # update info for not updated followers
+      # update followers info, so in report we will have actual media amount, followers and etc. data
       unless report.steps.include?('followers_info')
         not_updated = []
-        followers_ids.in_groups_of(5_000, false) do |ids|
-          not_updated.concat User.where(id: ids).outdated.pluck(:id)
+        followers_ids.in_groups_of(10_000, false) do |ids|
+          users = User.where(id: ids).outdated.pluck(:id, :grabbed_at)
+          not_updated.concat users.select{|r| r[1] < 6.days.ago}.map(&:first)
         end
         if not_updated.size == 0
           report.steps << 'followers_info'

@@ -13,7 +13,7 @@ class User < ActiveRecord::Base
   scope :not_grabbed, -> { where grabbed_at: nil }
   scope :not_private, -> { where private: [nil, false] }
   scope :privates, -> { where private: true }
-  scope :outdated, -> { where('grabbed_at is null OR grabbed_at < ? OR bio is null OR website is null OR follows is null OR followed_by is null OR media_amount IS NULL', 7.days.ago) }
+  scope :outdated, -> (date=7.days) { where('grabbed_at is null OR grabbed_at < ? OR bio is null OR website is null OR follows is null OR followed_by is null OR media_amount IS NULL', date.ago) }
   scope :with_url, -> { where 'website is not null && website != ""' }
   scope :without_likes, -> { where('avg_likes IS NULL OR avg_likes_updated_at is null OR avg_likes_updated_at < ?', 1.month.ago) }
   scope :without_location, -> { where('location_updated_at IS NULL OR location_updated_at < ?', 3.months.ago) }
