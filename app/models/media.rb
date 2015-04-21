@@ -329,7 +329,7 @@ class Media < ActiveRecord::Base
 
     if country == "US" && !country_lookup.states[state]
       st = country_lookup.states.select{|k, v| v['name'] == state}.first
-      state = st.first if st.size > 0
+      state = st.first if st
     end
 
     self.location_country = country
