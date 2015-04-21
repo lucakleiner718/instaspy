@@ -136,16 +136,17 @@ class Media < ActiveRecord::Base
     #   Tag.connection.execute("UPDATE tags SET media_count=media_count-1 WHERE id in (#{deleted_tags.join(',')})")
     # end
     if added_tags.size > 0
-      begin
-        Media.connection.execute("INSERT IGNORE INTO media_tags (media_id, tag_id) VALUES #{tags_ids.map{|tid| "(#{self.id}, #{tid})"}.join(',')}")
-        Media.connection.execute("UPDATE tags SET media_count=media_count+1 WHERE id in (#{tags_ids.join(',')})")
-      rescue Mysql2::Error => e
-        if e =~ /Lock wait timeout exceeded/
-          UpdateTagMediaCounterWorker.perform_async self.id, added_tags
-        else
-          raise e
-        end
-      end
+      # begin
+      #   Media.connection.execute("INSERT IGNORE INTO media_tags (media_id, tag_id) VALUES #{tags_ids.map{|tid| "(#{self.id}, #{tid})"}.join(',')}")
+      #   Media.connection.execute("UPDATE tags SET media_count=media_count+1 WHERE id in (#{tags_ids.join(',')})")
+      # rescue Mysql2::Error => e
+      #   if e =~ /Lock wait timeout exceeded/
+      TagsToMediaWorker.perform_async self.id, added_tags
+      UpdateTagMediaCounterWorker.perform_async added_tags
+        # else
+        #   raise e
+        # end
+      # end
       # Media.connection.execute("INSERT IGNORE INTO media_tags (media_id, tag_id) VALUES #{added_tags.map{|tid| "(#{self.id}, #{tid})"}.join(',')}")
       # Media.connection.execute("UPDATE tags SET media_count=media_count+1 WHERE id in (#{added_tags.join(',')})")
     end
