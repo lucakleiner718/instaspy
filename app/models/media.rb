@@ -236,85 +236,107 @@ class Media < ActiveRecord::Base
       break if lookup_list.size == 0
     end
 
+    country = state = city = country_lookup = nil
+
     row = resp.first
     case row.class.name
       when 'Geocoder::Result::Here'
         address = row.data['Location']['Address']
-        c = Country.find_country_by_alpha3(address['Country'])
-        self.location_country = c ? c.alpha2 : address['Country']
-        self.location_state = address['State']
-        self.location_city = address['City']
+        country_lookup = Country.find_country_by_alpha3(address['Country'])
+
+        country = country_lookup ? country_lookup.alpha2 : address['Country']
+        state = address['State']
+        city = address['City']
       when 'Geocoder::Result::Google'
         row.address_components.each do |address_component|
-          self.location_country = address_component['long_name'] if address_component['types'].include?('country')
-          self.location_state = address_component['long_name'] if address_component['types'].include?('administrative_area_level_1')
-          self.location_city = address_component['long_name'] if address_component['types'].include?('locality')
+          if address_component['types'].include?('country')
+            country = address_component['short_name'] || address_component['long_name']
+          end
+          if address_component['types'].include?('administrative_area_level_1')
+            state = address_component['short_name'] || address_component['long_name']
+          end
+          if address_component['types'].include?('locality')
+            city = address_component['short_name'] || address_component['long_name']
+          end
         end
       when 'Geocoder::Result::Yandex'
         address = row.data['GeoObject']['metaDataProperty']['GeocoderMetaData']['AddressDetails']
 
         begin
-          self.location_country = Country.find_country_by_name(address['Country']['CountryName']).alpha2
+          country = Country.find_country_by_name(address['Country']['CountryName']).alpha2
         rescue
         end
 
-        if self.location_country.blank?
+        if country.blank?
           begin
-            self.location_country = Country.find_country_by_name(address['Country']['Locality']['Premise']['PremiseName']).alpha2
-          rescue
-          end
-        end
-
-        begin
-          self.location_state = address['Country']['AdministrativeArea']['AdministrativeAreaName']
-        rescue => e
-          # binding.pry
-        end
-
-        if self.location_state.blank?
-          begin
-            self.location_state = address['Country']['Thoroughfare']['ThoroughfareName']
-          rescue => e
-            # binding.pry
-          end
-        end
-
-        begin
-          self.location_city = address['Country']['AdministrativeArea']['Locality']['DependentLocality']['DependentLocalityName']
-        rescue => e
-        end
-
-        if self.location_city.blank?
-          begin
-            self.location_city = address['Country']['Locality']['LocalityName']
+            country = Country.find_country_by_name(address['Country']['Locality']['Premise']['PremiseName']).alpha2
           rescue => e
           end
         end
 
-        if self.location_city.blank?
+        begin
+          state = address['Country']['AdministrativeArea']['AdministrativeAreaName']
+        rescue => e
+        end
+
+        if state.blank?
           begin
-            self.location_city = address['Country']['AdministrativeArea']['SubAdministrativeArea']['SubAdministrativeAreaName']
+            state = address['Country']['Thoroughfare']['ThoroughfareName']
+          rescue => e
+          end
+        end
+
+        begin
+          city = address['Country']['AdministrativeArea']['Locality']['DependentLocality']['DependentLocalityName']
+        rescue => e
+        end
+
+        if city.blank?
+          begin
+            city = address['Country']['Locality']['LocalityName']
+          rescue => e
+          end
+        end
+
+        if city.blank?
+          begin
+            city = address['Country']['AdministrativeArea']['SubAdministrativeArea']['SubAdministrativeAreaName']
           rescue => e
           end
         end
 
       when 'Geocoder::Result::Esri'
         address = row.data['address']
-        c = Country.find_country_by_alpha3(address['CountryCode'])
-        self.location_country = c ? c.alpha2 : address['CountryCode']
-        self.location_state = address['Region']
-        self.location_city = address['City']
+        country_lookup = Country.find_country_by_alpha3(address['CountryCode'])
+        country = country_lookup ? country_lookup.alpha2 : address['CountryCode']
+        state = address['Region']
+        city = address['City']
 
       when 'Geocoder::Result::Bing'
-        address =  row.data['address']
+        address = row.data['address']
         country = address['countryRegion']
         country = 'KR' if country == 'South Korea'
         country_lookup = Country.find_country_by_name(country)
 
-        self.location_country = country_lookup ? country_lookup.alpha2 : country
-        self.location_state = address['adminDistrict']
-        self.location_city = address['locality'] || address['adminDistrict2']
+        country = country_lookup ? country_lookup.alpha2 : country
+        state = address['adminDistrict']
+        city = address['locality'] || address['adminDistrict2']
     end
+
+    country_lookup = Country.find_country_by_name(country) unless country_lookup
+    country_lookup = Country.find_country_by_alpha2(country) unless country_lookup
+    country_lookup = Country.find_country_by_alpha3(country) unless country_lookup
+
+    if country == "US" && !country_lookup.states[state]
+      st = country_lookup.states.select{|k, v| v['name'] == state}.first
+      state = st.first if st.size > 0
+    end
+
+    self.location_country = country
+    self.location_state = state
+    self.location_city = city
+
+    self.location
   end
 
   def update_location! *args

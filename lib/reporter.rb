@@ -624,11 +624,11 @@ class Reporter
     ids = User.connection.execute("
       SELECT a.id
       FROM (
-        SELECT avg_likes/followed_by as eng, id
+        SELECT avg_likes/followed_by as eng, id, location_updated_at
         FROM users
-        WHERE followed_by > 1000 AND avg_likes is not null
+        WHERE followed_by > 1000 AND avg_likes > 15
       ) AS a
-      WHERE a.eng > 0.015
+      WHERE a.eng > 0.015 AND location_updated_at is null
     ").to_a.map(&:first)
 
   end
