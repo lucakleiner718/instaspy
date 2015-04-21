@@ -622,13 +622,21 @@ class Reporter
     User.where('followed_by > ?', 1_000).where(private: false).where('media_amount > 0').where('avg_likes is not null')
 
     ids = User.connection.execute("
-      SELECT count(a.id)
-      FROM (
-        SELECT avg_likes/followed_by as eng, id, location_updated_at
-        FROM users
-        WHERE followed_by > 1000 AND avg_likes > 15 AND (location_country='united states' OR location_country='us')
-      ) AS a
-      WHERE a.eng > 0.015
+      SELECT id
+      FROM users
+      WHERE followed_by > 1000 AND avg_likes is null
+    ").to_a.map(&:first)
+
+    location_ids = User.connection.execute("
+      SELECT id
+      FROM users
+      WHERE followed_by > 1000 AND avg_likes > 15 AND location_updated_at is null
+    ").to_a.map(&:first)
+
+    count = User.connection.execute("
+      SELECT count(id)
+      FROM users
+      WHERE followed_by > 1000 AND avg_likes > 15 AND (location_country='united states' OR location_country='us')
     ").to_a.map(&:first)
 
   end
