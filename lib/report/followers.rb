@@ -73,7 +73,7 @@ module Report::Followers
         not_updated = []
         followers_ids.in_groups_of(10_000, false) do |ids|
           users = User.where(id: ids).outdated(7.days).pluck(:id, :grabbed_at)
-          not_updated.concat users.select{|r| r[1] < 8.days.ago}.map(&:first)
+          not_updated.concat users.select{|r| r[1].blank? || r[1] < 8.days.ago}.map(&:first)
         end
         if not_updated.size == 0
           report.steps << 'followers_info'
