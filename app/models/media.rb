@@ -207,7 +207,7 @@ class Media < ActiveRecord::Base
 
     return false if self.location_lat.blank? || self.location_lng.blank?
 
-    lookup_list = [:bing, :google, :yandex, :esri, :here]
+    lookup_list = options[:lookup_list] || [:bing, :google, :yandex, :esri, :here]
 
     while true
       retries = 0
@@ -229,6 +229,7 @@ class Media < ActiveRecord::Base
       rescue Geocoder::InvalidRequest => e
         return false
       rescue Geocoder::OverQueryLimitError => e
+        Rails.logger.debug e.class.name
         lookup_list = lookup_list - [lookup]
         retry
       end
@@ -238,6 +239,8 @@ class Media < ActiveRecord::Base
       lookup_list = lookup_list - [lookup]
 
       break if lookup_list.size == 0
+      break if retries > 5
+      retries += 1
     end
 
     country = state = city = country_lookup = nil
@@ -311,10 +314,12 @@ class Media < ActiveRecord::Base
 
       when 'Geocoder::Result::Esri'
         address = row.data['address']
-        country_lookup = Country.find_country_by_alpha3(address['CountryCode'])
-        country = country_lookup ? country_lookup.alpha2 : address['CountryCode']
-        state = address['Region']
-        city = address['City']
+        if address
+          country_lookup = Country.find_country_by_alpha3(address['CountryCode'])
+          country = country_lookup ? country_lookup.alpha2 : address['CountryCode']
+          state = address['Region']
+          city = address['City']
+        end
 
       when 'Geocoder::Result::Bing'
         address = row.data['address']
@@ -327,9 +332,11 @@ class Media < ActiveRecord::Base
         city = address['locality'] || address['adminDistrict2']
     end
 
-    country_lookup = Country.find_country_by_name(country) unless country_lookup
-    country_lookup = Country.find_country_by_alpha2(country) unless country_lookup
-    country_lookup = Country.find_country_by_alpha3(country) unless country_lookup
+    if country
+      country_lookup = Country.find_country_by_name(country) unless country_lookup
+      country_lookup = Country.find_country_by_alpha2(country) unless country_lookup
+      country_lookup = Country.find_country_by_alpha3(country) unless country_lookup
+    end
 
     if country == "US" && !country_lookup.states[state]
       st = country_lookup.states.select{|k, v| v['name'] == state}.first
