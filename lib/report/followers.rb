@@ -51,89 +51,93 @@ module Report::Followers
 
     if report.steps.include?('user_info')
       unless report.steps.include?('followers')
-        users = User.where(id: report.processed_ids).map{|u| [u.id, u.followed_by, u.followers.size]}
+        users = User.where(id: report.processed_ids).where(private: false).map{|u| [u.id, u.followed_by, u.followers.size]}
         for_update = users.select{|r| r[2]/r[1].to_f < 0.95}
 
-        for_update.each do |row|
-          UserFollowersWorker.perform_async(row[0], ignore_exists: true)
-        end
         if for_update.size == 0
           report.steps << 'followers'
-        end
-      end
-
-      # ids of ALL followers of provided users
-      followers_ids = Follower.where(user_id: report.processed_ids)
-      followers_ids = followers_ids.where('followed_at >= ?', report.date_from) if report.date_from
-      followers_ids = followers_ids.where('followed_at <= ?', report.date_to) if report.date_to
-      followers_ids = followers_ids.pluck(:follower_id).uniq
-
-      # update followers info, so in report we will have actual media amount, followers and etc. data
-      unless report.steps.include?('followers_info')
-        not_updated = []
-        followers_ids.in_groups_of(10_000, false) do |ids|
-          users = User.where(id: ids).outdated(7.days).pluck(:id, :grabbed_at)
-          not_updated.concat users.select{|r| r[1].blank? || r[1] < 8.days.ago}.map(&:first)
-        end
-        if not_updated.size == 0
-          report.steps << 'followers_info'
         else
-          not_updated.each { |uid| UserWorker.perform_async uid, true }
-          progress += not_updated.size / followers_ids.size.to_f / parts_amount
+          for_update.each do |row|
+            UserFollowersWorker.perform_async(row[0], ignore_exists: true)
+          end
+          progress += for_update.size / users.size.to_f/ parts_amount
         end
       end
 
-      # after followers list grabbed and all followers updated
-      if report.steps.include?('followers') && report.steps.include?('followers_info')
+      if report.steps.include?('followers')
+        # ids of ALL followers of provided users
+        followers_ids = Follower.where(user_id: report.processed_ids)
+        followers_ids = followers_ids.where('followed_at >= ?', report.date_from) if report.date_from
+        followers_ids = followers_ids.where('followed_at <= ?', report.date_to) if report.date_to
+        followers_ids = followers_ids.pluck(:follower_id).uniq
 
-        # if we need avg likes data and it is not yet grabbed
-        if report.output_data.include?('likes') && !report.steps.include?('likes')
-          get_likes = []
-          followers_ids.in_groups_of(5_000, false) do |ids|
-            get_likes.concat User.where(id: ids).without_likes.with_media.pluck(:id)
+        # update followers info, so in report we will have actual media amount, followers and etc. data
+        unless report.steps.include?('followers_info')
+          not_updated = []
+          followers_ids.in_groups_of(10_000, false) do |ids|
+            users = User.where(id: ids).outdated(7.days).pluck(:id, :grabbed_at)
+            not_updated.concat users.select{|r| r[1].blank? || r[1] < 8.days.ago}.map(&:first)
           end
-          if get_likes.size == 0
-            report.steps << 'likes'
+          if not_updated.size == 0
+            report.steps << 'followers_info'
           else
-            get_likes.each { |uid| UserAvgLikesWorker.perform_async uid }
-            progress += get_likes.size / followers_ids.size.to_f / parts_amount
+            not_updated.each { |uid| UserWorker.perform_async uid, true }
+            progress += not_updated.size / followers_ids.size.to_f / parts_amount
           end
         end
 
-        # if we need location data and it is not yet grabbed
-        if report.output_data.include?('location') && !report.steps.include?('location')
-          get_location = []
-          followers_ids.in_groups_of(5_000, false) do |ids|
-            get_location.concat User.where(id: ids).without_location.with_media.pluck(:id)
-          end
-          if get_location.size == 0
-            report.steps << 'location'
-          else
-            get_location.each { |uid| UserLocationWorker.perform_async(uid) }
-            progress += get_location.size / followers_ids.size.to_f / parts_amount
-          end
-        end
+        # after followers list grabbed and all followers updated
+        if report.steps.include?('followers_info')
 
-        # if we need feedly subscribers amount and it is not yet grabbed
-        if report.output_data.include?('feedly') && !report.steps.include?('feedly')
-          if report.jobs['feedly']
-            jobs = report.jobs['feedly']
-            jobs.map! { |job_id| Sidekiq::Status::get_all job_id }
-            if jobs.select{|j| j['status'] == 'complete'}.size == jobs.size
-              # complete
-              report.steps << 'feedly'
+          # if we need avg likes data and it is not yet grabbed
+          if report.output_data.include?('likes') && !report.steps.include?('likes')
+            get_likes = []
+            followers_ids.in_groups_of(5_000, false) do |ids|
+              get_likes.concat User.where(id: ids).without_likes.with_media.pluck(:id)
+            end
+            if get_likes.size == 0
+              report.steps << 'likes'
             else
-              # waiting and changing progress amount
-              progress += (jobs.size - jobs.select{|j| j['status'] == 'complete'}.size) / jobs.size.to_f / parts_amount
+              get_likes.each { |uid| UserAvgLikesWorker.perform_async uid }
+              progress += get_likes.size / followers_ids.size.to_f / parts_amount
             end
-          else
-            jobs_ids = []
-            # adding workers
-            User.where(id: report.processed_ids).with_url.find_each do |u|
-              jobs_ids << FeedlyWorker.perform_async(u.website)
-            end
+          end
 
-            report.jobs['feedly'] = jobs_ids
+          # if we need location data and it is not yet grabbed
+          if report.output_data.include?('location') && !report.steps.include?('location')
+            get_location = []
+            followers_ids.in_groups_of(5_000, false) do |ids|
+              get_location.concat User.where(id: ids).without_location.with_media.pluck(:id)
+            end
+            if get_location.size == 0
+              report.steps << 'location'
+            else
+              get_location.each { |uid| UserLocationWorker.perform_async(uid) }
+              progress += get_location.size / followers_ids.size.to_f / parts_amount
+            end
+          end
+
+          # if we need feedly subscribers amount and it is not yet grabbed
+          if report.output_data.include?('feedly') && !report.steps.include?('feedly')
+            if report.jobs['feedly']
+              jobs = report.jobs['feedly']
+              jobs.map! { |job_id| Sidekiq::Status::get_all job_id }
+              if jobs.select{|j| j['status'] == 'complete'}.size == jobs.size
+                # complete
+                report.steps << 'feedly'
+              else
+                # waiting and changing progress amount
+                progress += (jobs.size - jobs.select{|j| j['status'] == 'complete'}.size) / jobs.size.to_f / parts_amount
+              end
+            else
+              jobs_ids = []
+              # adding workers
+              User.where(id: report.processed_ids).with_url.find_each do |u|
+                jobs_ids << FeedlyWorker.perform_async(u.website)
+              end
+
+              report.jobs['feedly'] = jobs_ids
+            end
           end
         end
       end
