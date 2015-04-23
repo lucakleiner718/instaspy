@@ -26,10 +26,6 @@ class Tag < ActiveRecord::Base
     write_attribute(:name, value)
   end
 
-  def users limit=1000
-    self.media.limit(limit).map{|media_item| media_item.user}.uniq
-  end
-
   # offset (DateTime) - start point of user grabbing
   # total_limit (integer) - amount of media, stop grabbing when code receive provided amount
   # created_from (DateTime) - last point, until code should grab data
@@ -37,7 +33,10 @@ class Tag < ActiveRecord::Base
     options = args.extract_options!
 
     if options[:offset].present?
-      m = Media.where('created_time >= ? && created_time <= ?', options[:offset] - 10.minutes, options[:offset] + 10.minutes).first
+      m = Media.where('created_time >= ? && created_time <= ?', options[:offset], options[:offset] + 10.minutes).order(created_time: :asc).first
+      unless m
+        m = Media.where('created_time >= ? && created_time <= ?', options[:offset], options[:offset] + 60.minutes).order(created_time: :asc).first
+      end
       if m
         max_tag_id = m.insta_id.match(/^(\d+)_/)[1]
       end

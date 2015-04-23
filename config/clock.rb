@@ -17,7 +17,7 @@ module Clockwork
 
   every(1.day, 'check.media', if: lambda { |t| t.day == 1 }) {
     Tag.observed.pluck(:id).each do |tag_id|
-      TagCompleteMediaWorker.perform_async tag_id
+      TagCompleteMediaWorker.spawn tag_id
     end
   }
 
