@@ -72,9 +72,9 @@ module Report::Users
 
       if report.output_data.include?('feedly') && !report.steps.include?('feedly')
         if report.jobs['feedly']
-          jobs = report.jobs['feedly']
-          jobs.map! { |job_id| Sidekiq::Status::get_all job_id }
-          if jobs.select{|j| j['status'] == 'complete'}.size == jobs.size
+          feedly_jobs = report.jobs['feedly']
+          jobs = feedly_jobs.map { |job_id| Sidekiq::Status::get_all job_id }
+          if jobs.select{|j| j['status'] == 'complete'}.size == feedly_jobs.size
             # complete
             report.steps << 'feedly'
           else
@@ -82,13 +82,18 @@ module Report::Users
             progress += (jobs.size - jobs.select{|j| j['status'] == 'complete'}.size) / jobs.size.to_f / parts_amount
           end
         else
-          jobs_ids = []
+          job_ids = []
           # adding workers
           User.where(id: report.processed_ids).with_url.find_each do |u|
-            jobs_ids << FeedlyWorker.perform_async(u.website)
+            job_id << FeedlyWorker.perform_async(u.website)
+            if job_id
+              job_ids << job_id
+            else
+              FeedlyWorker.new.perform(u.website)
+            end
           end
 
-          report.jobs['feedly'] = jobs_ids
+          report.jobs['feedly'] = job_ids
         end
       end
     end
