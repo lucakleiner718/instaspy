@@ -85,7 +85,7 @@ module Report::Users
           job_ids = []
           # adding workers
           User.where(id: report.processed_ids).with_url.find_each do |u|
-            job_id << FeedlyWorker.perform_async(u.website)
+            job_id = FeedlyWorker.perform_async(u.website)
             if job_id
               job_ids << job_id
             else
