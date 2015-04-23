@@ -3,7 +3,7 @@ class ReportsController < ApplicationController
   helper_method :sort_column, :sort_direction
 
   def index
-    @reports = Report.all
+    @reports = Report.order(finished_at: :desc, started_at: :desc, created_at: :desc)
 
     case params[:format]
       when 'all'

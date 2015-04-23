@@ -17,7 +17,7 @@
 <table class="table">
   <thead>
   <tr>
-    <th><%= sortable :format, 'Format' %></th>
+    <th>Format</th>
     <th>Original Input</th>
     <th>Notify Email</th>
     <th>Status</th>
@@ -45,7 +45,7 @@
       <td><%= report.created_at.strftime('%m/%d/%y %H:%M:%S') %></td>
       <td><%= report.started_at.strftime('%m/%d/%y %H:%M:%S') if report.started_at %></td>
       <td><%= report.finished_at.strftime('%m/%d/%y %H:%M:%S') if report.finished_at %></td>
-      <td><%= link_to 'Download report', report.result_data, target: :_blank if report.result_data.present? %></td>
+      <td><%= link_to 'Download', report.result_data, target: :_blank if report.result_data.present? %></td>
     </tr>
   <% end %>
   </tbody>
