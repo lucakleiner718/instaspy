@@ -51,7 +51,7 @@ module Report::Followers
 
     if report.steps.include?('user_info')
       unless report.steps.include?('followers')
-        users = User.where(id: report.processed_ids).where(private: false).map{|u| [u.id, u.followed_by, u.followers.size]}
+        users = User.where(id: report.processed_ids).where(private: false).map{|u| [u.id, u.followed_by, Follower.where(user_id: u.id).size]}
         for_update = users.select{|r| r[2]/r[1].to_f < 0.95}
 
         if for_update.size == 0
