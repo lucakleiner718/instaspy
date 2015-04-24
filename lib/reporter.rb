@@ -621,16 +621,18 @@ class Reporter
     User.where('followed_by > ?', 1_000).where(private: false).where('media_amount > 0').where('avg_likes is null')
     User.where('followed_by > ?', 1_000).where(private: false).where('media_amount > 0').where('avg_likes is not null')
 
+    # update avg likes
     ids = User.connection.execute("
       SELECT id
       FROM users
-      WHERE followed_by > 1000 AND avg_likes is null
+      WHERE followed_by > 1000 AND avg_likes is null AND private=0 AND media_amount > 0
     ").to_a.map(&:first)
 
+    # update location
     location_ids = User.connection.execute("
       SELECT id
       FROM users
-      WHERE followed_by > 1000 AND avg_likes > 15 AND location_updated_at is null
+      WHERE followed_by > 1000 AND avg_likes > 15 AND location_updated_at is null AND private=0 AND media_amount > 0
     ").to_a.map(&:first)
 
     count = User.connection.execute("

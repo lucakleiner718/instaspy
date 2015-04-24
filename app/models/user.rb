@@ -1120,4 +1120,8 @@ class User < ActiveRecord::Base
     users
   end
 
+  def followers_size
+    Follower.where(user_id: self.id).size
+  end
+
 end
