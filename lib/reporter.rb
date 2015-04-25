@@ -534,22 +534,25 @@ class Reporter
 
     not_found = []
     options[:additional_columns] ||= []
+    feedly_data = nil
+    amount = 0
 
     if options[:usernames]
       users = User.where(username: options[:usernames])
       not_found = options[:usernames] - users.pluck(:username)
+      amount = options[:usernames].size
     elsif options[:ids]
       users = User.where(id: options[:ids])
       if options[:additional_columns].include? :feedly
-        feedly_data = Feedly.where(website: users.to_a.map{|u| u.website})
+        feedly_data = Feedly.where(website: User.where(id: options[:ids]).pluck(:website))
       end
+      amount = options[:ids].size
     elsif options[:insta_ids]
       users = User.where(insta_id: options[:insta_ids])
+      amount = options[:insta_ids].size
     end
 
     return false unless users
-
-    # users = users.joins(:feedly) if options[:additional_columns].include? :feedly
 
     header = ['Instagram ID', 'Username', 'Full name', 'Bio', 'Website', 'Follows', 'Followers', 'Email']
     header += ['Country', 'State', 'City'] if options[:additional_columns].include? :location
@@ -561,8 +564,7 @@ class Reporter
       row += [u.location_country, u.location_state, u.location_city] if options[:additional_columns].include? :location
       row += [u.avg_likes] if options[:additional_columns].include? :likes
       if options[:additional_columns].include? :feedly
-        # u.feedly
-        feedly = feedly_data.select{|f| f.website == u.website }.first
+        feedly = feedly_data ? feedly_data.select{|f| f.website == u.website }.first : u.feedly
         row += [feedly ? feedly.subscribers_amount : '']
       end
 
@@ -572,8 +574,13 @@ class Reporter
     csv_string = CSV.generate do |csv|
       csv << header
 
+      index = 0
+      Rails.logger.debug('Started processing users')
       users.find_each do |user|
+        index += 1
+        start = Time.now
         process_user.call(user, csv)
+        Rails.logger.debug("Processed user #{user.id} #{index}/#{amount}")
       end
 
       not_found.each do |username|
