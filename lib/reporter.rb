@@ -544,7 +544,11 @@ class Reporter
     elsif options[:ids]
       users = User.where(id: options[:ids])
       if options[:additional_columns].include? :feedly
-        feedly_data = Feedly.where(website: User.where(id: options[:ids]).pluck(:website))
+        feedly_data_ar = Feedly.where(website: User.where(id: options[:ids]).pluck(:website)).select(:website, :subscribers_amount)
+        feedly_data = {}
+        feedly_data_ar.each do |fd|
+          feedly_data[fd.website] = fd.subscribers_amount
+        end
       end
       amount = options[:ids].size
     elsif options[:insta_ids]
@@ -564,8 +568,8 @@ class Reporter
       row += [u.location_country, u.location_state, u.location_city] if options[:additional_columns].include? :location
       row += [u.avg_likes] if options[:additional_columns].include? :likes
       if options[:additional_columns].include? :feedly
-        feedly = feedly_data ? feedly_data.select{|f| f.website == u.website }.first : u.feedly
-        row += [feedly ? feedly.subscribers_amount : '']
+        subscribers_amount = feedly_data ? feedly_data[u.website] : u.feedly.subscribers_amount
+        row += [subscribers_amount]
       end
 
       csv << row
@@ -576,11 +580,11 @@ class Reporter
 
       index = 0
       Rails.logger.debug('Started processing users')
-      users.find_each do |user|
+      users.find_each(batch_size: 5_000) do |user|
         index += 1
         start = Time.now
         process_user.call(user, csv)
-        Rails.logger.debug("Processed user #{user.id} #{index}/#{amount}")
+        Rails.logger.debug("Processed user #{user.id} #{index}/#{amount}; time: #{(Time.now - start.to_f).round(2)}s")
       end
 
       not_found.each do |username|
