@@ -19,7 +19,7 @@ class Feedly < ActiveRecord::Base
     retries = 0
     begin
       resp = client.search_feeds url
-    rescue Feedlr::Error => e
+    rescue Feedlr::Error, Feedlr::Error::RequestTimeout => e
       retries += 1
       sleep 10*retries
       retry if retries <= 5

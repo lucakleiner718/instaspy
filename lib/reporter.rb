@@ -540,6 +540,9 @@ class Reporter
       not_found = options[:usernames] - users.pluck(:username)
     elsif options[:ids]
       users = User.where(id: options[:ids])
+      if options[:additional_columns].include? :feedly
+        feedly_data = Feedly.where(website: users.to_a.map{|u| u.website})
+      end
     elsif options[:insta_ids]
       users = User.where(insta_id: options[:insta_ids])
     end
@@ -558,7 +561,8 @@ class Reporter
       row += [u.location_country, u.location_state, u.location_city] if options[:additional_columns].include? :location
       row += [u.avg_likes] if options[:additional_columns].include? :likes
       if options[:additional_columns].include? :feedly
-        feedly = u.feedly
+        # u.feedly
+        feedly = feedly_data.select{|f| f.website == u.website }.first
         row += [feedly ? feedly.subscribers_amount : '']
       end
 

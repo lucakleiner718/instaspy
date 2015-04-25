@@ -177,7 +177,7 @@ class User < ActiveRecord::Base
       end
       return false
     rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::InternalServerError, Instagram::GatewayTimeout,
-      JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
+      JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Faraday::ParsingError, Zlib::BufError, Errno::EPIPE => e
       retries += 1
       sleep 10*retries
       retry if retries <= 5
