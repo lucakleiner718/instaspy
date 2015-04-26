@@ -483,4 +483,12 @@ class Media < ActiveRecord::Base
     end
   end
 
+  def self.delete_old amount=100_000
+    ids = Media.order(id: :asc).limit(amount).pluck(:id)
+    ids.in_groups_of(10_000, false) do |group|
+      Media.connection.execute("DELETE FROM media WHERE id IN (#{group.join(',')})")
+      Media.connection.execute("DELETE FROM media_tags WHERE media_id IN (#{group.join(',')})")
+    end
+  end
+
 end

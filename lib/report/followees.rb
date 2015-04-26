@@ -64,17 +64,19 @@ module Report::Followees
 
       if report.steps.include?('followees')
 
-        report.data['followees'] = [] unless report.data['followees']
-        if report.data['followees'].size == 0
+        if report.data['followees_file'].blank?
           # ids of ALL followees of provided users
           followees_ids = Follower.where(follower_id: report.processed_ids)
           followees_ids = followees_ids.where('followed_at >= ?', report.date_from) if report.date_from
           followees_ids = followees_ids.where('followed_at <= ?', report.date_to) if report.date_to
           followees_ids = followees_ids.pluck(:user_id).uniq
 
-          report.data['followees'] = followees_ids
+          File.write(Rails.root.join("public", "reports/reports_data/report-#{report.id}-followees-ids"), followees_ids.join(','))
+          report.processed_input ="reports/reports_data/report-#{report.id}-followees-ids"
+
+          report.data['followees_file'] = followees_ids
         else
-          followees_ids = report.data['followees']
+          followees_ids = File.read(report.data['followees_file']).split(',').map(&:to_i)
         end
 
         # update followees info, so in report we will have actual media amount, followees and etc. data

@@ -67,17 +67,19 @@ module Report::Followers
 
       if report.steps.include?('followers')
 
-        report.data['followers'] = [] unless report.data['followers']
-        if report.data['followers'].size == 0
+        if report.data['followers_file'].blank?
           # ids of ALL followers of provided users
           followers_ids = Follower.where(user_id: report.processed_ids)
           followers_ids = followers_ids.where('followed_at >= ?', report.date_from) if report.date_from
           followers_ids = followers_ids.where('followed_at <= ?', report.date_to) if report.date_to
           followers_ids = followers_ids.pluck(:follower_id).uniq
 
-          report.data['followers'] = followers_ids
+          File.write(Rails.root.join("public", "reports/reports_data/report-#{report.id}-followers-ids"), followers_ids.join(','))
+          report.processed_input ="reports/reports_data/report-#{report.id}-followers-ids"
+
+          report.data['followers_file'] = followers_ids
         else
-          followers_ids = report.data['followers']
+          followers_ids = File.read(report.data['followers_file']).split(',').map(&:to_i)
         end
 
         # update followers info, so in report we will have actual media amount, followers and etc. data
