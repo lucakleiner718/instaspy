@@ -584,7 +584,7 @@ class Reporter
         index += 1
         start = Time.now
         process_user.call(user, csv)
-        Rails.logger.debug("Processed user #{user.id} #{index}/#{amount}; time: #{(Time.now - start.to_f).round(2)}s")
+        Rails.logger.debug("Processed user #{user.id} #{index}/#{amount}; time: #{(Time.now - start).to_f.round(2)}s")
       end
 
       not_found.each do |username|

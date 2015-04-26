@@ -1,0 +1,17 @@
+<p>Report file: <%= link_to "Download", @file %></p>
+<table>
+  <thead>
+  <tr>
+    <th>Input usernames amount</th>
+    <th>Processed usernames amount</th>
+    <th>Not processed</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td><%= @report.usernames.size %></td>
+    <td><%= @report.processed_ids.size %></td>
+    <td><%= @report.not_processed.join(', ') %></td>
+  </tr>
+  </tbody>
+</table>

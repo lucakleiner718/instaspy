@@ -17,6 +17,12 @@ class ReportMailer < ActionMailer::Base
     mail to: @report.notify_email, subject: "Requested InstaSpy followers report"
   end
 
+  def followees report_id
+    @report = Report.find(report_id)
+    @file = "http://#{Rails.env.production? ? "107.170.110.156" : "localhost:3000"}/#{@report.result_data}"
+    mail to: @report.notify_email, subject: "Requested InstaSpy followees report"
+  end
+
   def users report_id
     @report = Report.find(report_id)
     @file = "http://#{Rails.env.production? ? "107.170.110.156" : "localhost:3000"}/#{@report.result_data}"

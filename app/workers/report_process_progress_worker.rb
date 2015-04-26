@@ -12,6 +12,8 @@ class ReportProcessProgressWorker
     case report.format
       when 'followers'
         Report::Followers.reports_in_process report
+      when 'followees'
+        Report::Followees.reports_in_process report
       when 'users'
         Report::Users.reports_in_process report
       when 'tags'

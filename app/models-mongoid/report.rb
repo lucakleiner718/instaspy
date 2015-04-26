@@ -16,6 +16,7 @@ class Report
   field :steps, type: Array, default: []
   field :date_from, type: DateTime
   field :date_to, type: DateTime
+  field :data, type: Hash, default: {}
   include Mongoid::Timestamps
 
   # probably not best way
