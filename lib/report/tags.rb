@@ -83,6 +83,25 @@ module Report::Tags
             get_location.each { |uid| UserLocationWorker.perform_async uid }
           end
         end
+
+        if report.output_data.include?('feedly') && !report.steps[step_index][1].include?('feedly')
+          with_website = []
+          feedly_exists = []
+          report.processed_ids.in_groups_of(5_000, false) do |ids|
+            for_process = User.where(id: ids).with_url.pluck(:id)
+            with_website.concat for_process
+            feedly_exists.concat Feedly.where(user_id: for_process).pluck(:user_id)
+          end
+
+          no_feedly = with_website - feedly_exists
+
+          if no_feedly.size == 0
+            report.steps << 'feedly'
+          else
+            no_feedly.each { |uid| UserFeedlyWorker.new.perform uid }
+            progress += feedly_exists.size / with_website.size.to_f / parts_amount
+          end
+        end
       end
     end
 

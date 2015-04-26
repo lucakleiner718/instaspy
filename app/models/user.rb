@@ -8,7 +8,7 @@ class User < ActiveRecord::Base
   has_many :user_followees, class_name: 'Follower', foreign_key: :follower_id, dependent: :destroy
   has_many :followees, through: :user_followees
 
-  belongs_to :feedly, primary_key: :website, foreign_key: :website
+  has_one :feedly
 
   scope :not_grabbed, -> { where grabbed_at: nil }
   scope :not_private, -> { where private: [nil, false] }
@@ -1073,14 +1073,14 @@ class User < ActiveRecord::Base
     (self.avg_likes/self.followed_by.to_f).round(2)
   end
 
-  def get_feedly
-    return false if self.website.blank?
-    f = Feedly.where('feedly_url = :w OR website = :w', w: self.website).first
-    unless f
-      f = Feedly.process self.website
-    end
-    f
-  end
+  # def get_feedly
+  #   return false if self.website.blank?
+  #   f = Feedly.where('feedly_url = :w OR website = :w', w: self.website).first
+  #   unless f
+  #     f = Feedly.process self.website
+  #   end
+  #   f
+  # end
 
   def self.from_usernames usernames
     users = User.where(username: usernames).to_a
@@ -1122,6 +1122,51 @@ class User < ActiveRecord::Base
 
   def followers_size
     Follower.where(user_id: self.id).size
+  end
+
+  def update_feedly!
+    return false if self.website.blank?
+
+    record = Feedly.where(user_id: self.id).first_or_initialize
+
+    if record.new_record?
+      rec = Feedly.where(website: self.website).where('user_id is null').first
+      if rec
+        record = rec
+        record.user_id = self.id
+      end
+    end
+
+    if !record.new_record? && record.website.present? && record.website == self.website && record.grabbed_at.present? && record.grabbed_at > 1.month.ago
+      record.save if record.changed?
+      return record
+    end
+
+    client = Feedlr::Client.new
+
+    retries = 0
+    begin
+      resp = client.search_feeds self.website
+    rescue Feedlr::Error, Feedlr::Error::RequestTimeout => e
+      retries += 1
+      sleep 10*retries
+      retry if retries <= 5
+      raise e
+    end
+
+    if resp['results'] && resp['results'].size > 0
+      result = resp['results'].first
+
+      record.feedly_url = result['website']
+      record.feed_id = result['feedId']
+      record.subscribers_amount = result['subscribers'] || 0
+    end
+
+    record.website = self.website
+    record.grabbed_at = Time.now
+    record.save
+
+    true
   end
 
 end

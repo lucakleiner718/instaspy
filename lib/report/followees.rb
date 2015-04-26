@@ -124,24 +124,21 @@ module Report::Followees
 
           # if we need feedly subscribers amount and it is not yet grabbed
           if report.output_data.include?('feedly') && !report.steps.include?('feedly')
-            if report.jobs['feedly']
-              jobs = report.jobs['feedly']
-              jobs.map! { |job_id| Sidekiq::Status::get_all job_id }
-              if jobs.select{|j| j['status'] == 'complete'}.size == jobs.size
-                # complete
-                report.steps << 'feedly'
-              else
-                # waiting and changing progress amount
-                progress += (jobs.size - jobs.select{|j| j['status'] == 'complete'}.size) / jobs.size.to_f / parts_amount
-              end
-            else
-              jobs_ids = []
-              # adding workers
-              User.where(id: report.processed_ids).with_url.find_each do |u|
-                jobs_ids << FeedlyWorker.perform_async(u.website)
-              end
+            with_website = []
+            feedly_exists = []
+            followees_ids.in_groups_of(5_000, false) do |ids|
+              for_process = User.where(id: ids).with_url.pluck(:id)
+              with_website.concat for_process
+              feedly_exists.concat Feedly.where(user_id: for_process).pluck(:user_id)
+            end
 
-              report.jobs['feedly'] = jobs_ids
+            no_feedly = with_website - feedly_exists
+
+            if no_feedly.size == 0
+              report.steps << 'feedly'
+            else
+              no_feedly.each { |uid| UserFeedlyWorker.perform_async uid }
+              progress += feedly_exists.size / with_website.size.to_f / parts_amount
             end
           end
         end

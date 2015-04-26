@@ -42,7 +42,7 @@ class ReportsController < ApplicationController
       File.write(Rails.root.join("public/reports/reports_data/report-#{@report.id}-original-input.csv"), csv_string)
 
       @report.update_attribute :original_input, "reports/reports_data/report-#{@report.id}-original-input.csv"
-      ReportProcessNewWorker.perform_async @report.id.to_s
+      ReportProcessNewWorker.perform_async @report.id
       redirect_to reports_path
     else
       render :new

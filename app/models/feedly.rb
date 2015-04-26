@@ -2,8 +2,10 @@ class Feedly < ActiveRecord::Base
 
   self.table_name = :feedly
 
-  validates :website, uniqueness: true, presence: true
-  validates :feedly_url, uniqueness: true
+  belongs_to :user
+
+  # validates :website, uniqueness: true, presence: true
+  # validates :feedly_url, uniqueness: true
 
   def self.process url
     record = Feedly.where(website: url).first

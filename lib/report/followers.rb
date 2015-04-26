@@ -21,6 +21,7 @@ module Report::Followers
     File.write(Rails.root.join("public", "reports/reports_data/report-#{report.id}-processed-input.csv"), csv_string)
     report.processed_input ="reports/reports_data/report-#{report.id}-processed-input.csv"
 
+    report.data = { 'followers' => [] }
     report.status = :in_process
     report.started_at = Time.now
     report.save
@@ -65,11 +66,17 @@ module Report::Followers
       end
 
       if report.steps.include?('followers')
-        # ids of ALL followers of provided users
-        followers_ids = Follower.where(user_id: report.processed_ids)
-        followers_ids = followers_ids.where('followed_at >= ?', report.date_from) if report.date_from
-        followers_ids = followers_ids.where('followed_at <= ?', report.date_to) if report.date_to
-        followers_ids = followers_ids.pluck(:follower_id).uniq
+        if report.data['followers'].size == 0
+          # ids of ALL followers of provided users
+          followers_ids = Follower.where(user_id: report.processed_ids)
+          followers_ids = followers_ids.where('followed_at >= ?', report.date_from) if report.date_from
+          followers_ids = followers_ids.where('followed_at <= ?', report.date_to) if report.date_to
+          followers_ids = followers_ids.pluck(:follower_id).uniq
+
+          report.data['followers'] = followers_ids
+        else
+          followers_ids = report.data['followers']
+        end
 
         # update followers info, so in report we will have actual media amount, followers and etc. data
         unless report.steps.include?('followers_info')
@@ -119,24 +126,21 @@ module Report::Followers
 
           # if we need feedly subscribers amount and it is not yet grabbed
           if report.output_data.include?('feedly') && !report.steps.include?('feedly')
-            if report.jobs['feedly']
-              jobs = report.jobs['feedly']
-              jobs.map! { |job_id| Sidekiq::Status::get_all job_id }
-              if jobs.select{|j| j['status'] == 'complete'}.size == jobs.size
-                # complete
-                report.steps << 'feedly'
-              else
-                # waiting and changing progress amount
-                progress += (jobs.size - jobs.select{|j| j['status'] == 'complete'}.size) / jobs.size.to_f / parts_amount
-              end
-            else
-              jobs_ids = []
-              # adding workers
-              User.where(id: report.processed_ids).with_url.find_each do |u|
-                jobs_ids << FeedlyWorker.perform_async(u.website)
-              end
+            with_website = []
+            feedly_exists = []
+            followers_ids.in_groups_of(5_000, false) do |ids|
+              for_process = User.where(id: ids).with_url.pluck(:id)
+              with_website.concat for_process
+              feedly_exists.concat Feedly.where(user_id: for_process).pluck(:user_id)
+            end
 
-              report.jobs['feedly'] = jobs_ids
+            no_feedly = with_website - feedly_exists
+
+            if no_feedly.size == 0
+              report.steps << 'feedly'
+            else
+              no_feedly.each { |uid| UserFeedlyWorker.perform_async uid }
+              progress += feedly_exists.size / with_website.size.to_f / parts_amount
             end
           end
         end
