@@ -86,7 +86,7 @@ module Report::Followees
           if not_updated.size == 0
             report.steps << 'followees_info'
           else
-            not_updated.each { |uid| UserWorker.perform_async uid, true }
+            not_updated.each { |uid| UserWorker.perform_async uid }
             progress += (followees_ids.size - not_updated.size) / followees_ids.size.to_f / parts_amount
           end
         end
