@@ -64,6 +64,7 @@ module Report::Followees
 
       if report.steps.include?('followees')
 
+        report.data['followees'] = [] unless report.data['followees']
         if report.data['followees'].size == 0
           # ids of ALL followees of provided users
           followees_ids = Follower.where(follower_id: report.processed_ids)
