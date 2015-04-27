@@ -75,11 +75,9 @@ module Report::Followers
           followers_ids = followers_ids.pluck(:follower_id).uniq
 
           File.write(Rails.root.join("public", "reports/reports_data/report-#{report.id}-followers-ids"), followers_ids.join(','))
-          report.processed_input ="reports/reports_data/report-#{report.id}-followers-ids"
-
-          report.data['followers_file'] = followers_ids
+          report.data['followers_file'] = "reports/reports_data/report-#{report.id}-followers-ids"
         else
-          followers_ids = File.read(report.data['followers_file']).split(',').map(&:to_i)
+          followers_ids = File.read(Rails.root.join("public", report.data['followers_file'])).split(',').map(&:to_i)
         end
 
         # update followers info, so in report we will have actual media amount, followers and etc. data
