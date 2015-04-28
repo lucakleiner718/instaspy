@@ -19,6 +19,8 @@ class Report
   field :data, type: Hash, default: {}
   include Mongoid::Timestamps
 
+  scope :active, -> { where(:status.in => ['new', 'in_process']) }
+
   # probably not best way
   def id
     self.read_attribute(:id).to_s

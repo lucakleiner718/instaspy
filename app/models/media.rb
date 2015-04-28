@@ -484,11 +484,14 @@ class Media < ActiveRecord::Base
   end
 
   def self.delete_old amount=100_000
-    ids = Media.order(id: :asc).where('created_at < ?', 2.months.ago).limit(amount).pluck(:id)
-    ids.in_groups_of(10_000, false) do |group|
-      ActiveRecord::Base.transaction do
-        Media.connection.execute("DELETE FROM media WHERE id IN (#{group.join(',')})")
-        Media.connection.execute("DELETE FROM media_tags WHERE media_id IN (#{group.join(',')})")
+    split_size = 100_000
+    (amount/split_size.to_f).ceil.times do |i|
+      ids = Media.order(id: :asc).where('created_at < ?', 2.months.ago).limit(split_size).offset(split_size*i).pluck(:id)
+      ids.in_groups_of(10_000, false) do |group|
+        ActiveRecord::Base.transaction do
+          Media.connection.execute("DELETE FROM media WHERE id IN (#{group.join(',')})")
+          Media.connection.execute("DELETE FROM media_tags WHERE media_id IN (#{group.join(',')})")
+        end
       end
     end
   end

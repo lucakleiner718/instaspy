@@ -21,7 +21,6 @@ module Report::Followers
     File.write(Rails.root.join("public", "reports/reports_data/report-#{report.id}-processed-input.csv"), csv_string)
     report.processed_input ="reports/reports_data/report-#{report.id}-processed-input.csv"
 
-    report.data = { 'followers' => [] }
     report.status = :in_process
     report.started_at = Time.now
     report.save
@@ -84,7 +83,9 @@ module Report::Followers
         unless report.steps.include?('followers_info')
           not_updated = []
           followers_ids.in_groups_of(10_000, false) do |ids|
+            # grab all users without data and data outdated for 7 days
             users = User.where(id: ids).outdated(7.days).pluck(:id, :grabbed_at)
+            # select users only without data and outdated for 8 days, to avoid adding new users on each iteration
             not_updated.concat users.select{|r| r[1].blank? || r[1] < 8.days.ago}.map(&:first)
           end
           if not_updated.size == 0
