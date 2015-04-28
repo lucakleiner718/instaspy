@@ -40,6 +40,7 @@ module Report::Tags
     end
 
     tags_publishers = {}
+    publishers_media = {}
 
     report.processed_csv.each do |row|
       tag_id = row[1].to_i
@@ -50,8 +51,12 @@ module Report::Tags
       media = media.where('created_time >= ?', report.date_from) if report.date_from
       media = media.where('created_time <= ?', report.date_to) if report.date_to
 
-      publishers_ids = media.pluck(:user_id).uniq
+      media_ids = media.pluck(:id, :user_id).uniq{|r| r.last}
+      publishers_ids = media_ids.map(&:last)
       tags_publishers[tag_id] = publishers_ids
+
+      publishers_media[tag_id] = {}
+      media_ids.each { |r| publishers_media[tag_id][r[1]] = r[0] }
 
       unless report.steps[step_index][1].include?('publishers_info')
         users = []
@@ -107,40 +112,53 @@ module Report::Tags
 
     report.progress = ((report.steps.inject(0) { |sum, tag_data| sum + tag_data[1].size}.to_f / (report.processed_csv.size*parts_amount)).round(2) * 100).to_i
 
-    # if report.steps.select{|r| r[1].include?('publishers_info')}.size == report.steps.size
     if report.progress == 100
       report.status = 'finished'
-      self.finish report, tags_publishers
+      self.finish report, tags_publishers, publishers_media
     end
 
     report.save
   end
 
 
-  def self.finish report, tags_publishers
+  def self.finish report, tags_publishers, publishers_media
     files = []
 
     header = ['ID', 'Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followers', 'Email']
     header += ['Country', 'State', 'City'] if report.output_data.include? 'location'
     header += ['AVG Likes'] if report.output_data.include? 'likes'
     header += ['Feedly Subscribers'] if report.output_data.include? 'feedly'
+    header += ['Media Link', 'Media Likes', 'Media Comments']
 
     report.processed_csv.each do |row|
       tag_id = row[1].to_i
       tag = Tag.find(tag_id)
 
+      media_list = {}
+      publishers_media[tag_id].values.in_groups_of(10_000, false) do |rows|
+        Media.where(id: rows).pluck(:user_id, :likes_amount, :comments_amount, :link).each do |media_row|
+          user_id = media_row.shift
+          media_list[user_id] = media_row
+        end
+      end
+
       csv_string = CSV.generate do |csv|
         csv << header
-        User.where(id: tags_publishers[tag_id]).find_each do |u|
-          row = [u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email]
-          row.concat [u.location_country, u.location_state, u.location_city] if report.output_data.include? 'location'
-          row.concat [u.avg_likes] if report.output_data.include? 'likes'
-          if report.output_data.include? 'feedly'
-            feedly = u.feedly
-            row.concat [feedly ? feedly.subscribers_amount : '']
-          end
+        tags_publishers[tag_id].in_groups_of(1000, false) do |ids|
+          User.where(id: ids).find_each do |u|
+            media = media_list[u.id]
+            next unless media
+            row = [u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email]
+            row += [u.location_country, u.location_state, u.location_city] if report.output_data.include? 'location'
+            row += [u.avg_likes] if report.output_data.include? 'likes'
+            if report.output_data.include? 'feedly'
+              feedly = u.feedly
+              row += [feedly ? feedly.subscribers_amount : '']
+            end
+            row += [media[2], media[0], media[1]]
 
-          csv << row
+            csv << row
+          end
         end
       end
 
@@ -157,7 +175,7 @@ module Report::Tags
       stringio.rewind
       binary_data = stringio.sysread
 
-      filepath = "reports/tag-#{report.processed_csv.size}-publishers.zip"
+      filepath = "reports/tag-#{report.processed_csv.size}-publishers-#{Time.now.to_i}.zip"
       File.write("public/#{filepath}", binary_data)
       report.result_data = filepath
     end

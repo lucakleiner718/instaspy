@@ -31,7 +31,7 @@
   <tbody>
   <% @reports.each do |report| %>
     <tr>
-      <td><%= report.format %> for <%= report.usernames.size %> usernames</td>
+      <td><%= report.format == 'tags' ? 'publishers' : report.format %> for <%= report.usernames.size %> <%= report.format != 'tags' ? 'usernames' : 'tags' %></td>
       <td><%= link_to "Open", "#{root_url}#{report.original_input}", target: :_blank %></td>
       <td><%= report.notify_email %></td>
       <td><span class="label label-<%= {'new' => 'info', 'in_process' => 'primary', 'finished' => 'success'}[report.status] %>"><%= report.status.titleize %></span></td>
