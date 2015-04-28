@@ -34,7 +34,7 @@ class ReportsController < ApplicationController
     @report.date_to = DateTime.strptime(report_params['date_to'], '%m/%d/%Y').end_of_day if report_params['date_to'].present?
 
     if @report.save
-      session['report_notify_email'] = @report.notify_email if @report.notify_email.present?
+      session['report_notify_email'] = @report.notify_email
 
       csv_string = Report.process_input report_params[:input]
 

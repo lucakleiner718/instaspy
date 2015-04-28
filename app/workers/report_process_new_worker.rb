@@ -18,6 +18,8 @@ class ReportProcessNewWorker
         Report::Users.reports_new report
       when 'tags'
         Report::Tags.reports_new report
+      when 'recent-media'
+        Report::RecentMedia.reports_new report
     end
   end
 

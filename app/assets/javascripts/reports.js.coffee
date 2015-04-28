@@ -8,4 +8,10 @@ jQuery ($) ->
     else
       $('.report_date_from, .report_date_to').hide()
 
+    if ['followers', 'followees', 'tags', 'users'].indexOf($(this).val()) >= 0
+      $('.report_output_data').show()
+    else
+      $('.report_output_data').hide()
+
+
   $('#report_format').trigger('change')

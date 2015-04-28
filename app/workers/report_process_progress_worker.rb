@@ -18,6 +18,8 @@ class ReportProcessProgressWorker
         Report::Users.reports_in_process report
       when 'tags'
         Report::Tags.reports_in_process report
+      when 'recent-media'
+        Report::RecentMedia.reports_in_process report
     end
   end
 

@@ -4,8 +4,8 @@ class Report
   field :format, type: String
   field :original_input, type: String
   field :processed_input, type: String
-  field :status, type: String
-  field :progress, type: Integer, default: 0
+  field :status, type: String                   # current status of job
+  field :progress, type: Integer, default: 0    # progress in percentage
   field :jobs, type: Hash, default: {}
   field :started_at, type: DateTime
   field :finished_at, type: DateTime
