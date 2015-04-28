@@ -5,13 +5,11 @@ class ReportRecentMediaWorker
 
   def perform user_id, report_id
     user = User.where(id: user_id).first
-    report = Report.find(report_id)
 
     if user
       user.recent_media total_limit: 20
     end
 
-    report.data['processed_ids'] << user_id
-    report.save
+    Report.find(report_id).push(tmp_list1: user_id)
   end
 end

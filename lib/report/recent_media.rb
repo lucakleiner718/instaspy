@@ -23,7 +23,6 @@ module Report::RecentMedia
 
     ReportProcessProgressWorker.perform_async report.id
 
-    report.data = { 'processed_ids' => [] }
     report.status = :in_process
     report.started_at = Time.now
     report.save
@@ -51,7 +50,7 @@ module Report::RecentMedia
 
     if report.steps.include?('user_info')
       unless report.steps.include?('recent_media')
-        not_processed = report.processed_ids - report.data['processed_ids']
+        not_processed = report.processed_ids - report.tmp_list1
         if not_processed.size == 0
           report.steps << 'recent_media'
         else
@@ -83,13 +82,13 @@ module Report::RecentMedia
     users_media = {}
 
     report.processed_ids.in_groups_of(1000, false) do |uids|
-      Media.where(user_id: report.processed_ids).order(created_time: :desc).pluck(:id, :user_id).each do |row|
+      Media.where(user_id: uids).order(created_time: :desc).pluck(:id, :user_id).each do |row|
         users_media[row[1]] = [] unless users_media[row[1]]
         users_media[row[1]] << row[0]
       end
     end
 
-    header = ['ID', 'Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followers', 'Email', 'Media Link', 'Media Likes', 'Media Comments']
+    header = ['ID', 'Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followers', 'Email', 'Media Link', 'Media Likes', 'Media Comments', 'Media Published', 'Media Tags']
 
     csv_string = CSV.generate do |csv|
       csv << header
@@ -97,9 +96,13 @@ module Report::RecentMedia
         next unless users_media[u.id]
 
         media_ids = users_media[u.id][0,20]
-        Media.where(id: media_ids).order(created_time: :desc).pluck(:link, :likes_amount, :comments_amount).each do |media|
-          row = [u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email,
-                      media[0], media[1], media[2]
+        tags_ids = Media.connection.execute("select tag_id, media_id from media_tags where media_id in (#{media_ids.join(',')})").to_a
+        tags_all = Tag.where(id: tags_ids.map{|r| r[0]}.uniq).pluck(:id, :name)
+        Media.where(id: media_ids).order(created_time: :desc).pluck(:link, :likes_amount, :comments_amount, :created_time, :id).each do |media|
+          tags = tags_ids.select{|r| r[1] == media[4]}.map{|r| r[0]}
+          row = [
+            u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email,
+            media[0], media[1], media[2], media[3].strftime('%m/%d/%Y %H:%M:%S'), tags_all.select{|r| r[0].in?(tags)}.map(&:last).join(',')
           ]
           csv << row
         end
