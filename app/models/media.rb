@@ -457,12 +457,12 @@ class Media < ActiveRecord::Base
   private
 
   def increment_some_tag tag
-    Rails.logger.debug "increment_some_tag #{tag.id}"
+    # Rails.logger.debug "increment_some_tag #{tag.id}"
     Tag.increment_counter tag.id
   end
 
   def decrement_some_tag tag
-    Rails.logger.debug "decrement_some_tag #{tag.id}"
+    # Rails.logger.debug "decrement_some_tag #{tag.id}"
     Tag.decrement_counter tag.id
   end
 

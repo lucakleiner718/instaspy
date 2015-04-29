@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150426192723) do
+ActiveRecord::Schema.define(version: 20150429131512) do
 
   create_table "feedly", force: true do |t|
     t.string   "website"
@@ -144,10 +144,8 @@ ActiveRecord::Schema.define(version: 20150426192723) do
   create_table "tags", force: true do |t|
     t.string   "name"
     t.datetime "created_at"
-    t.integer  "media_count", default: 0, null: false
   end
 
-  add_index "tags", ["media_count"], name: "index_tags_on_media_count", using: :btree
   add_index "tags", ["name"], name: "index_tags_on_name2", length: {"name"=>191}, using: :btree
 
   create_table "track_users", force: true do |t|
