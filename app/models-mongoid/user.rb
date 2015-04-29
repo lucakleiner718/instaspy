@@ -1,12 +1,51 @@
-class User < ActiveRecord::Base
+class User
+
+  include Mongoid::Document
+  field :insta_id, type: Integer
+  field :username, type: String
+  field :full_name, type: String
+  field :bio, type: String
+  field :website, type: String
+  field :follows, type: Integer
+  field :followed_by, type: Integer
+  field :media_amount, type: Integer
+  field :private, type: Boolean, default: false
+  field :grabbed_at, type: DateTime
+  field :email, type: String
+  field :location_country, type: String
+  field :location_state, type: String
+  field :location_city, type: String
+  field :location_updated_at, type: DateTime
+  field :avg_likes, type: Integer
+  field :avg_likes_updated_at, type: DateTime
+  field :avg_comments, type: Integer
+  field :avg_comments_updated_at, type: DateTime
+  include Mongoid::Timestamps
+
+  index({ insta_id: 1 }, { unique: true })
+  index({ username: 1 }, { unique: true })
+  index comments: 1
+  index avg_comments_updated_at: 1
+  index avg_likes: 1
+  index avg_likes_updated_at: 1
+  index created_at: 1
+  index email: 1
+  index followed_by: 1
+  index grabbed_at: 1
+  index location_city: 1
+  index location_country: 1
+  index location_state: 1
+  index media_amount: 1
+  index updated_at: 1
+  index website: 1
 
   has_many :media, class_name: 'Media', dependent: :destroy
 
-  has_many :user_followers, class_name: 'Follower', foreign_key: :user_id, dependent: :destroy
-  has_many :followers, through: :user_followers
+  # has_many :user_followers, class_name: 'Follower'#, foreign_key: :user_id, dependent: :destroy
+  # has_many :followers, through: :user_followers
 
-  has_many :user_followees, class_name: 'Follower', foreign_key: :follower_id, dependent: :destroy
-  has_many :followees, through: :user_followees
+  # has_many :user_followees, class_name: 'Follower'#, foreign_key: :follower_id, dependent: :destroy
+  # has_many :followees, through: :user_followees
 
   has_one :feedly
 
@@ -149,6 +188,8 @@ class User < ActiveRecord::Base
           exists_username.save
         end
       end
+
+
     rescue Instagram::BadRequest => e
       if e.message =~ /you cannot view this resource/
 
@@ -619,9 +660,12 @@ class User < ActiveRecord::Base
       data = d
     end
 
+    bidning.pry
+
     if data
       exists = User.where(insta_id: data['id']).first
       if exists
+        exists.insta_data data
         exists.username = data['username']
         exists.save
         return exists
@@ -812,7 +856,7 @@ class User < ActiveRecord::Base
   end
 
   def self.fix_exists_username username, exists_insta_id
-    user = self.where(username: username).where('insta_id != ?', exists_insta_id).first
+    user = self.where(username: username).ne(insta_id: exists_insta_id).first
     user.update_info! force: true if user.present?
   end
 
@@ -826,7 +870,7 @@ class User < ActiveRecord::Base
 
     users2 = []
     left_urls[0..1000].each do |url|
-      user = User.where('website like ?', "%#{url}%").first
+      user = User.where(website: /#{url}/).first
       users2 << user if user
     end
 

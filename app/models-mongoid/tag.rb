@@ -1,6 +1,11 @@
-class Tag < ActiveRecord::Base
+class Tag
 
-  has_and_belongs_to_many :media, class_name: 'Media', after_add: :increment_some_tag, after_remove: :decrement_some_tag
+  include Mongoid::Document
+  field :name, type: String
+
+  index({ name: 1 })
+
+  # has_many :media_tags#, class_name: 'Media'#, after_add: :increment_some_tag, after_remove: :decrement_some_tag
 
   def increment_some_tag a
     binding.pry
@@ -13,8 +18,6 @@ class Tag < ActiveRecord::Base
   scope :observed, -> { joins(:observed_tag).where('observed_tags.id is not null') }
   scope :chartable, -> { observed.where('observed_tags.for_chart = ?', true) }
   scope :exportable, -> { observed.where('observed_tags.export_csv = ?', true) }
-
-  default_scope -> { }
 
   has_one :observed_tag, dependent: :destroy
 
@@ -41,9 +44,9 @@ class Tag < ActiveRecord::Base
     options = args.extract_options!
 
     if options[:offset].present?
-      m = Media.where('created_time >= ? && created_time <= ?', options[:offset], options[:offset] + 10.minutes).order(created_time: :asc).first
+      m = Media.where(:created_time.gte => options[:offset], :created_time.lte => (options[:offset] + 10.minutes)).order(created_time: :asc).first
       unless m
-        m = Media.where('created_time >= ? && created_time <= ?', options[:offset], options[:offset] + 60.minutes).order(created_time: :asc).first
+        m = Media.where(:created_time.gte => options[:offset], :created_time.lte => (options[:offset] + 60.minutes)).order(created_time: :asc).first
       end
       if m
         max_tag_id = m.insta_id.match(/^(\d+)_/)[1]
@@ -67,6 +70,7 @@ class Tag < ActiveRecord::Base
       rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::BadRequest,
         Instagram::InternalServerError, Instagram::GatewayTimeout, Instagram::InternalServerError,
         JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE, Errno::EOPNOTSUPP => e
+        Rails.logger.debug e
         retries += 1
         sleep 5*retries
         retry if retries <= 6
@@ -79,9 +83,9 @@ class Tag < ActiveRecord::Base
 
       data = media_list.data
 
-      media_found = Media.where(insta_id: data.map{|el| el['id']})
-      tags_found.concat(Tag.where(name: data.map{|el| el['tags']}.flatten.uniq).to_a).uniq!
-      users_found = User.where(insta_id: data.map{|el| el['user']['id']})
+      media_found = Media.in(insta_id: data.map{|el| el['id']})
+      tags_found.concat(Tag.in(name: data.map{|el| el['tags']}.flatten.uniq).to_a).uniq!
+      users_found = User.in(insta_id: data.map{|el| el['user']['id']})
 
       data.each do |media_item|
         logger.debug "#{">>".green} Start process #{media_item['id']}"
@@ -92,8 +96,8 @@ class Tag < ActiveRecord::Base
 
         added += 1 if media.new_record?
 
-        media.media_user media_item['user'], users_found
-        media.media_data media_item
+        media.set_user media_item['user'], users_found
+        media.set_data media_item
 
         # save media before adding tags
         begin
@@ -102,7 +106,7 @@ class Tag < ActiveRecord::Base
           media = Media.where(insta_id: media_item['id']).first
         end
 
-        media.media_tags media_item['tags'], tags_found
+        media.set_tags media_item['tags'], tags_found
 
         tags_found.concat(media.tags).uniq!
 

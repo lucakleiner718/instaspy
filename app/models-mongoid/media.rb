@@ -1,12 +1,38 @@
-class Media < ActiveRecord::Base
+class Media
 
-  has_and_belongs_to_many :tags, after_add: :increment_some_tag, after_remove: :decrement_some_tag
+  include Mongoid::Document
+  field :insta_id, type: String
+  # field :user_id, type: String
+  field :created_time, type: DateTime
+  field :likes_amount, type: Integer
+  field :comments_amount, type: Integer
+  field :link, type: String
+  field :location_lat, type: BigDecimal
+  field :location_lng, type: BigDecimal
+  field :location_name, type: String
+  field :location_city, type: String
+  field :location_state, type: String
+  field :location_country, type: String
+  field :location_present, type: String
+  include Mongoid::Timestamps
+
+  index created_at: 1
+  index created_time: 1
+  index location_city: 1
+  index location_country: 1
+  index location_state: 1
+  index updated_at: 1
+  index user_id: 1
+  index({ insta_id: 1 }, { unique: true })
+
+  # has_many :media_tags#, after_add: :increment_some_tag, after_remove: :decrement_some_tag
+  has_many :media_tags
   belongs_to :user
 
   scope :with_location, -> { where('location_lat is not null and location_lat != ""') }
   scope :without_location, -> { where('location_lat is null or location_lat != ""').where('location_present is null') }
 
-  reverse_geocoded_by :location_lat, :location_lng
+  # reverse_geocoded_by :location_lat, :location_lng
 
   def location_name=(value)
     if value.present?
@@ -68,7 +94,7 @@ class Media < ActiveRecord::Base
     save_result
   end
 
-  def media_data media_item
+  def set_data media_item
     if media_item['location']
       self.location_present = true
       self.location_lat = media_item['location']['latitude']
@@ -84,7 +110,7 @@ class Media < ActiveRecord::Base
     self.created_time = Time.at media_item['created_time'].to_i
   end
 
-  def media_user media_item_user, users_found=nil
+  def set_user media_item_user, users_found=nil
     user = nil
     user = users_found.select{|el| el.insta_id == media_item_user['id'].to_i}.first if users_found.present?
     user = User.where(insta_id: media_item_user['id']).first_or_initialize unless user
@@ -101,24 +127,24 @@ class Media < ActiveRecord::Base
 
     begin
       user.save
-    rescue ActiveRecord::RecordNotUnique => e
-      if e.message =~ /Duplicate entry/ && e.message =~ /index_users_on_username/
-        exists_user = User.where(username: user.username).first
-        if exists_user.insta_id == user.insta_id
-          user = exists_user
-        else
-          exists_user.update_info!
-          if exists_user.private? || exists_user.username == user.username
-            exists_user.destroy
-            retry
-          end
-        end
-      else
-        user = User.where(username: user.username).first
-      end
+    # rescue ActiveRecord::RecordNotUnique => e
+    #   if e.message =~ /Duplicate entry/ && e.message =~ /index_users_on_username/
+    #     exists_user = User.where(username: user.username).first
+    #     if exists_user.insta_id == user.insta_id
+    #       user = exists_user
+    #     else
+    #       exists_user.update_info!
+    #       if exists_user.private? || exists_user.username == user.username
+    #         exists_user.destroy
+    #         retry
+    #       end
+    #     end
+    #   else
+    #     user = User.where(username: user.username).first
+    #   end
     end
 
-    self.user_id = user.id
+    self.user = user
   end
 
   # def media_tags tags_list, tags_found=nil
@@ -167,9 +193,9 @@ class Media < ActiveRecord::Base
   #   # end
   # end
 
-  def media_tags tags_names, tags_found=nil
+  def set_tags tags_names, tags_found=nil
     unless tags_found
-      tags_found = Tag.where(id: Tag.connection.execute("SELECT tag_id FROM media_tags WHERE media_id=#{self.id}").to_a)
+      tags_found = Tag.in(id: self.media_tags.pluck(:tag_id))
     end
 
     find_more = tags_names
@@ -178,7 +204,7 @@ class Media < ActiveRecord::Base
     end
 
     if find_more.size > 0
-      tags_found.concat Tag.where(name: find_more).to_a
+      tags_found.concat Tag.in(name: find_more).to_a
     end
 
     tags_list = []
@@ -192,11 +218,11 @@ class Media < ActiveRecord::Base
           # if tags_found
           #   tag = Tag.unscoped.where(name: tag_name).create
           # else
-          tag = Tag.unscoped.where(name: tag_name).first_or_create
+          tag = Tag.where(name: tag_name).first_or_create
             # end
-        rescue ActiveRecord::RecordNotUnique => e
-          # Rails.logger.info "#{"Duplicated entry #{tag_name}".red} / #{tags_found.map{|el| el.name}.join(',')}"
-          tag = Tag.unscoped.where(name: tag_name).first
+        # rescue ActiveRecord::RecordNotUnique => e
+        #   # Rails.logger.info "#{"Duplicated entry #{tag_name}".red} / #{tags_found.map{|el| el.name}.join(',')}"
+        #   tag = Tag.unscoped.where(name: tag_name).first
         end
       end
       tags_list << tag if tag && tag.valid?
@@ -452,6 +478,17 @@ class Media < ActiveRecord::Base
       end
     end
     false
+  end
+
+  def tags
+    self.media_tags.map{|mt| mt.tag}
+  end
+
+  def tags=tags
+    self.media_tags = []
+    tags.each do |t|
+      self.media_tags << MediaTag.new(tag_id: t.id)
+    end
   end
 
   private
