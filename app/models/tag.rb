@@ -1,6 +1,14 @@
 class Tag < ActiveRecord::Base
 
-  has_and_belongs_to_many :media, class_name: 'Media'
+  has_and_belongs_to_many :media, class_name: 'Media', after_add: :increment_some_tag, after_remove: :decrement_some_tag
+
+  def increment_some_tag a
+    binding.pry
+  end
+
+  def decrement_some_tag a
+    binding.pry
+  end
 
   scope :observed, -> { joins(:observed_tag).where('observed_tags.id is not null') }
   scope :chartable, -> { observed.where('observed_tags.for_chart = ?', true) }
@@ -47,6 +55,7 @@ class Tag < ActiveRecord::Base
     options[:total_limit] ||= 5_000
     start_media_amount = self.media.length if options[:media_atleast]
     created_time_list = []
+    tags_found = []
 
     while true
       time_start = Time.now
@@ -71,7 +80,7 @@ class Tag < ActiveRecord::Base
       data = media_list.data
 
       media_found = Media.where(insta_id: data.map{|el| el['id']})
-      tags_found = Tag.where(name: data.map{|el| el['tags']}.flatten.uniq).to_a
+      tags_found.concat(Tag.where(name: data.map{|el| el['tags']}.flatten.uniq).to_a).uniq!
       users_found = User.where(insta_id: data.map{|el| el['user']['id']})
 
       data.each do |media_item|
@@ -86,6 +95,7 @@ class Tag < ActiveRecord::Base
         media.media_user media_item['user'], users_found
         media.media_data media_item
 
+        # save media before adding tags
         begin
           media.save
         rescue ActiveRecord::RecordNotUnique => e
@@ -194,24 +204,37 @@ class Tag < ActiveRecord::Base
   end
 
   def count_media
-    # self.update_column :media_count, self.media.length
-    # amount = Tag.connection.execute("select count(distinct(media_id)) from media_tags where tag_id=#{self.id}").to_a.first.first
-    # amount = Tag.connection.execute("select count(media_id) from media_tags where tag_id=#{self.id}").to_a.first.first
     Tag.connection.execute("select count(*) from media_tags where tag_id=#{self.id}").to_a[0][0]
   end
 
   def update_media_count!
     amount = self.count_media
-    self.update_attribute :media_count, amount if self.media_count != amount
+    tmc = TagMediaCounter.get(self.id)
+    tmc.media_count = amount
+    tmc.save
   end
 
-  # def media_amount
-  #   if self.media_count.blank? || self.media_count_updated_at < 3.days.ago
-  #     self.media_count = self.media.size
-  #     self.media_count_updated_at = Time.now
-  #     self.save
-  #   end
-  #   self.media_count
-  # end
+  def self.increment_counter tag_id
+    TagMediaCounter.want(tag_id).inc(media_count: 1)
+  end
+
+  def self.decrement_counter tag_id
+    TagMediaCounter.want(tag_id).inc(media_count: -1)
+  end
+
+  def media_count
+    TagMediaCounter.get(self.id).media_count
+  end
+
+  def self.count_media tag_id
+    Tag.connection.execute("select count(*) from media_tags where tag_id=#{tag_id}").to_a[0][0]
+  end
+
+  def self.update_media_count! tag_id
+    amount = self.count_media tag_id
+    tmc = TagMediaCounter.get(tag_id)
+    tmc.media_count = amount
+    tmc.save
+  end
 
 end

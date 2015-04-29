@@ -698,6 +698,7 @@ class User < ActiveRecord::Base
 
     total_added = 0
     options[:total_limit] ||= 2_000
+    tags_found = []
 
     self.update_info! unless self.insta_id
     raise Exception unless self.insta_id || self.destroyed?
@@ -736,7 +737,7 @@ class User < ActiveRecord::Base
       data = media_list.data
 
       media_found = Media.where(insta_id: data.map{|el| el['id']})
-      tags_found = Tag.where(name: data.map{|el| el['tags']}.flatten.uniq).select(:id, :name).to_a
+      tags_found.concat(Tag.where(name: data.map{|el| el['tags']}.flatten.uniq).select(:id, :name).to_a).uniq!
 
       data.each do |media_item|
         logger.debug "#{">>".green} Start process #{media_item['id']}"
@@ -758,7 +759,7 @@ class User < ActiveRecord::Base
         end
 
         media.media_tags media_item['tags'], tags_found
-        tags_found.concat(media.tags.to_a).uniq!{|el| el.id}
+        tags_found.concat(media.tags.to_a).uniq!
 
         avg_created_time += media['created_time'].to_i
 

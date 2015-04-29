@@ -31,6 +31,7 @@ class Media < ActiveRecord::Base
   def update_info!
     return false if self.user && self.user.private?
 
+    start_time = Time.now
     retries = 0
 
     begin
@@ -57,10 +58,14 @@ class Media < ActiveRecord::Base
 
     self.media_user response.data['user']
     self.media_data response.data
-    self.media_tags response.data['tags'], self.tags.to_a
+    self.media_tags response.data['tags']
     self.updated_at = Time.now
 
-    self.save
+    save_result = self.save
+
+    Rails.logger.debug "#{">>".green} Update took #{(Time.now - start_time).to_f.round(2)}s"
+
+    save_result
   end
 
   def media_data media_item
@@ -116,84 +121,89 @@ class Media < ActiveRecord::Base
     self.user_id = user.id
   end
 
-  def media_tags tags_list, tags_found=nil
-    tags_to_create = tags_list
-    if tags_found && tags_found.class.name == 'Array' && tags_found.size > 0
-      tags_to_create = tags_to_create.map{|tname| tname.downcase} - tags_found.map{|t| t.name.downcase}
-    end
-
-    if tags_to_create.size > 0
-      Tag.connection.execute("INSERT IGNORE INTO tags (name) VALUES #{tags_to_create.map{|t_name| "(#{Tag.connection.quote t_name})"}.join(',')}")
-    end
-    tags_ids = Tag.where(name: tags_list).pluck(:id)
-
-    current_tags_ids = Tag.connection.execute("SELECT tag_id FROM media_tags WHERE media_id=#{self.id}").to_a.map(&:first).uniq
-    # deleted_tags = current_tags_ids - new_tags_ids
-    added_tags = tags_ids - current_tags_ids
-
-    # if deleted_tags.size > 0
-    #   Tag.connection.execute("DELETE FROM media_tags WHERE media_id=#{self.id} AND tag_id IN(#{deleted_tags.join(',')})")
-    #   Tag.connection.execute("UPDATE tags SET media_count=media_count-1 WHERE id in (#{deleted_tags.join(',')})")
-    # end
-    if added_tags.size > 0
-      # begin
-      #   Media.connection.execute("INSERT IGNORE INTO media_tags (media_id, tag_id) VALUES #{tags_ids.map{|tid| "(#{self.id}, #{tid})"}.join(',')}")
-      #   Media.connection.execute("UPDATE tags SET media_count=media_count+1 WHERE id in (#{tags_ids.join(',')})")
-      # rescue Mysql2::Error => e
-      #   if e =~ /Lock wait timeout exceeded/
-      Media.connection.execute("INSERT IGNORE INTO media_tags (media_id, tag_id) VALUES #{added_tags.map{|tid| "(#{self.id}, #{tid})"}.join(',')}")
-      # tags_ids.each do |tid|
-      #   UpdateTagMediaCounterWorker.perform_async tid
-      #   # Media.connection.execute("UPDATE tags SET media_count=media_count+1 WHERE id=#{tid}")
-      # end
-      # TagsToMediaWorker.perform_async self.id, added_tags
-      # UpdateTagMediaCounterWorker.perform_async added_tags
-        # else
-        #   raise e
-        # end
-      # end
-      # Media.connection.execute("INSERT IGNORE INTO media_tags (media_id, tag_id) VALUES #{added_tags.map{|tid| "(#{self.id}, #{tid})"}.join(',')}")
-      # Media.connection.execute("UPDATE tags SET media_count=media_count+1 WHERE id in (#{added_tags.join(',')})")
-    end
-  end
-
-  # def media_tags2 tags_names, tags_found=nil
-  #   unless tags_found
-  #     tags_found = self.tags
+  # def media_tags tags_list, tags_found=nil
+  #   tags_to_create = tags_list
+  #   if tags_found && tags_found.class.name == 'Array' && tags_found.size > 0
+  #     tags_to_create = tags_to_create.map{|tname| tname.downcase} - tags_found.map{|t| t.name.downcase}
   #   end
   #
-  #   find_more = media_item['tags']
-  #   if tags_found.size > 0
-  #     find_more -= tags_found.map{|el| el.name.downcase}
+  #   if tags_to_create.size > 0
+  #     Tag.connection.execute("INSERT IGNORE INTO tags (name) VALUES #{tags_to_create.map{|t_name| "(#{Tag.connection.quote t_name})"}.join(',')}")
   #   end
+  #   tags_ids = Tag.where(name: tags_list).pluck(:id)
   #
-  #   if find_more.size > 0
-  #     tags_found.concat Tag.where(name: find_more).to_a
-  #   end
+  #   current_tags_ids = Tag.connection.execute("SELECT tag_id FROM media_tags WHERE media_id=#{self.id}").to_a.map(&:first).uniq
+  #   # deleted_tags = current_tags_ids - new_tags_ids
+  #   added_tags = tags_ids - current_tags_ids
   #
-  #   tags_list = []
-  #   tags_names.each do |tag_name|
-  #     tag = nil
-  #     if tags_found
-  #       tag = tags_found.select{|el| el.name.downcase == tag_name.downcase}.first
-  #     end
-  #     unless tag
-  #       begin
-  #         # if tags_found
-  #         #   tag = Tag.unscoped.where(name: tag_name).create
-  #         # else
-  #         tag = Tag.unscoped.where(name: tag_name).first_or_create
-  #           # end
-  #       rescue ActiveRecord::RecordNotUnique => e
-  #         # Rails.logger.info "#{"Duplicated entry #{tag_name}".red} / #{tags_found.map{|el| el.name}.join(',')}"
-  #         tag = Tag.unscoped.where(name: tag_name).first
-  #       end
-  #     end
-  #     tags_list << tag if tag && tag.valid?
-  #   end
+  #   binding.pry
   #
-  #   self.tags = tags_list.uniq{|el| el.id}
+  #   self.tag_ids = added_tags
+  #   # self.save
+  #
+  #   # # if deleted_tags.size > 0
+  #   # #   Tag.connection.execute("DELETE FROM media_tags WHERE media_id=#{self.id} AND tag_id IN(#{deleted_tags.join(',')})")
+  #   # #   Tag.connection.execute("UPDATE tags SET media_count=media_count-1 WHERE id in (#{deleted_tags.join(',')})")
+  #   # # end
+  #   # if added_tags.size > 0
+  #   #   # begin
+  #   #   #   Media.connection.execute("INSERT IGNORE INTO media_tags (media_id, tag_id) VALUES #{tags_ids.map{|tid| "(#{self.id}, #{tid})"}.join(',')}")
+  #   #   #   Media.connection.execute("UPDATE tags SET media_count=media_count+1 WHERE id in (#{tags_ids.join(',')})")
+  #   #   # rescue Mysql2::Error => e
+  #   #   #   if e =~ /Lock wait timeout exceeded/
+  #   #   Media.connection.execute("INSERT IGNORE INTO media_tags (media_id, tag_id) VALUES #{added_tags.map{|tid| "(#{self.id}, #{tid})"}.join(',')}")
+  #   #   # tags_ids.each do |tid|
+  #   #   #   UpdateTagMediaCounterWorker.perform_async tid
+  #   #   #   # Media.connection.execute("UPDATE tags SET media_count=media_count+1 WHERE id=#{tid}")
+  #   #   # end
+  #   #   # TagsToMediaWorker.perform_async self.id, added_tags
+  #   #   # UpdateTagMediaCounterWorker.perform_async added_tags
+  #   #     # else
+  #   #     #   raise e
+  #   #     # end
+  #   #   # end
+  #   #   # Media.connection.execute("INSERT IGNORE INTO media_tags (media_id, tag_id) VALUES #{added_tags.map{|tid| "(#{self.id}, #{tid})"}.join(',')}")
+  #   #   # Media.connection.execute("UPDATE tags SET media_count=media_count+1 WHERE id in (#{added_tags.join(',')})")
+  #   # end
   # end
+
+  def media_tags tags_names, tags_found=nil
+    unless tags_found
+      tags_found = Tag.where(id: Tag.connection.execute("SELECT tag_id FROM media_tags WHERE media_id=#{self.id}").to_a)
+    end
+
+    find_more = tags_names
+    if tags_found.size > 0
+      find_more -= tags_found.map{|el| el.name.downcase}
+    end
+
+    if find_more.size > 0
+      tags_found.concat Tag.where(name: find_more).to_a
+    end
+
+    tags_list = []
+    tags_names.each do |tag_name|
+      tag = nil
+      if tags_found
+        tag = tags_found.select{|el| el.name.downcase == tag_name.downcase}.first
+      end
+      unless tag
+        begin
+          # if tags_found
+          #   tag = Tag.unscoped.where(name: tag_name).create
+          # else
+          tag = Tag.unscoped.where(name: tag_name).first_or_create
+            # end
+        rescue ActiveRecord::RecordNotUnique => e
+          # Rails.logger.info "#{"Duplicated entry #{tag_name}".red} / #{tags_found.map{|el| el.name}.join(',')}"
+          tag = Tag.unscoped.where(name: tag_name).first
+        end
+      end
+      tags_list << tag if tag && tag.valid?
+    end
+
+    self.tags = tags_list.uniq{|el| el.id}
+  end
 
 
   def set_location *args
@@ -446,33 +456,14 @@ class Media < ActiveRecord::Base
 
   private
 
-  # after_create :increment_tag
-  # after_destroy :decrement_tag
-
-  # def increment_tag
-  #   t = self.tags
-  #   self.class.connection.execute("update tags set media_count=media_count+1 where id in (#{t.map(&:id).join(',')})") if t.size > 0
-  # end
-  #
-  # def decrement_tag
-  #   t = self.tags
-  #   self.class.connection.execute("update tags set media_count=media_count-1 where id in (#{t.map(&:id).join(',')})") if t.size > 0
-  # end
-
   def increment_some_tag tag
-    begin
-      self.class.connection.execute("update tags set media_count=media_count+1 where id=#{tag.id}")
-    rescue => e
-      TagMediaCounterWorker.perform_async tag.id, '+'
-    end
+    Rails.logger.debug "increment_some_tag #{tag.id}"
+    Tag.increment_counter tag.id
   end
 
   def decrement_some_tag tag
-    begin
-      self.class.connection.execute("update tags set media_count=media_count-1 where id=#{tag.id}")
-    rescue => e
-      TagMediaCounterWorker.perform_async tag.id, '-'
-    end
+    Rails.logger.debug "decrement_some_tag #{tag.id}"
+    Tag.decrement_counter tag.id
   end
 
   def self.delete_old amount=100_000
