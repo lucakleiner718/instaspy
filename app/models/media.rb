@@ -460,10 +460,6 @@ class Media < ActiveRecord::Base
   # end
 
   def increment_some_tag tag
-    # tag.increment! :media_count
-    # Tag.transaction do
-    # Tag.increment_counter :media_count, tag.id
-    # end
     begin
       self.class.connection.execute("update tags set media_count=media_count+1 where id=#{tag.id}")
     rescue => e
@@ -472,10 +468,6 @@ class Media < ActiveRecord::Base
   end
 
   def decrement_some_tag tag
-    # tag.decrement! :media_count
-    # Tag.transaction do
-    # Tag.decrement_counter :media_count, tag.id
-    # end
     begin
       self.class.connection.execute("update tags set media_count=media_count-1 where id=#{tag.id}")
     rescue => e
@@ -484,14 +476,12 @@ class Media < ActiveRecord::Base
   end
 
   def self.delete_old amount=100_000
-    split_size = 100_000
+    split_size = 10_000
     (amount/split_size.to_f).ceil.times do |i|
-      ids = Media.order(id: :asc).where('created_at < ?', 2.months.ago).limit(split_size).offset(split_size*i).pluck(:id)
-      ids.in_groups_of(10_000, false) do |group|
-        ActiveRecord::Base.transaction do
-          Media.connection.execute("DELETE FROM media WHERE id IN (#{group.join(',')})")
-          Media.connection.execute("DELETE FROM media_tags WHERE media_id IN (#{group.join(',')})")
-        end
+      ids = Media.order(id: :asc).where('created_at < :time AND created_time < :time', time: 2.months.ago).limit(split_size).offset(split_size*i).pluck(:id)
+      ActiveRecord::Base.transaction do
+        Media.connection.execute("DELETE FROM media WHERE id IN (#{ids.join(',')})")
+        Media.connection.execute("DELETE FROM media_tags WHERE media_id IN (#{ids.join(',')})")
       end
     end
   end
