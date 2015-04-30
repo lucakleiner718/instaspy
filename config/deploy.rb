@@ -4,7 +4,7 @@ lock '3.2.1'
 set :application, 'instaspy'
 set :repo_url, 'git@github.com:luxagency/instaspy.git'
 
-set :branch, :master
+set :branch, 'migrate-mongo'
 set :scm, :git
 set :format, :pretty
 set :pty, true
