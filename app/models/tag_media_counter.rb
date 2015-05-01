@@ -1,4 +1,5 @@
 class TagMediaCounter
+
   include Mongoid::Document
   field :tag_id, type: Integer
   field :media_count, type: Integer, default: 0

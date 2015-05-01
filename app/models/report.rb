@@ -1,6 +1,6 @@
 class Report
-  include Mongoid::Document
 
+  include Mongoid::Document
   field :format, type: String
   field :original_input, type: String
   field :processed_input, type: String

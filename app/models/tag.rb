@@ -7,14 +7,6 @@ class Tag
 
   # has_many :media_tags#, class_name: 'Media'#, after_add: :increment_some_tag, after_remove: :decrement_some_tag
 
-  def increment_some_tag a
-    binding.pry
-  end
-
-  def decrement_some_tag a
-    binding.pry
-  end
-
   scope :observed, -> { where(:id.in => ObservedTag.all.pluck(:id)) }
   scope :chartable, -> { where(:id.in => ObservedTag.where(for_chart: true).pluck(:id)) }
   scope :exportable, -> { where(:id.in => ObservedTag.where(export_csv: true).pluck(:id)) }

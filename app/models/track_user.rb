@@ -7,6 +7,6 @@ class TrackUser
 
   belongs_to :user
 
-  add_index "track_users", ["user_id"], name: "index_track_users_on_user_id", unique: true, using: :btree
+  index({ user_id: 1 }, { unique: true })
 
 end

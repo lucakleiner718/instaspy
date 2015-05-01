@@ -1,7 +1,6 @@
 class Proxy
 
   include Mongoid::Document
-
   field :url, type: String
   field :login, type: String
   field :password, type: String

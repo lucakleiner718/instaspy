@@ -1,4 +1,5 @@
 class MediaAmountStat
+
   include Mongoid::Document
 
   field :date, type: Date

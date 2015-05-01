@@ -1,7 +1,7 @@
 class InstaClient
 
   def initialize login=nil
-    @login = login || InstagramLogin.joins(:account).sample
+    @login = login || InstagramLogin.all.sample
 
     raise unless @login
 
