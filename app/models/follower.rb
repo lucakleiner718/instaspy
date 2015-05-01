@@ -1,4 +1,4 @@
-class Follower < ActiveRecord::Base
+class Follower
 
   include Mongoid::Document
 

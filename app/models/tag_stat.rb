@@ -1,4 +1,4 @@
-class TagStat < ActiveRecord::Base
+class TagStat
 
   include Mongoid::Document
   field :amount, type: Integer

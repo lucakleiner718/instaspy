@@ -202,7 +202,6 @@ class Reporter
   end
 
   def self.location_report usernames, send_email=true
-    # ActiveRecord::Base.logger.level = 1
     data = []
     media_amount = 50
 
