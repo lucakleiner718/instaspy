@@ -28,7 +28,11 @@ set :puma_threads, [0, 4]
 set :sidekiq_timeout, 60
 set :sidekiq_run_in_background, false
 
+set :rvm_type, :user
 set :rvm_ruby_version, '2.1.1@instaspy'
+set :rvm_roles, [:app]
+
+# set :log_level, :debug
 
 set :bundle_binstubs, nil
 
