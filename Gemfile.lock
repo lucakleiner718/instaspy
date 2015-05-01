@@ -273,7 +273,6 @@ GEM
     multi_json (1.10.1)
     multi_xml (0.5.5)
     multipart-post (2.0.0)
-    mysql2 (0.3.16)
     nenv (0.2.0)
     net-scp (1.2.1)
       net-ssh (>= 2.6.5)
@@ -479,7 +478,6 @@ DEPENDENCIES
   kaminari
   kaminari-bootstrap
   mongoid
-  mysql2
   net-sftp
   newrelic_rpm
   nokogiri

@@ -6,9 +6,7 @@ set :stage, :production
 # property set.  Don't declare `role :all`, it's a meta role.
 
 role :app, %w{app@45.55.202.215}
-# role :web, %w{deploy@example.com}
-role :db,  %w{root@45.55.211.223}
-
+# role :db,  %w{app@45.55.211.223}
 
 # Extended Server Syntax
 # ======================

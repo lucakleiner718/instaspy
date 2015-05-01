@@ -1,4 +1,13 @@
-class Proxy < ActiveRecord::Base
+class Proxy
+
+  include Mongoid::Document
+
+  field :url, type: String
+  field :login, type: String
+  field :password, type: String
+  field :active, type: Boolean, default: true
+  field :provider, type: String
+  include Mongoid::Timestamps
 
   def self.get_some
     self.where(active: true).limit(30).sample

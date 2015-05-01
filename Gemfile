@@ -44,7 +44,6 @@ group :production do
 end
 
 gem 'jquery-ui-rails'
-gem 'mysql2'                              # Use mysql as the database for Active Record
 gem 'pry-rails'
 gem 'instagram'
 gem 'httparty'

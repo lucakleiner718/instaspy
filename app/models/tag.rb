@@ -15,9 +15,9 @@ class Tag
     binding.pry
   end
 
-  scope :observed, -> { joins(:observed_tag).where('observed_tags.id is not null') }
-  scope :chartable, -> { observed.where('observed_tags.for_chart = ?', true) }
-  scope :exportable, -> { observed.where('observed_tags.export_csv = ?', true) }
+  scope :observed, -> { where(:id.in => ObservedTag.all.pluck(:id)) }
+  scope :chartable, -> { where(:id.in => ObservedTag.where(for_chart: true).pluck(:id)) }
+  scope :exportable, -> { where(:id.in => ObservedTag.where(export_csv: true).pluck(:id)) }
 
   has_one :observed_tag, dependent: :destroy
 
