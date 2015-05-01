@@ -7,9 +7,9 @@ class Tag
 
   # has_many :media_tags#, class_name: 'Media'#, after_add: :increment_some_tag, after_remove: :decrement_some_tag
 
-  scope :observed, -> { where(:id.in => ObservedTag.all.pluck(:id)) }
-  scope :chartable, -> { where(:id.in => ObservedTag.where(for_chart: true).pluck(:id)) }
-  scope :exportable, -> { where(:id.in => ObservedTag.where(export_csv: true).pluck(:id)) }
+  scope :observed, -> { where(:id.in => ObservedTag.all.pluck(:tag_id)) }
+  scope :chartable, -> { where(:id.in => ObservedTag.where(for_chart: true).pluck(:tag_id)) }
+  scope :exportable, -> { where(:id.in => ObservedTag.where(export_csv: true).pluck(:tag_id)) }
 
   has_one :observed_tag, dependent: :destroy
 

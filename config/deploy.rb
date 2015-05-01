@@ -85,6 +85,6 @@ namespace :god do
 
 end
 
-# after 'deploy:publishing', 'god:restart'
+after 'deploy:publishing', 'god:restart'
 
 after "deploy:updated", "newrelic:notice_deployment"
