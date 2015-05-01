@@ -20,7 +20,7 @@ set :deploy_to, '/home/app/instaspy'
 
 set :puma_conf, "#{shared_path}/puma.rb"
 set :puma_state, "#{shared_path}/tmp/pids/puma.state"
-set :puma_role, :app
+set :puma_role, :web
 set :puma_workers, 2
 set :puma_preload_app, false
 set :puma_threads, [0, 4]
@@ -30,7 +30,7 @@ set :sidekiq_run_in_background, false
 
 set :rvm_type, :user
 set :rvm_ruby_version, '2.1.1@instaspy'
-set :rvm_roles, [:app]
+set :rvm_roles, [:app, :web]
 
 # set :log_level, :debug
 
@@ -40,7 +40,7 @@ namespace :deploy do
 
   desc 'Restart application'
   task :restart do
-    on roles(:app), in: :sequence, wait: 5 do
+    on roles(:web), in: :sequence, wait: 5 do
       invoke 'puma:restart'
       # invoke 'sidekiq:restart'
     end
@@ -56,7 +56,7 @@ namespace :god do
     on roles(:app), in: :sequence, wait: 5 do
       within release_path do
         with rails_env: fetch(:rails_env) do
-          execute :bundle, :exec, 'god terminate'
+          execute :bundle, :exec, 'god terminate' if test(*("[ -f /home/app/instaspy/shared/tmp/pids/god.pid ]").split(' '))
           execute :bundle, :exec, 'god -c config/procs.god'
         end
       end
@@ -85,6 +85,6 @@ namespace :god do
 
 end
 
-after 'deploy:publishing', 'god:restart'
+# after 'deploy:publishing', 'god:restart'
 
 after "deploy:updated", "newrelic:notice_deployment"

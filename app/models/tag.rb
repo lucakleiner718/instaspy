@@ -200,7 +200,7 @@ class Tag
   end
 
   def count_media
-    Tag.connection.execute("select count(*) from media_tags where tag_id=#{self.id}").to_a[0][0]
+    MediaTag.where(tag_id: self.id).size
   end
 
   def update_media_count!
@@ -223,7 +223,7 @@ class Tag
   end
 
   def self.count_media tag_id
-    Tag.connection.execute("select count(*) from media_tags where tag_id=#{tag_id}").to_a[0][0]
+    MediaTag.where(tag_id: tag_id).size
   end
 
   def self.update_media_count! tag_id
