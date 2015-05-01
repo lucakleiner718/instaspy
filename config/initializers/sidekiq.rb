@@ -4,7 +4,7 @@ Sidekiq.default_worker_options = {
 }
 
 Sidekiq.configure_server do |config|
-  config.redis = { url: 'redis://localhost:6379/12', namespace: "instaspy_#{Rails.env}" }
+  config.redis = { url: 'redis://45.55.202.12:6379/12', namespace: "instaspy_#{Rails.env}" }
   # config.server_middleware do |chain|
   #   chain.add Sidekiq::Status::ServerMiddleware, expiration: 30.minutes # default
   # end
@@ -15,7 +15,7 @@ Sidekiq.configure_server do |config|
 end
 
 Sidekiq.configure_client do |config|
-  config.redis = { url: 'redis://localhost:6379/12', namespace: "instaspy_#{Rails.env}" }
+  config.redis = { url: 'redis://45.55.202.12:6379/12', namespace: "instaspy_#{Rails.env}" }
   # config.client_middleware do |chain|
   #   chain.add Sidekiq::Status::ClientMiddleware
   # end
