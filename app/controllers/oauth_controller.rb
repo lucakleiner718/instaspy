@@ -6,9 +6,6 @@ class OauthController < ApplicationController
       account = InstagramAccount.all.sample
     end
 
-    InstagramAccount.where(login_process: true).update_all(login_process: false)
-
-    account.update_attribute :login_process, true
     session[:ig_account] = account.id
     redirect_to Instagram.authorize_url(redirect_uri: account.redirect_uri,
         client_id: account.client_id, client_secret: account.client_secret, no_response_wrapper: true)
@@ -18,8 +15,7 @@ class OauthController < ApplicationController
     if session[:ig_account].present?
       account = InstagramAccount.find(session[:ig_account])
     else
-      account = InstagramAccount.where(login_process: true).first
-      account.update_column :login_process, false if account
+      account = InstagramAccount.first
     end
 
     Rails.logger.info "Processing with account #{account.id}; session: #{session[:ig_account]};"
@@ -37,7 +33,6 @@ class OauthController < ApplicationController
     user.insta_data response.user
     user.save
 
-    account.login_process = false
     account.save
 
     redirect_to clients_status_path

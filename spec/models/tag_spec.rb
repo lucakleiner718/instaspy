@@ -38,7 +38,7 @@ RSpec.describe Tag, type: :model do
 
   # it 'should remove from csv report if have other observed booleans' do
   #   Tag.add_to_csv('shopbop')
-  #   Tag.get('shopbop').observed_tag.update_column :for_chart, true
+  #   Tag.get('shopbop').observed_tag.update_attribute :for_chart, true
   #   expect(Tag.get('shopbop').observed_tag.for_chart).to be_truthy
   #   Tag.remove_from_csv('shopbop')
   #   expect(Tag.get('shopbop').observed_tag.for_chart).to be_falsey

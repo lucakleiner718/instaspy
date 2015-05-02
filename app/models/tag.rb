@@ -179,7 +179,7 @@ class Tag
   def self.remove_from_csv tag_name
     t = Tag.where(name: tag_name).first_or_initialize
     if t.observed_tag.present?
-      t.observed_tag.update_column :export_csv, false
+      t.observed_tag.update_attribute :export_csv, false
     end
   end
 

@@ -6,7 +6,7 @@ class MediaWorker
 
   def perform tag_id, *args
     tag = Tag.find(tag_id)
-    tag.observed_tag.update_column :media_updated_at, Time.now if tag.observed_tag
+    tag.observed_tag.update_attribute :media_updated_at, Time.now if tag.observed_tag
     tag.recent_media *args
   end
 
