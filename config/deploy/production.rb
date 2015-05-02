@@ -7,7 +7,9 @@ set :stage, :production
 
 role :app, %w{app@45.55.202.12}
 role :web, %w{app@45.55.202.215}
-# role :db,  %w{app@45.55.211.223}
+role :db,  %w{app@45.55.211.223}
+
+set :filter, :roles => %w{app web}
 
 # Extended Server Syntax
 # ======================
