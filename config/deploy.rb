@@ -36,19 +36,7 @@ set :rvm_roles, [:app, :web]
 
 set :bundle_binstubs, nil
 
-namespace :deploy do
-
-  desc 'Restart application'
-  task :restart do
-    on roles(:web), in: :sequence, wait: 5 do
-      invoke 'puma:restart'
-      # invoke 'sidekiq:restart'
-    end
-  end
-
-  after :publishing, :restart
-
-end
+after 'deploy:publishing', 'puma:restart'
 
 namespace :god do
 
