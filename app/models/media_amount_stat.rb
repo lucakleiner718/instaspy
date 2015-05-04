@@ -7,6 +7,6 @@ class MediaAmountStat
   field :action, type: String
   field :updated_at, type: DateTime
 
-  index({ date: 1, action: 1 }, { unique: true, background: true })
+  index({ date: 1, action: 1 }, { drop_dups: true, background: true })
 
 end

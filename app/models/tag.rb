@@ -3,7 +3,7 @@ class Tag
   include Mongoid::Document
   field :name, type: String
 
-  index({ name: 1 }, { unique: true, drop_dups: true, background: true })
+  index({ name: 1 }, { drop_dups: true, background: true })
 
   # has_many :media_tags#, class_name: 'Media'#, after_add: :increment_some_tag, after_remove: :decrement_some_tag
 
