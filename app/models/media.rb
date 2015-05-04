@@ -2,7 +2,6 @@ class Media
 
   include Mongoid::Document
   field :insta_id, type: String
-  # field :user_id, type: String
   field :created_time, type: DateTime
   field :likes_amount, type: Integer
   field :comments_amount, type: Integer
@@ -24,7 +23,7 @@ class Media
   index location_state: 1
   index updated_at: 1
   index user_id: 1
-  index({ insta_id: 1 }, { unique: true })
+  index({ insta_id: 1 }, { drop_dups: true })
 
   # has_many :media_tags#, after_add: :increment_some_tag, after_remove: :decrement_some_tag
   has_many :media_tags
