@@ -110,9 +110,9 @@ class Media
     self.created_time = Time.at media_item['created_time'].to_i
   end
 
-  def set_user media_item_user, users_found=nil
+  def set_user media_item_user, users_found=[]
     user = nil
-    user = users_found.select{|el| el.insta_id == media_item_user['id'].to_i}.first if users_found.present?
+    user = users_found.select{|el| el.insta_id == media_item_user['id'].to_i}.first if users_found.size > 0
     user = User.where(insta_id: media_item_user['id']).first_or_initialize unless user
     # if user.new_record?
     #   # with same username as we want to create

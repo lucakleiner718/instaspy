@@ -75,12 +75,13 @@ class Tag
 
       data = media_list.data
 
-      media_found = Media.in(insta_id: data.map{|el| el['id']})
+      media_found = Media.in(insta_id: data.map{|el| el['id']}).to_a
       tags_found.concat(Tag.in(name: data.map{|el| el['tags']}.flatten.uniq).to_a).uniq!
-      users_found = User.in(insta_id: data.map{|el| el['user']['id']})
+      users_found = User.in(insta_id: data.map{|el| el['user']['id']}).to_a
 
       data.each do |media_item|
         logger.debug "#{">>".green} Start process #{media_item['id']}"
+        st_time = Time.now
         media = media_found.select{|el| el.insta_id == media_item['id']}.first
         unless media
           media = Media.new(insta_id: media_item['id'])
@@ -92,19 +93,21 @@ class Tag
         media.set_data media_item
 
         # save media before adding tags
-        begin
+        # begin
           media.save
-        rescue ActiveRecord::RecordNotUnique => e
-          media = Media.where(insta_id: media_item['id']).first
-        end
+        # rescue ActiveRecord::RecordNotUnique => e
+        #   media = Media.where(insta_id: media_item['id']).first
+        # end
 
         media.set_tags media_item['tags'], tags_found
 
         tags_found.concat(media.tags).uniq!
 
         created_time_list << media['created_time'].to_i
-        logger.debug "#{">>".green} End process #{media_item['id']}"
+        logger.debug "#{">>".green} End process #{media_item['id']}. Time: #{(Time.now - st_time).to_f.round(2)}s"
       end
+
+      tags_found = []
 
       total_added += added
       total_processed += media_list.data.size
