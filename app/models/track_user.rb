@@ -7,6 +7,6 @@ class TrackUser
 
   belongs_to :user
 
-  index({ user_id: 1 }, { unique: true })
+  index({ user_id: 1 }, { drop_dups: true })
 
 end

@@ -5,7 +5,7 @@ class TagMediaCounter
   field :media_count, type: Integer, default: 0
   include Mongoid::Timestamps::Updated
 
-  index({ tag_id: 1 }, { unique: true })
+  index({ tag_id: 1 }, { drop_dups: true })
 
   def self.get tag_id
     self.find_or_initialize_by(tag_id: tag_id)
