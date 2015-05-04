@@ -32,7 +32,7 @@
   <% @reports.each do |report| %>
     <tr>
       <td><%= report.format == 'tags' ? 'Publishers' : report.format.titleize %> for <%= report.usernames.size %> <%= report.format != 'tags' ? 'usernames' : 'tags' %></td>
-      <td><%= link_to "Open", "#{root_url}#{report.original_input}", target: :_blank %></td>
+      <td><%= link_to "Open", report.original_input_url, target: :_blank %></td>
       <td><%= report.notify_email %></td>
       <td><span class="label label-<%= {'new' => 'info', 'in_process' => 'primary', 'finished' => 'success'}[report.status] %>"><%= report.status.titleize %></span></td>
       <td>
@@ -45,7 +45,7 @@
       <td><%= report.created_at.strftime('%m/%d/%y %H:%M:%S') %></td>
       <td><%= report.started_at.strftime('%m/%d/%y %H:%M:%S') if report.started_at %></td>
       <td><%= report.finished_at.strftime('%m/%d/%y %H:%M:%S') if report.finished_at %></td>
-      <td><%= link_to 'Download', report.result_data, target: :_blank if report.result_data.present? %></td>
+      <td><%= link_to 'Download', report.result_data_url, target: :_blank if report.result_data.present? %></td>
     </tr>
   <% end %>
   </tbody>

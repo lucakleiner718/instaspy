@@ -1,0 +1,3 @@
+class Report::Base
+
+end

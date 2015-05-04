@@ -29,10 +29,9 @@ class Media
   has_many :media_tags
   belongs_to :user
 
-  scope :with_location, -> { where('location_lat is not null and location_lat != ""') }
-  scope :without_location, -> { where('location_lat is null or location_lat != ""').where('location_present is null') }
-
-  # reverse_geocoded_by :location_lat, :location_lng
+  scope :with_coordinates, -> { where(:location_lat.ne => nil).and(:location_lat.ne => '') }
+  scope :with_country, -> { where(:location_country.ne => nil).and(:location_country.ne => '') }
+  scope :without_location, -> { scoped.or(location_lat: nil).or(:location_lat.ne => '').where(location_present: nil) }
 
   def location_name=(value)
     if value.present?
@@ -421,8 +420,8 @@ class Media
       media_list.data.each do |media_item|
         media = Media.where(insta_id: media_item['id']).first_or_initialize
 
-        media.media_user media_item['user']
-        media.media_data media_item
+        media.set_user media_item['user']
+        media.set_data media_item
 
         if media.new_record?
           added += 1
@@ -433,6 +432,8 @@ class Media
           media.save unless media.new_record? && Media.where(insta_id: media_item['id']).size == 1
         rescue ActiveRecord::RecordNotUnique => e
         end
+
+        media.set_tags media_item['tags']
 
         avg_created_time += media['created_time'].to_i
       end
@@ -485,10 +486,11 @@ class Media
   end
 
   def tags=tags
-    self.media_tags = []
+    tags_list = []
     tags.each do |t|
-      self.media_tags << MediaTag.new(tag_id: t.id)
+      tags_list << MediaTag.new(tag_id: t.id)
     end
+    self.media_tags = tags_list
   end
 
   private

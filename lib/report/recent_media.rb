@@ -1,4 +1,4 @@
-module Report::RecentMedia
+class Report::RecentMedia < Report::Base
 
   def self.reports_new report
     processed_input = report.original_csv
@@ -18,14 +18,16 @@ module Report::RecentMedia
         csv << row
       end
     end
-    File.write(Rails.root.join("public", "reports/reports_data/report-#{report.id}-processed-input.csv"), csv_string)
-    report.update_attribute :processed_input, "reports/reports_data/report-#{report.id}-processed-input.csv"
 
-    ReportProcessProgressWorker.perform_async report.id
+    filepath = "reports/reports_data/report-#{report.id}-processed-input.csv"
+    FileManager.save_file filepath, csv_string
+    report.processed_input = filepath
 
     report.status = :in_process
     report.started_at = Time.now
     report.save
+
+    ReportProcessProgressWorker.perform_async report.id
   end
 
 
@@ -92,13 +94,13 @@ module Report::RecentMedia
 
     csv_string = CSV.generate do |csv|
       csv << header
-      User.where(id: report.processed_ids).find_each do |u|
+      User.where(:id.in => report.processed_ids).each do |u|
         next unless users_media[u.id]
 
         media_ids = users_media[u.id][0,20]
-        tags_ids = Media.connection.execute("select tag_id, media_id from media_tags where media_id in (#{media_ids.join(',')})").to_a
-        tags_all = Tag.where(id: tags_ids.map{|r| r[0]}.uniq).pluck(:id, :name)
-        Media.where(id: media_ids).order(created_time: :desc).pluck(:link, :likes_amount, :comments_amount, :created_time, :id).each do |media|
+        tags_ids = MediaTag.where(:media_id.in => media_ids.join(',')).pluck(:tag_id, :media_id)
+        tags_all = Tag.where(:id.in => tags_ids.map{|r| r[0]}.uniq).pluck(:id, :name)
+        Media.where(:id.in => media_ids).order(created_time: :desc).pluck(:link, :likes_amount, :comments_amount, :created_time, :id).each do |media|
           tags = tags_ids.select{|r| r[1] == media[4]}.map{|r| r[0]}
           row = [
             u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email,
@@ -124,7 +126,7 @@ module Report::RecentMedia
       binary_data = stringio.sysread
 
       filepath = "reports/#{basename}.zip"
-      File.write("public/#{filepath}", binary_data)
+      FileManager.save_file filepath, binary_data
       report.result_data = filepath
     end
 

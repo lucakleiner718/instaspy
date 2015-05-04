@@ -1,4 +1,4 @@
-module Report::Followees
+class Report::Followees < Report::Base
 
   def self.reports_new report
     processed_input = report.original_csv
@@ -18,13 +18,17 @@ module Report::Followees
         csv << row
       end
     end
-    File.write(Rails.root.join("public", "reports/reports_data/report-#{report.id}-processed-input.csv"), csv_string)
-    report.processed_input = "reports/reports_data/report-#{report.id}-processed-input.csv"
+
+    filepath = "reports/reports_data/report-#{report.id}-processed-input.csv"
+    FileManager.save_file filepath, csv_string
+    report.processed_input = filepath
 
     report.data = { 'followees' => [] }
     report.status = :in_process
     report.started_at = Time.now
     report.save
+
+    ReportProcessProgressWorker.perform_async report.id
   end
 
 
@@ -37,7 +41,7 @@ module Report::Followees
     progress = 0
 
     unless report.steps.include?('user_info')
-      not_updated = User.where(id: report.processed_ids).outdated.pluck(:id)
+      not_updated = User.in(id: report.processed_ids).outdated.pluck(:id)
 
       if not_updated.size == 0
         report.steps << 'user_info'
@@ -51,7 +55,7 @@ module Report::Followees
 
     if report.steps.include?('user_info')
       unless report.steps.include?('followees')
-        users = User.where(id: report.processed_ids).where(private: false).map{|u| [u.id, u.follows, Follower.where(follower_id: u.id).size]}
+        users = User.in(id: report.processed_ids).not_private.map{ |u| [u.id, u.follows, u.followees_size] }
         for_update = users.select{|r| r[2]/r[1].to_f < 0.95}
 
         if for_update.size == 0
@@ -66,22 +70,23 @@ module Report::Followees
 
         if report.data['followees_file'].blank?
           # ids of ALL followees of provided users
-          followees_ids = Follower.where(follower_id: report.processed_ids)
-          followees_ids = followees_ids.where('followed_at >= ?', report.date_from) if report.date_from
-          followees_ids = followees_ids.where('followed_at <= ?', report.date_to) if report.date_to
+          followees_ids = Follower.in(follower_id: report.processed_ids)
+          followees_ids = followees_ids.gte(followed_at => report.date_from) if report.date_from
+          followees_ids = followees_ids.gte(followed_at => report.date_to) if report.date_to
           followees_ids = followees_ids.pluck(:user_id).uniq
 
-          File.write(Rails.root.join("public", "reports/reports_data/report-#{report.id}-followees-ids"), followees_ids.join(','))
-          report.data['followees_file'] = "reports/reports_data/report-#{report.id}-followees-ids"
+          filepath = "reports/reports_data/report-#{report.id}-followees-ids"
+          FileManager.save_file filepath, followees_ids.join(',')
+          report.data['followees_file'] = filepath
         else
-          followees_ids = File.read(Rails.root.join("public", report.data['followees_file'])).split(',').map(&:to_i)
+          followees_ids = FileManager.read_file(report.data['followees_file']).split(',').map(&:to_i)
         end
 
         # update followees info, so in report we will have actual media amount, followees and etc. data
         unless report.steps.include?('followees_info')
           not_updated = []
           followees_ids.in_groups_of(10_000, false) do |ids|
-            users = User.where(id: ids).outdated(7.days).pluck(:id, :grabbed_at)
+            users = User.in(id: ids).outdated(7.days).pluck(:id, :grabbed_at)
             not_updated.concat users.select{|r| r[1].blank? || r[1] < 8.days.ago}.map(&:first)
           end
           if not_updated.size == 0
@@ -99,7 +104,7 @@ module Report::Followees
           if report.output_data.include?('likes') && !report.steps.include?('likes')
             get_likes = []
             followees_ids.in_groups_of(5_000, false) do |ids|
-              get_likes.concat User.where(id: ids).without_likes.with_media.pluck(:id)
+              get_likes.concat User.in(id: ids).without_likes.with_media.not_private.pluck(:id)
             end
             if get_likes.size == 0
               report.steps << 'likes'
@@ -113,7 +118,7 @@ module Report::Followees
           if report.output_data.include?('location') && !report.steps.include?('location')
             get_location = []
             followees_ids.in_groups_of(5_000, false) do |ids|
-              get_location.concat User.where(id: ids).without_location.with_media.pluck(:id)
+              get_location.concat User.in(id: ids).without_location.with_media.not_private.pluck(:id)
             end
             if get_location.size == 0
               report.steps << 'location'
@@ -128,9 +133,9 @@ module Report::Followees
             with_website = []
             feedly_exists = []
             followees_ids.in_groups_of(5_000, false) do |ids|
-              for_process = User.where(id: ids).with_url.pluck(:id)
+              for_process = User.in(id: ids).with_url.pluck(:id)
               with_website.concat for_process
-              feedly_exists.concat Feedly.where(user_id: for_process).pluck(:user_id)
+              feedly_exists.concat Feedly.in(user_id: for_process).pluck(:user_id)
             end
 
             no_feedly = with_website - feedly_exists
@@ -167,11 +172,11 @@ module Report::Followees
     header += ['AVG Likes'] if report.output_data.include? 'likes'
     header += ['Feedly Subscribers'] if report.output_data.include? 'feedly'
 
-    User.where(id: report.processed_ids).find_each do |user|
+    User.in(id: report.processed_ids).each do |user|
       csv_string = CSV.generate do |csv|
         csv << header
         followees_ids = Follower.where(follower_id: user.id).pluck(:user_id)
-        User.where(id: followees_ids).each do |u|
+        User.in(id: followees_ids).each do |u|
           row = [u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email]
           row.concat [u.location_country, u.location_state, u.location_city] if report.output_data.include? 'location'
           row.concat [u.avg_likes] if report.output_data.include? 'likes'
@@ -198,7 +203,7 @@ module Report::Followees
       binary_data = stringio.sysread
 
       filepath = "reports/users-followees-#{files.size}-#{Time.now.to_i}.zip"
-      File.write("public/#{filepath}", binary_data)
+      FileManager.save_file filepath, binary_data
       report.result_data = filepath
     end
 

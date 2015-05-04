@@ -1,4 +1,4 @@
-module Report::Tags
+class Report::Tags < Report::Base
 
   def self.reports_new report
     processed_input = report.original_csv
@@ -18,18 +18,20 @@ module Report::Tags
         csv << row
       end
     end
-    File.write(Rails.root.join("public", "reports/reports_data/report-#{report.id}-processed-input.csv"), csv_string)
-    report.update_attribute :processed_input, "reports/reports_data/report-#{report.id}-processed-input.csv"
+
+    filepath = "reports/reports_data/report-#{report.id}-processed-input.csv"
+    FileManager.save_file filepath, csv_string
+    report.processed_input = filepath
 
     report.processed_csv.each do |row|
       report.steps << [row[1], []]
     end
 
-    ReportProcessProgressWorker.perform_async report.id
-
     report.status = :in_process
     report.started_at = Time.now
     report.save
+
+    ReportProcessProgressWorker.perform_async report.id
   end
 
 
@@ -72,7 +74,7 @@ module Report::Tags
 
       if report.steps[step_index][1].include?('publishers_info')
         if report.output_data.include?('likes') && !report.steps[step_index][1].include?('likes')
-          get_likes = User.where(id: publishers_ids).without_likes.with_media.pluck(:id)
+          get_likes = User.where(id: publishers_ids).without_likes.with_media.not_private.pluck(:id)
           if get_likes.size == 0
             report.steps[step_index][1] << 'likes'
           else
@@ -81,7 +83,7 @@ module Report::Tags
         end
 
         if report.output_data.include?('location') && !report.steps[step_index][1].include?('location')
-          get_location = User.where(id: publishers_ids).without_location.with_media.pluck(:id)
+          get_location = User.where(id: publishers_ids).without_location.with_media.not_private.pluck(:id)
           if get_location.size == 0
             report.steps[step_index][1] << 'location'
           else
@@ -136,7 +138,7 @@ module Report::Tags
 
       media_list = {}
       publishers_media[tag_id].values.in_groups_of(10_000, false) do |rows|
-        Media.where(id: rows).pluck(:user_id, :likes_amount, :comments_amount, :link).each do |media_row|
+        Media.where(:id.in => rows).pluck(:user_id, :likes_amount, :comments_amount, :link).each do |media_row|
           user_id = media_row.shift
           media_list[user_id] = media_row
         end
@@ -145,7 +147,7 @@ module Report::Tags
       csv_string = CSV.generate do |csv|
         csv << header
         tags_publishers[tag_id].in_groups_of(1000, false) do |ids|
-          User.where(id: ids).find_each do |u|
+          User.where(:id.in => ids).each do |u|
             media = media_list[u.id]
             next unless media
             row = [u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email]
@@ -176,7 +178,7 @@ module Report::Tags
       binary_data = stringio.sysread
 
       filepath = "reports/tag-#{report.processed_csv.size}-publishers-#{Time.now.to_i}.zip"
-      File.write("public/#{filepath}", binary_data)
+      FileManager.save_file filepath, binary_data
       report.result_data = filepath
     end
 

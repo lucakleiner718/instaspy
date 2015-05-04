@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe User, type: :model do
 
-  before :all do
+  before :each do
     create(:instagram_login) if InstagramLogin.all.size == 0
   end
 
@@ -109,8 +109,7 @@ RSpec.describe User, type: :model do
     VCR.use_cassette('user_1446641248_followers') do
       user.update_followers
     end
-    user.followers.reload
-    expect(user.followers.size).to eq 70
+    expect(user.followers_size).to eq 70
   end
 
   it 'should catch email from bio' do
@@ -120,6 +119,15 @@ RSpec.describe User, type: :model do
 
   it 'should update location!' do
 
+  end
+
+  it 'should return outdated users list' do
+    create(:outdated)
+    expect(User.outdated.size).to eq 1
+    create(:outdated2)
+    expect(User.outdated.size).to eq 2
+    create(:recently_grabbed)
+    expect(User.outdated.size).to eq 2
   end
 
 end

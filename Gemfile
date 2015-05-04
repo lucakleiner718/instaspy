@@ -85,3 +85,4 @@ gem 'feedlr', github: 'khelll/feedlr'
 
 gem 'newrelic_rpm'
 gem 'simple_form'
+gem 'fog'

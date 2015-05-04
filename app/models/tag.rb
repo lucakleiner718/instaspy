@@ -233,4 +233,8 @@ class Tag
     tmc.save
   end
 
+  def media
+    Media.where(:media_id.in => MediaTag.where(tag_id: self.id).pluck(:media_id))
+  end
+
 end

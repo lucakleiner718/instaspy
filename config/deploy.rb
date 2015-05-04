@@ -30,13 +30,13 @@ set :sidekiq_run_in_background, false
 
 set :rvm_type, :user
 set :rvm_ruby_version, '2.1.1@instaspy'
-set :rvm_roles, [:app, :web]
+set :rvm_roles, %w{app web}
 
 # set :log_level, :debug
 
 set :bundle_binstubs, nil
 
-after 'deploy:publishing', 'puma:restart'
+after 'deploy:restart', 'puma:restart'
 
 namespace :god do
 

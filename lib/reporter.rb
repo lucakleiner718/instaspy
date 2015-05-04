@@ -246,7 +246,7 @@ class Reporter
     csv_string = CSV.generate do |csv|
       csv << ['Insta ID', 'Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followed By', 'Media Amount', 'Email', 'Added to Instaspy', 'Media URL', 'Media likes', 'Media comments', 'Media date posted']
 
-      media_list.find_each do |media|
+      media_list.each do |media|
         user = media.user
         user.update_info! if user.outdated?
         # media.update_location! if media.location_present? && media.location_lat.present? && media.location.blank?
@@ -579,7 +579,7 @@ class Reporter
 
       index = 0
       Rails.logger.debug('Started processing users')
-      users.find_each(batch_size: 5_000) do |user|
+      users.each do |user|
         index += 1
         start = Time.now
         process_user.call(user, csv)

@@ -1,4 +1,4 @@
-module Report::Users
+class Report::Users < Report::Base
 
   def self.reports_new report
     processed_input = report.original_csv
@@ -18,14 +18,16 @@ module Report::Users
         csv << row
       end
     end
-    File.write(Rails.root.join("public", "reports/reports_data/report-#{report.id}-processed-input.csv"), csv_string)
-    report.update_attribute :processed_input, "reports/reports_data/report-#{report.id}-processed-input.csv"
 
-    ReportProcessProgressWorker.perform_async report.id
+    filepath = "reports/reports_data/report-#{report.id}-processed-input.csv"
+    FileManager.save_file filepath, csv_string
+    report.processed_input = filepath
 
     report.status = :in_process
     report.started_at = Time.now
     report.save
+
+    ReportProcessProgressWorker.perform_async report.id
   end
 
 
@@ -53,7 +55,7 @@ module Report::Users
 
     if report.steps.include?('user_info')
       if report.output_data.include?('likes') && !report.steps.include?('likes')
-        get_likes = User.where(id: report.processed_ids).without_likes.with_media.pluck(:id)
+        get_likes = User.where(id: report.processed_ids).without_likes.with_media.not_private.pluck(:id)
         if get_likes.size == 0
           report.steps << 'likes'
         else
@@ -62,7 +64,7 @@ module Report::Users
       end
 
       if report.output_data.include?('location') && !report.steps.include?('location')
-        get_location = User.where(id: report.processed_ids).without_location.with_media.pluck(:id)
+        get_location = User.where(id: report.processed_ids).without_location.with_media.not_private.pluck(:id)
         if get_location.size == 0
           report.steps << 'location'
         else
@@ -113,7 +115,7 @@ module Report::Users
 
     csv_string = CSV.generate do |csv|
       csv << header
-      User.where(id: report.processed_ids).find_each do |u|
+      User.where(:id.in => report.processed_ids).each do |u|
         row = [u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email]
         row.concat [u.location_country, u.location_state, u.location_city] if report.output_data.include? 'location'
         row.concat [u.avg_likes] if report.output_data.include? 'likes'
@@ -141,7 +143,7 @@ module Report::Users
       binary_data = stringio.sysread
 
       filepath = "reports/#{basename}.zip"
-      File.write("public/#{filepath}", binary_data)
+      FileManager.save_file filepath, binary_data
       report.result_data = filepath
     end
 

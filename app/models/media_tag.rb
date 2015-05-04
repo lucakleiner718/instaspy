@@ -6,6 +6,6 @@ class MediaTag
 
   index media_id: 1
   index tag_id: 1
-  index media_id: 1, tag_id: 1
+  index({ media_id: 1, tag_id: 1}, { unique: true })
 
 end

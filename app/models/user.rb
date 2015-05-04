@@ -50,13 +50,13 @@ class User
   has_one :feedly
 
   scope :not_grabbed, -> { where grabbed_at: nil }
-  scope :not_private, -> { where private: [nil, false] }
+  scope :not_private, -> { where private: false }
   scope :privates, -> { where private: true }
-  scope :outdated, -> (date=7.days) { where('grabbed_at is null OR grabbed_at < ? OR bio is null OR website is null OR follows is null OR followed_by is null OR media_amount IS NULL', date.ago) }
-  scope :with_url, -> { where 'website is not null && website != ""' }
-  scope :without_likes, -> { where('avg_likes IS NULL OR avg_likes_updated_at is null OR avg_likes_updated_at < ?', 1.month.ago) }
-  scope :without_location, -> { where('location_updated_at IS NULL OR location_updated_at < ?', 3.months.ago) }
-  scope :with_media, -> { where('media_amount > 0').where(private: false) }
+  scope :outdated, -> (date=7.days) { scoped.or(grabbed_at: nil).or(:grabbed_at.lt => date.ago).or(bio: nil, website: nil, follows: nil, followed_by: nil, media_amount: nil) }
+  scope :with_url, -> { where(:website.ne => nil).and(:website.ne => '') }
+  scope :without_likes, -> { scoped.or(avg_likes: nil, avg_likes_updated_at: nil).or(:avg_likes_updated_at.lt => 1.month.ago) }
+  scope :without_location, -> { scoped.or(location_updated_at: nil).or(:location_updated_at.lt => 3.months.ago) }
+  scope :with_media, -> { where(:media_amount.gt => 0) }
 
   before_save do
     # Catch email from bio
@@ -276,7 +276,7 @@ class User
 
   # what the avg interval between followers
   def follow_speed
-    dates = self.user_followers.where('followed_at is not null').order(followed_at: :asc).pluck(:followed_at)
+    dates = self.user_followers.where(:followed_at.ne => nil).order(followed_at: :asc).pluck(:followed_at)
     ((dates.last - dates.first) / dates.size.to_f).round(2)
   end
 
@@ -288,7 +288,7 @@ class User
       return true
     end
 
-    if self.user_followers.where('followed_at is not null').size > 2
+    if self.user_followers.where(:followed_at.ne => nil).size > 2
       speed = self.follow_speed
     else
       speed = 2_000
@@ -405,22 +405,22 @@ class User
 
         UserWorker.perform_async(user.id, true) if options[:deep]
 
-        begin
+        # begin
           user.save if user.changed?
-        rescue ActiveRecord::RecordNotUnique => e
-          if e.message.match('Duplicate entry') && e.message =~ /index_users_on_insta_id/
-            user = User.where(insta_id: user_data['id']).first
-            new_record = false
-          elsif e.message.match('Duplicate entry') && e.message =~ /index_users_on_username/
-            exists_user = User.where(username: user_data['username']).first
-            if exists_user.insta_id != user_data['id']
-              exists_user.destroy
-              retry
-            end
-          else
-            raise e
-          end
-        end
+        # rescue ActiveRecord::RecordNotUnique => e
+        #   if e.message.match('Duplicate entry') && e.message =~ /index_users_on_insta_id/
+        #     user = User.where(insta_id: user_data['id']).first
+        #     new_record = false
+        #   elsif e.message.match('Duplicate entry') && e.message =~ /index_users_on_username/
+        #     exists_user = User.where(username: user_data['username']).first
+        #     if exists_user.insta_id != user_data['id']
+        #       exists_user.destroy
+        #       retry
+        #     end
+        #   else
+        #     raise e
+        #   end
+        # end
 
         followed_at = Time.now
         followed_at = Time.at(cursor.to_i/1000) if cursor
@@ -572,22 +572,22 @@ class User
           user.update_info!
         end
 
-        begin
+        # begin
           user.save if user.new_record? || user.changed?
-        rescue ActiveRecord::RecordNotUnique => e
-          if e.message.match('Duplicate entry') && e.message =~ /index_users_on_insta_id/
-            user = User.where(insta_id: user_data['id']).first
-            new_record = false
-          elsif e.message.match('Duplicate entry') && e.message =~ /index_users_on_username/
-            exists_user = User.where(username: user_data['username']).first
-            if exists_user.insta_id != user_data['id']
-              exists_user.destroy
-              retry
-            end
-          else
-            raise e
-          end
-        end
+        # rescue ActiveRecord::RecordNotUnique => e
+        #   if e.message.match('Duplicate entry') && e.message =~ /index_users_on_insta_id/
+        #     user = User.where(insta_id: user_data['id']).first
+        #     new_record = false
+        #   elsif e.message.match('Duplicate entry') && e.message =~ /index_users_on_username/
+        #     exists_user = User.where(username: user_data['username']).first
+        #     if exists_user.insta_id != user_data['id']
+        #       exists_user.destroy
+        #       retry
+        #     end
+        #   else
+        #     raise e
+        #   end
+        # end
 
         fol = nil
         fol = fols.select{|el| el.user_id == user.id }.first unless options[:reload]
@@ -660,8 +660,6 @@ class User
       data = d
     end
 
-    bidning.pry
-
     if data
       exists = User.where(insta_id: data['id']).first
       if exists
@@ -693,7 +691,7 @@ class User
   def self.get_emails usernames=[]
     users = User.all
     users = users.where(username: usernames).where('email is null OR email="" OR bio is null OR bio=""').where('grabbed_at < ?', 3.days.ago) if usernames.size > 0
-    users.find_each(batch_size: 1000) do |user|
+    users.each do |user|
       user.update_info! if user.email.blank? || user.bio.blank?
     end
   end
@@ -781,7 +779,7 @@ class User
       data = media_list.data
 
       media_found = Media.where(insta_id: data.map{|el| el['id']})
-      tags_found.concat(Tag.where(name: data.map{|el| el['tags']}.flatten.uniq).select(:id, :name).to_a).uniq!
+      tags_found.concat(Tag.where(name: data.map{|el| el['tags']}.flatten.uniq).to_a).uniq!
 
       data.each do |media_item|
         logger.debug "#{">>".green} Start process #{media_item['id']}"
@@ -792,17 +790,17 @@ class User
           media = Media.new(insta_id: media_item['id'], user_id: self.id)
         end
 
-        media.media_data media_item
+        media.set_data media_item
 
         added += 1 if media.new_record?
 
-        begin
+        # begin
           media.save
-        rescue ActiveRecord::RecordNotUnique => e
-          media = Media.where(insta_id: media_item['id']).first
-        end
+        # rescue ActiveRecord::RecordNotUnique => e
+        #   media = Media.where(insta_id: media_item['id']).first
+        # end
 
-        media.media_tags media_item['tags'], tags_found
+        media.set_tags media_item['tags'], tags_found
         tags_found.concat(media.tags.to_a).uniq!
 
         avg_created_time += media['created_time'].to_i
@@ -904,7 +902,7 @@ class User
 
     self.update_media_location
 
-    if self.media.with_location == 0 && self.media_amount > self.media.size
+    if self.media.with_coordinates == 0 && self.media_amount > self.media.size
       self.recent_media ignore_exists: true, total_limit: media_amount + 100
       self.update_media_location
     end
@@ -912,7 +910,7 @@ class User
     countries = {}
     states = {}
     cities = {}
-    self.media.with_location.where('location_country is not null && location_country != "" OR location_state is not null && location_state != "" OR location_city is not null && location_city != ""').each do |media|
+    self.media.with_coordinates.with_country.each do |media|
       if media.location_country.present?
         countries[media.location_country] ||= 0
         countries[media.location_country] += 1
@@ -962,38 +960,29 @@ class User
     return false if self.destroyed?
 
     logger.debug ">> update_media_location: #{self.username.green}"
-    with_location = self.media.with_location
+    with_location = self.media.with_coordinates
     with_location_amount = with_location.size
     processed = 0
 
-    with_location.where('location_country is null').each_with_index do |media, index|
+    with_location.where(location_country: nil).each_with_index do |media, index|
       processed += 1
-      # if user obviously have lots of media in one place, leave other media
-      if index % 5 == 0
-        resp = Tag.connection.execute("SELECT count(id), location_country FROM `media`  WHERE `media`.`user_id` = #{self.id} AND (location_lat is not null and location_lat != '') GROUP BY location_country").to_a
+      # if user obviously have lots of media in one place, leave other media, check each 10th media
+      if index % 10 == 0
 
-        # if we don't have media where location_country is blank
-        without_country_amount = resp.select{ |el| el[1].nil? }.first.try(:first)
+        data = Media.where(user_id: self.id).where(:location_lat.ne => nil, :location_tag.ne => '').group_by{ |m| m.location_country }
+        amounts = []
+        data.each{ |k, v| amounts << [k, v.size] }
+        amounts = amounts.sort{ |a, b| a[1] <=> b[1] }.reverse
 
-        break if without_country_amount.blank?
-
-        # if we have at least 10% of same location
-        if with_location_amount > 20 && without_country_amount / with_location_amount.to_f < 0.9
-          # if resp.size == 2
+        unless amounts[0][0].nil? && with_location_amount > 20
           logger.debug ">> update_media_location: #{self.username.green}. stopped because most of the media has same country"
           break
-          # else
-            # binding.pry
-            # raise
-          # end
         end
       end
 
       media.update_location!
 
       logger.debug ">> update_media_location: #{self.username.green}. progress: #{(processed / with_location_amount.to_f * 100).to_i}%"
-
-      sleep(5)
     end
   end
 
@@ -1011,12 +1000,12 @@ class User
 
     self.update_info! unless self.insta_id
 
-    media = self.media.order(created_time: :desc).where('created_time < ?', 1.day.ago).limit(media_limit)
+    media = self.media.order(created_time: :desc).lt(created_time: 1.day.ago).limit(media_limit)
 
     if media.size < options[:total_limit]
       Rails.logger.info "[#{"Update AVG Data".green}] [#{self.username.cyan}] Grabbing more media, current: #{media.size}"
       self.recent_media ignore_exists: true, total_limit: options[:total_limit]
-      media = self.media.order(created_time: :desc).where('created_time < ?', 1.day.ago).limit(media_limit)
+      media = self.media.order(created_time: :desc).lt(created_time: 1.day.ago).limit(media_limit)
       Rails.logger.info "[#{"Update AVG Data".green}] [#{self.username.cyan}] Grabbed more media, current: #{media.size}"
     end
 
@@ -1128,7 +1117,7 @@ class User
   # end
 
   def self.from_usernames usernames
-    users = User.where(username: usernames).to_a
+    users = User.in(username: usernames).to_a
 
     not_processed = []
     not_found = usernames - users.map{|u| u.username}
@@ -1147,7 +1136,7 @@ class User
   end
 
   def self.from_usernames_ids usernames
-    users = User.where(username: usernames).pluck(:id, :username)
+    users = User.in(username: usernames).pluck(:id, :username)
 
     not_processed = []
     not_found = usernames - users.map{|u| u[1]}
@@ -1165,17 +1154,13 @@ class User
     users
   end
 
-  def followers_size
-    Follower.where(user_id: self.id).size
-  end
-
   def update_feedly!
     return false if self.website.blank?
 
     record = Feedly.where(user_id: self.id).first_or_initialize
 
     if record.new_record?
-      rec = Feedly.where(website: self.website).where('user_id is null').first
+      rec = Feedly.where(website: self.website).where(user_id: nil).first
       if rec
         record = rec
         record.user_id = self.id
@@ -1212,6 +1197,31 @@ class User
     record.save
 
     true
+  end
+
+  def user_followers
+    Follower.where(user_id: self.id)
+  end
+
+  def followers
+    User.in(id: self.user_followers.pluck(:id))
+  end
+
+  def followers_size
+    self.user_followers.size
+  end
+
+
+  def user_followees
+    Follower.where(follower_id: self.id)
+  end
+
+  def followees
+    User.in(id: self.user_followees.pluck(:id))
+  end
+
+  def followees_size
+    self.user_followees.size
   end
 
 end

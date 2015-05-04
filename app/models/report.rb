@@ -45,11 +45,13 @@ class Report
   end
 
   def original_csv
-    CSV.read(Rails.root.join('public', self.original_input))
+    # CSV.read(Rails.root.join('public', self.original_input))
+    CSV.parse(FileManager.read_file(self.original_input))
   end
 
   def processed_csv
-    CSV.read(Rails.root.join('public', self.processed_input))
+    # CSV.read(Rails.root.join('public', self.processed_input))
+    CSV.parse(FileManager.read_file(self.processed_input))
   end
 
   def new?
@@ -73,6 +75,14 @@ class Report
     end
 
     csv_string
+  end
+
+  def original_input_url
+    "#{ENV['FILES_DIR']}/#{self.original_input}"
+  end
+
+  def result_data_url
+    "#{ENV['FILES_DIR']}/#{self.result_data}"
   end
 
 end
