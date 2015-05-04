@@ -14,11 +14,11 @@ class TagsController < ApplicationController
         @tags = @tags.chartable
     end
 
-    if params[:sort]
-      @tags = @tags.order("#{params[:sort]} #{params[:direction]}")
-    end
+    params[:sort] ||= :name
+    params[:direction] ||= :asc
+    @tags = @tags.order_by("#{params[:sort]} #{params[:direction]}")
 
-    @tags = @tags.order(:name).page(params[:page]).per(20)
+    @tags = @tags.page(params[:page]).per(20)
 
     if params[:filter] != 'observed'
       @tags.map do |t|
@@ -40,6 +40,6 @@ class TagsController < ApplicationController
   end
 
   def sort_column
-    Tag.column_names.include?(params[:sort]) ? params[:sort] : "name"
+    (Tag.fields.keys - ['_id'] + ['media_count']).include?(params[:sort]) ? params[:sort] : "name"
   end
 end

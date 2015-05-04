@@ -11,7 +11,8 @@
   <thead>
   <tr>
     <th><%= sortable :name, 'Tag name' %></th>
-    <th><%= sortable :media_count, 'Media amount in db' %></th>
+    <!--<th><%#= sortable :media_count, 'Media amount in db' %></th>-->
+    <th>Media amount in db</th>
     <% if params[:filter] == 'observed' %>
       <th>Started tracking</th>
     <% end %>
