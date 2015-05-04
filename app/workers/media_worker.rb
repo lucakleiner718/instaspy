@@ -11,7 +11,7 @@ class MediaWorker
   end
 
   def self.spawn
-    tags = Tag.where(:id.in => ObservedTag.or(:media_updated_at.lt => 5.minute.ago, media_updated_at: nil).pluck(:tag_id)).order('observed_tags.media_updated_at asc')
+    tags = Tag.in(id: ObservedTag.or(:media_updated_at.lt => 5.minute.ago).or(media_updated_at: nil).pluck(:tag_id)).order('observed_tags.media_updated_at asc')
     tags.each do |tag|
       MediaWorker.perform_async tag.id
     end

@@ -234,7 +234,7 @@ class Tag
   end
 
   def media
-    Media.in(id: MediaTag.where(tag_id: self.id).pluck(:media_id).map)
+    Media.in(id: MediaTag.where(tag_id: self.id).pluck(:media_id))
   end
 
 end
