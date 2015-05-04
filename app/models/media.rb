@@ -14,7 +14,7 @@ class Media
   field :location_state, type: String
   field :location_country, type: String
   field :location_present, type: String
-  field :tags_list, type: Array, default: []
+  field :tag_names, type: Array, default: []
   include Mongoid::Timestamps
 
   index created_at: 1
