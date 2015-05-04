@@ -3,7 +3,7 @@ class Tag
   include Mongoid::Document
   field :name, type: String
 
-  index({ name: 1 })
+  index({ name: 1 }, { unique: true })
 
   # has_many :media_tags#, class_name: 'Media'#, after_add: :increment_some_tag, after_remove: :decrement_some_tag
 
@@ -92,12 +92,7 @@ class Tag
         media.set_user media_item['user'], users_found
         media.set_data media_item
 
-        # save media before adding tags
-        # begin
-          media.save
-        # rescue ActiveRecord::RecordNotUnique => e
-        #   media = Media.where(insta_id: media_item['id']).first
-        # end
+        media.save
 
         media.set_tags media_item['tags'], tags_found
 

@@ -193,7 +193,7 @@ class Media
   #   # end
   # end
 
-  def set_tags tags_names, tags_found=nil
+  def set_tags tags_names, tags_found=[]
     unless tags_found
       tags_found = Tag.in(id: self.media_tags.pluck(:tag_id))
     end
