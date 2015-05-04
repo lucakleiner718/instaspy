@@ -45,7 +45,7 @@ namespace :god do
       within release_path do
         with rails_env: fetch(:rails_env) do
           execute :bundle, :exec, 'god terminate' if test(*("[ -f /home/app/instaspy/shared/tmp/pids/god.pid ]").split(' '))
-          execute :bundle, :exec, 'god -c config/procs.god'
+          execute :bundle, :exec, 'god -c config/procs.god --pid tmp/pids/god.pid'
         end
       end
     end
