@@ -14,6 +14,7 @@ class Media
   field :location_state, type: String
   field :location_country, type: String
   field :location_present, type: String
+  field :tags_list, type: Array, default: []
   include Mongoid::Timestamps
 
   index created_at: 1
@@ -227,6 +228,7 @@ class Media
       tags_list << tag if tag && tag.valid?
     end
 
+    self.tag_names = tags_names
     self.tags = tags_list.uniq{|el| el.id}
   end
 

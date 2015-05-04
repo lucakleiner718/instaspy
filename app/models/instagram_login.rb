@@ -1,4 +1,5 @@
 class InstagramLogin
+
   include Mongoid::Document
   field :account_id, type: Integer
   field :ig_id, type: Integer
@@ -9,4 +10,5 @@ class InstagramLogin
 
   belongs_to :account, class_name: 'InstagramAccount'
   belongs_to :user, foreign_key: :ig_id, primary_key: :insta_id
+
 end
