@@ -72,7 +72,7 @@ class User
     end
 
     if self.username_changed?
-      self.username = self.username.strip.gsub(/\s/, '')
+      self.username = self.username.strip.downcase.gsub(/\s/, '')
 
       if self.insta_id.present?
         User.fix_exists_username(self.username, self.insta_id)
@@ -82,41 +82,20 @@ class User
     if self.email_changed? && self.email.present?
       self.email = self.email.downcase
     end
-
-    # if self.website_changed? && self.website.present? && self.feedly_feed_id.blank? && self.feedly_updated_at.present?
-    #   self.feedly_updated_at = nil
-    # end
   end
 
   def full_name=(value)
-    if value.present?
-      value = value.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
-      value = value.encode(value.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
-      value.strip!
-      value = value[0, 255]
-    end
-
-    # this is same as self[:attribute_name] = value
+    value = value.strip if value.present?
     write_attribute(:full_name, value)
   end
 
   def bio=(value)
-    if value.present?
-      value = value.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
-      value = value.encode(value.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
-      value.strip!
-    end
-
+    value = value.strip if value.present?
     write_attribute(:bio, value)
   end
 
   def website=(value)
-    if value.present?
-      value = value.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
-      value = value.encode(value.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
-      value = value[0, 255]
-    end
-
+    value = value.strip.downcase if value.present?
     write_attribute(:website, value)
   end
 
@@ -408,22 +387,7 @@ class User
 
         UserWorker.perform_async(user.id, true) if options[:deep]
 
-        # begin
-          user.save if user.changed?
-        # rescue ActiveRecord::RecordNotUnique => e
-        #   if e.message.match('Duplicate entry') && e.message =~ /index_users_on_insta_id/
-        #     user = User.where(insta_id: user_data['id']).first
-        #     new_record = false
-        #   elsif e.message.match('Duplicate entry') && e.message =~ /index_users_on_username/
-        #     exists_user = User.where(username: user_data['username']).first
-        #     if exists_user.insta_id != user_data['id']
-        #       exists_user.destroy
-        #       retry
-        #     end
-        #   else
-        #     raise e
-        #   end
-        # end
+        user.must_save if user.changed?
 
         followed_at = Time.now
         followed_at = Time.at(cursor.to_i/1000) if cursor
@@ -478,7 +442,6 @@ class User
       total_added += added
 
       finish = Time.now
-      # logger.debug ">> [#{self.username.green}] followers:#{follower_ids_list.size}/#{followed} request: #{(finish-start).to_f.round(2)}s :: IG request: #{(end_ig-start).to_f.round(2)}s / exists: #{exists} (#{total_exists.to_s.light_black}) / added: #{added} (#{total_added.to_s.light_black})"
       logger.debug ">> [#{self.username.green}] followers:#{followed} request: #{(finish-start).to_f.round(2)}s :: IG request: #{(end_ig-start).to_f.round(2)}s / exists: #{exists} (#{total_exists.to_s.light_black}) / added: #{added} (#{total_added.to_s.light_black})"
 
       break if !options[:ignore_exists] && exists >= 5
@@ -575,22 +538,7 @@ class User
           user.update_info!
         end
 
-        # begin
-          user.save if user.new_record? || user.changed?
-        # rescue ActiveRecord::RecordNotUnique => e
-        #   if e.message.match('Duplicate entry') && e.message =~ /index_users_on_insta_id/
-        #     user = User.where(insta_id: user_data['id']).first
-        #     new_record = false
-        #   elsif e.message.match('Duplicate entry') && e.message =~ /index_users_on_username/
-        #     exists_user = User.where(username: user_data['username']).first
-        #     if exists_user.insta_id != user_data['id']
-        #       exists_user.destroy
-        #       retry
-        #     end
-        #   else
-        #     raise e
-        #   end
-        # end
+        user.must_save if user.changed?
 
         fol = nil
         fol = fols.select{|el| el.user_id == user.id }.first unless options[:reload]
@@ -631,6 +579,8 @@ class User
   def self.add_by_username username
     return false if username.blank? || username.size > 30 || username !~ /\A[a-zA-Z0-9\._]+\z/
 
+    username.downcase!
+
     user = User.where(username: username).first_or_initialize
 
     return user if !user.new_record? && user.grabbed_at.present? && user.grabbed_at > 1.month.ago
@@ -647,15 +597,15 @@ class User
     end
 
     data = nil
-    data = resp.data.select{|el| el['username'].downcase == username.to_s.downcase }.first if resp.data.size > 0
+    data = resp.data.select{|el| el['username'].downcase == username.to_s }.first if resp.data.size > 0
 
     # In case if user changed username, instagram returns record with new data by old username
     if data.nil? && resp.data.size == 1
       d = resp.data.first
-      u = User.where(username: d['username']).first
+      u = User.where(username: d['username'].downcase).first
       if u
         u.update_info!
-        if u.username == d['username']
+        if u.username == d['username'].downcase
           user.destroy unless user.new_record?
           return u
         end
@@ -667,7 +617,7 @@ class User
       exists = User.where(insta_id: data['id']).first
       if exists
         exists.insta_data data
-        exists.username = data['username']
+        exists.username = data['username'].downcase
         exists.save
         return exists
       end

@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe Tag, type: :model do
 
-  before :all do
+  before :each do
     create(:instagram_login) if InstagramLogin.all.size == 0
   end
 
@@ -13,10 +13,11 @@ RSpec.describe Tag, type: :model do
   it 'should return recent media' do
     tag = Tag.get('shopbop')
     expect(tag.media.size).to eq 0
+
     VCR.use_cassette('tag_shopbop_recent_media_50') do
       tag.recent_media total_limit: 50
     end
-    tag.media.reload
+    # tag.media.reload
     expect(tag.media.length).to be > 50
   end
 
@@ -43,5 +44,16 @@ RSpec.describe Tag, type: :model do
   #   Tag.remove_from_csv('shopbop')
   #   expect(Tag.get('shopbop').observed_tag.for_chart).to be_falsey
   # end
+
+  it 'should have lower name' do
+    tag = Tag.create name: 'TEST'
+    expect(tag.name).to eq 'test'
+  end
+
+  it 'should find only downcase' do
+    Tag.create name: 'TEST'
+    expect(Tag.where(name: 'test').size).to eq 1
+    expect(Tag.where(name: 'TEST').size).to eq 0
+  end
 
 end

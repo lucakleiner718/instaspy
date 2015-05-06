@@ -18,14 +18,7 @@ class Tag
   CHART_DAYS = 14
 
   def name=(value)
-    if value.present?
-      value = value.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
-      value = value.encode(value.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
-      value.strip!
-      value = value[0, 255]
-    end
-
-    # this is same as self[:attribute_name] = value
+    value = value.strip.downcase if value.present?
     write_attribute(:name, value)
   end
 
@@ -78,7 +71,7 @@ class Tag
       data = media_list.data
 
       media_found = Media.in(insta_id: data.map{|el| el['id']}).to_a
-      tags_found.concat(Tag.in(name: data.map{|el| el['tags']}.flatten.uniq).to_a).uniq!
+      tags_found.concat(Tag.in(name: data.map{|el| el['tags']}.flatten.uniq.map(&:downcase)).to_a).uniq!
       users_found = User.in(insta_id: data.map{|el| el['user']['id']}.uniq).to_a
 
       data.each do |media_item|
@@ -168,7 +161,7 @@ class Tag
   end
 
   def self.add_to_csv tag_name
-    t = Tag.where(name: tag_name).first_or_create
+    t = Tag.where(name: tag_name.downcase).first_or_create
     ot = t.observed_tag.present? ? t.observed_tag : t.build_observed_tag
     ot.export_csv = true
     ot.save
@@ -176,21 +169,21 @@ class Tag
   end
 
   def self.remove_from_csv tag_name
-    t = Tag.where(name: tag_name).first_or_initialize
+    t = Tag.where(name: tag_name.downcase).first_or_initialize
     if t.observed_tag.present?
       t.observed_tag.update_attribute :export_csv, false
     end
   end
 
   def self.observe tag_name
-    t = Tag.where(name: tag_name).first_or_create
+    t = Tag.where(name: tag_name.downcase).first_or_create
     ot = t.observed_tag.present? ? t.observed_tag : t.build_observed_tag
     ot.save
     t.update_media_count!
   end
 
   def self.get tag_name
-    Tag.where(name: tag_name).first_or_create
+    Tag.where(name: tag_name.downcase).first_or_create
   end
 
   def publishers

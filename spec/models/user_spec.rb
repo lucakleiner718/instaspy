@@ -130,4 +130,14 @@ RSpec.describe User, type: :model do
     expect(User.outdated.size).to eq 2
   end
 
+  it 'should have lower username' do
+    u = User.create username: 'TEST', insta_id: 1
+    expect(u.username).to eq 'test'
+  end
+
+  it 'should have lower website' do
+    u = User.create username: 'TEST', insta_id: 1, website: 'http://AWESOME.coM'
+    expect(u.website).to eq 'http://awesome.com'
+  end
+
 end

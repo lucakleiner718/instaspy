@@ -12,7 +12,7 @@ class Media
   field :location_city, type: String
   field :location_state, type: String
   field :location_country, type: String
-  field :location_present, type: String
+  field :location_present, type: Boolean, default: nil
   field :tag_names, type: Array, default: []
   include Mongoid::Timestamps
 
@@ -117,7 +117,7 @@ class Media
     user.username = media_item_user['username']
     user.full_name = media_item_user['full_name']
 
-    user = user.must_save
+    user = user.must_save if user.changed?
     self.user = user
   end
 
@@ -125,6 +125,8 @@ class Media
     unless tags_found
       tags_found = Tag.in(id: self.media_tags.pluck(:tag_id))
     end
+
+    tags_names.map!(&:downcase)
 
     find_more = tags_names
     if tags_found.size > 0

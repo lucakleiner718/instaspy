@@ -2,8 +2,8 @@ require 'rails_helper'
 
 RSpec.describe Media, type: :model do
 
-  before :all do
-    FactoryGirl.create(:instagram_login) if InstagramLogin.all.size == 0
+  before :each do
+    create(:instagram_login) if InstagramLogin.all.size == 0
   end
 
   # it "should increment tags media_count after tag added to media" do
