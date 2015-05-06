@@ -657,4 +657,38 @@ class Reporter
 
   end
 
+  def self.report_by_emails emails
+    results = {}
+
+    emails.in_groups_of(100, false) do |emails_group|
+      User.where(email: emails_group).each do |user|
+        results[user.email] = [user.full_name, user.username, user.bio, user.website, user.follows, user.followed_by, user.media_amount, (user.private ? 'Yes' : 'No')]
+      end
+    end
+
+    GeneralMailer.report_by_emails(emails, results).deliver
+  end
+
+  def self.get_bio_by_usernames usernames
+    results = []
+
+    usernames.in_groups_of(2000, false) do |usernames_group|
+      users = User.where(username: usernames_group)
+
+      (usernames_group - users.pluck(:username)).each do |username|
+        u = User.add_by_username username
+        if u
+          u.update_info!
+          results << [u.username, u.bio]
+        end
+      end
+
+      users.each do |user|
+        results << [user.username, user.bio]
+      end
+    end
+
+    GeneralMailer.get_bio_by_usernames(results).deliver
+  end
+
 end

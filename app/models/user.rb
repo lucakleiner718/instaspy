@@ -142,7 +142,7 @@ class User
 
       # if we have data - update, if we don't have data, than better remove this account from database
       if data
-        self.insta_data data
+        self.set_data data
       else
         self.destroy
         return false
@@ -207,7 +207,7 @@ class User
       raise e
     end
 
-    self.insta_data data
+    self.set_data data
     self.grabbed_at = Time.now
     self.private = false if self.private?
     self.save
@@ -252,7 +252,7 @@ class User
     json = JSON.parse content
     data = json['entry_data']['UserProfile'].first['user']
 
-    self.insta_data data
+    self.set_data data
     self.save
   end
 
@@ -383,7 +383,7 @@ class User
         if user.insta_id.present? && user_data['id'].present? && user.insta_id != user_data['id'].to_i
           raise Exception
         end
-        user.insta_data user_data
+        user.set_data user_data
 
         UserWorker.perform_async(user.id, true) if options[:deep]
 
@@ -532,7 +532,7 @@ class User
           user = User.new(insta_id: user_data['id'])
         end
 
-        user.insta_data user_data
+        user.set_data user_data
 
         if options[:deep] && !user.private && (user.updated_at.blank? || user.updated_at < 1.month.ago || user.website.nil? || user.follows.blank? || user.followed_by.blank? || user.media_amount.blank?)
           user.update_info!
@@ -562,7 +562,7 @@ class User
     self.save
   end
 
-  def insta_data data
+  def set_data data
     self.full_name = data['full_name'] unless data['full_name'].nil?
     self.username = data['username']
     self.bio = data['bio'] unless data['bio'].nil?
@@ -616,13 +616,13 @@ class User
     if data
       exists = User.where(insta_id: data['id']).first
       if exists
-        exists.insta_data data
+        exists.set_data data
         exists.username = data['username'].downcase
         exists.save
         return exists
       end
 
-      user.insta_data data
+      user.set_data data
       user.save
       user
     else
@@ -636,51 +636,9 @@ class User
     if username.numeric? && username.to_i > 0
       User.where(insta_id: username).first_or_create
     else
-      username = username.to_s.strip
+      username = username.to_s.strip.downcase
       User.add_by_username(username)
     end
-  end
-
-  def self.get_emails usernames=[]
-    users = User.all
-    users = users.where(username: usernames).where('email is null OR email="" OR bio is null OR bio=""').where('grabbed_at < ?', 3.days.ago) if usernames.size > 0
-    users.each do |user|
-      user.update_info! if user.email.blank? || user.bio.blank?
-    end
-  end
-
-  def self.report_by_emails emails
-    results = {}
-
-    emails.in_groups_of(100, false) do |emails_group|
-      User.where(email: emails_group).each do |user|
-        results[user.email] = [user.full_name, user.username, user.bio, user.website, user.follows, user.followed_by, user.media_amount, (user.private ? 'Yes' : 'No')]
-      end
-    end
-
-    GeneralMailer.report_by_emails(emails, results).deliver
-  end
-
-  def self.get_bio_by_usernames usernames
-    results = []
-
-    usernames.in_groups_of(2000, false) do |usernames_group|
-      users = User.where(username: usernames_group)
-
-      (usernames_group - users.pluck(:username)).each do |username|
-        u = User.add_by_username username
-        if u
-          u.update_info!
-          results << [u.username, u.bio]
-        end
-      end
-
-      users.each do |user|
-        results << [user.username, user.bio]
-      end
-    end
-
-    GeneralMailer.get_bio_by_usernames(results).deliver
   end
 
   # args:

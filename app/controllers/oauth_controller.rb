@@ -30,7 +30,7 @@ class OauthController < ApplicationController
     login.save
 
     user = User.where(insta_id: response.user.id).first_or_initialize
-    user.insta_data response.user
+    user.set_data response.user
     user.save
 
     account.save

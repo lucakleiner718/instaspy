@@ -21,24 +21,9 @@ class ProcessFollowersWorker
       if user.insta_id.present? && user_data['id'].present? && user.insta_id != user_data['id'].to_i
         raise Exception
       end
-      user.insta_data user_data
+      user.set_data user_data
 
-      begin
-        user.save if user.changed?
-      rescue ActiveRecord::RecordNotUnique => e
-        if e.message.match('Duplicate entry') && e.message =~ /index_users_on_insta_id/
-          user = User.where(insta_id: user_data['id']).first
-          new_record = false
-        elsif e.message.match('Duplicate entry') && e.message =~ /index_users_on_username/
-          exists_user = User.where(username: user_data['username']).first
-          if exists_user.insta_id != user_data['id']
-            exists_user.destroy
-            retry
-          end
-        else
-          raise e
-        end
-      end
+      user.must_save if user.changed?
 
       if new_record
         Follower.create(user_id: origin.id, follower_id: user.id)
