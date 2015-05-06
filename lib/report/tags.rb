@@ -155,7 +155,7 @@ class Report::Tags < Report::Base
             row += [u.location_country, u.location_state, u.location_city] if report.output_data.include? 'location'
             row += [u.avg_likes] if report.output_data.include? 'likes'
             if report.output_data.include? 'feedly'
-              feedly = u.feedly
+              feedly = u.feedly.first
               row += [feedly ? feedly.subscribers_amount : '']
             end
             row += [media[2], media[0], media[1]]

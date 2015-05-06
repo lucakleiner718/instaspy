@@ -81,9 +81,9 @@ class Media
       raise e
     end
 
-    self.media_user response.data['user']
-    self.media_data response.data
-    self.media_tags response.data['tags']
+    self.set_user response.data['user']
+    self.set_data response.data
+    self.set_tags response.data['tags']
     self.updated_at = Time.now
 
     save_result = self.save
@@ -117,73 +117,9 @@ class Media
     user.username = media_item_user['username']
     user.full_name = media_item_user['full_name']
 
-    # begin
-      user.save
-    # rescue ActiveRecord::RecordNotUnique => e
-    #   if e.message =~ /Duplicate entry/ && e.message =~ /index_users_on_username/
-    #     exists_user = User.where(username: user.username).first
-    #     if exists_user.insta_id == user.insta_id
-    #       user = exists_user
-    #     else
-    #       exists_user.update_info!
-    #       if exists_user.private? || exists_user.username == user.username
-    #         exists_user.destroy
-    #         retry
-    #       end
-    #     end
-    #   else
-    #     user = User.where(username: user.username).first
-    #   end
-    # end
-
+    user = user.must_save
     self.user = user
   end
-
-  # def media_tags tags_list, tags_found=nil
-  #   tags_to_create = tags_list
-  #   if tags_found && tags_found.class.name == 'Array' && tags_found.size > 0
-  #     tags_to_create = tags_to_create.map{|tname| tname.downcase} - tags_found.map{|t| t.name.downcase}
-  #   end
-  #
-  #   if tags_to_create.size > 0
-  #     Tag.connection.execute("INSERT IGNORE INTO tags (name) VALUES #{tags_to_create.map{|t_name| "(#{Tag.connection.quote t_name})"}.join(',')}")
-  #   end
-  #   tags_ids = Tag.where(name: tags_list).pluck(:id)
-  #
-  #   current_tags_ids = Tag.connection.execute("SELECT tag_id FROM media_tags WHERE media_id=#{self.id}").to_a.map(&:first).uniq
-  #   # deleted_tags = current_tags_ids - new_tags_ids
-  #   added_tags = tags_ids - current_tags_ids
-  #
-  #   binding.pry
-  #
-  #   self.tag_ids = added_tags
-  #   # self.save
-  #
-  #   # # if deleted_tags.size > 0
-  #   # #   Tag.connection.execute("DELETE FROM media_tags WHERE media_id=#{self.id} AND tag_id IN(#{deleted_tags.join(',')})")
-  #   # #   Tag.connection.execute("UPDATE tags SET media_count=media_count-1 WHERE id in (#{deleted_tags.join(',')})")
-  #   # # end
-  #   # if added_tags.size > 0
-  #   #   # begin
-  #   #   #   Media.connection.execute("INSERT IGNORE INTO media_tags (media_id, tag_id) VALUES #{tags_ids.map{|tid| "(#{self.id}, #{tid})"}.join(',')}")
-  #   #   #   Media.connection.execute("UPDATE tags SET media_count=media_count+1 WHERE id in (#{tags_ids.join(',')})")
-  #   #   # rescue Mysql2::Error => e
-  #   #   #   if e =~ /Lock wait timeout exceeded/
-  #   #   Media.connection.execute("INSERT IGNORE INTO media_tags (media_id, tag_id) VALUES #{added_tags.map{|tid| "(#{self.id}, #{tid})"}.join(',')}")
-  #   #   # tags_ids.each do |tid|
-  #   #   #   UpdateTagMediaCounterWorker.perform_async tid
-  #   #   #   # Media.connection.execute("UPDATE tags SET media_count=media_count+1 WHERE id=#{tid}")
-  #   #   # end
-  #   #   # TagsToMediaWorker.perform_async self.id, added_tags
-  #   #   # UpdateTagMediaCounterWorker.perform_async added_tags
-  #   #     # else
-  #   #     #   raise e
-  #   #     # end
-  #   #   # end
-  #   #   # Media.connection.execute("INSERT IGNORE INTO media_tags (media_id, tag_id) VALUES #{added_tags.map{|tid| "(#{self.id}, #{tid})"}.join(',')}")
-  #   #   # Media.connection.execute("UPDATE tags SET media_count=media_count+1 WHERE id in (#{added_tags.join(',')})")
-  #   # end
-  # end
 
   def set_tags tags_names, tags_found=[]
     unless tags_found

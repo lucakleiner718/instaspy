@@ -47,7 +47,10 @@ class User
   # has_many :user_followees, class_name: 'Follower'#, foreign_key: :follower_id, dependent: :destroy
   # has_many :followees, through: :user_followees
 
-  has_one :feedly
+  has_many :feedly
+
+  validates :insta_id, uniqueness: true, if: 'insta_id.present?'
+  validates :username, uniqueness: true, if: 'username.present?'
 
   scope :not_grabbed, -> { where grabbed_at: nil }
   scope :not_private, -> { where private: false }
@@ -1222,6 +1225,32 @@ class User
 
   def followees_size
     self.user_followees.size
+  end
+
+  def must_save
+    self.save
+
+    unless self.valid?
+      if self.errors.messages[:insta_id]
+        return User.where(username: user.username).first
+      elsif self.errors.messages[:username]
+        exists_user = User.where(username: user.username).first
+
+        if exists_user.insta_id == self.insta_id
+          return exists_user
+        else
+          exists_user.update_info!
+          if exists_user.private? || exists_user.username == user.username
+            exists_user.destroy
+            self.save
+          end
+        end
+      else
+        raise Exception.new "Invalid user #{user.insta_id} / #{user.username}"
+      end
+    end
+
+    self
   end
 
 end
