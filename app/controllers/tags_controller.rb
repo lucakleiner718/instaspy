@@ -7,7 +7,7 @@ class TagsController < ApplicationController
 
     case params[:filter]
       when 'observed'
-        @tags = @tags.observed.includes(:observed_tag)
+        @tags = @tags.observed
       when 'csv'
         @tags = @tags.exportable
       when 'charts'
@@ -16,17 +16,9 @@ class TagsController < ApplicationController
 
     params[:sort] ||= :name
     params[:direction] ||= :asc
-    @tags = @tags.order_by("#{params[:sort]} #{params[:direction]}")
+    @tags = @tags.order("#{params[:sort]} #{params[:direction]}")
 
     @tags = @tags.page(params[:page]).per(20)
-
-    if params[:filter] != 'observed'
-      @tags.map do |t|
-        if t.media_count < 100
-          t.update_attribute :media_count, t.media.length
-        end
-      end
-    end
   end
 
   def observed

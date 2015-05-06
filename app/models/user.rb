@@ -20,7 +20,7 @@ class User
   field :avg_likes_updated_at, type: DateTime
   field :avg_comments, type: Integer
   field :avg_comments_updated_at, type: DateTime
-  include Mongoid::Timestamps
+  include Mongoid::Timestamps::Updated
 
   index({ insta_id: 1 }, { drop_dups: true, background: true })
   index({ username: 1 }, { drop_dups: true, background: true })
@@ -279,7 +279,7 @@ class User
 
   # what the avg interval between followers
   def follow_speed
-    dates = self.user_followers.where(:followed_at.ne => nil).order(followed_at: :asc).pluck(:followed_at)
+    dates = self.user_followers.where(:followed_at.ne => nil).order_by(followed_at: :asc).pluck(:followed_at)
     ((dates.last - dates.first) / dates.size.to_f).round(2)
   end
 
@@ -1232,21 +1232,21 @@ class User
 
     unless self.valid?
       if self.errors.messages[:insta_id]
-        return User.where(username: user.username).first
+        return User.where(username: self.username).first
       elsif self.errors.messages[:username]
-        exists_user = User.where(username: user.username).first
+        exists_user = User.where(username: self.username).first
 
         if exists_user.insta_id == self.insta_id
           return exists_user
         else
           exists_user.update_info!
-          if exists_user.private? || exists_user.username == user.username
+          if exists_user.private? || exists_user.username == self.username
             exists_user.destroy
             self.save
           end
         end
       else
-        raise Exception.new "Invalid user #{user.insta_id} / #{user.username}"
+        raise Exception.new "Invalid user #{self.insta_id} / #{self.username}"
       end
     end
 

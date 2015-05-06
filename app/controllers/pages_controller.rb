@@ -12,13 +12,6 @@ class PagesController < ApplicationController
 
   end
 
-  def export
-    @users = User.order(:full_name)
-    respond_to do |format|
-      format.csv { render csv: @users }
-    end
-  end
-
   def chart
     @xcategories = []
     blank = {}
@@ -81,8 +74,8 @@ class PagesController < ApplicationController
   end
 
   def media_chart
-    @published = MediaAmountStat.where(:date.gt => (params[:days] || 14).days.ago.utc.beginning_of_day, action: :published).order(date: :asc).map{|el| [el.date.strftime('%m/%d'), el.amount]}
-    @added = MediaAmountStat.where(:date.gt => (params[:days] || 14).days.ago.utc.beginning_of_day, action: :added).order(date: :asc).map{|el| [el.date.strftime('%m/%d'), el.amount]}
+    @published = MediaAmountStat.where(:date.gt => (params[:days] || 14).days.ago.utc.beginning_of_day, action: :published).order_by(date: :asc).map{|el| [el.date.strftime('%m/%d'), el.amount]}
+    @added = MediaAmountStat.where(:date.gt => (params[:days] || 14).days.ago.utc.beginning_of_day, action: :added).order_by(date: :asc).map{|el| [el.date.strftime('%m/%d'), el.amount]}
   end
 
   private
