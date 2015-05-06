@@ -22,8 +22,8 @@ class User
   field :avg_comments_updated_at, type: DateTime
   include Mongoid::Timestamps
 
-  index({ insta_id: 1 }, { drop_dups: true })
-  index({ username: 1 }, { drop_dups: true })
+  index({ insta_id: 1 }, { drop_dups: true, background: true })
+  index({ username: 1 }, { drop_dups: true, background: true })
   index comments: 1
   index avg_comments_updated_at: 1
   index avg_likes: 1

@@ -40,7 +40,8 @@ class Report::Users < Report::Base
     progress = 0
 
     unless report.steps.include?('user_info')
-      not_updated = User.where(id: report.processed_ids).where('grabbed_at < ?', 6.hours.ago).pluck(:id)
+      users = User.in(id: report.processed_ids).outdated(1.day).pluck(:id, :grabbed_at)
+      not_updated = users.select{|r| r[1].blank? || r[1] < 36.hours.ago}.map(&:first)
 
       if not_updated.size == 0
         report.steps << 'user_info'
@@ -55,7 +56,7 @@ class Report::Users < Report::Base
 
     if report.steps.include?('user_info')
       if report.output_data.include?('likes') && !report.steps.include?('likes')
-        get_likes = User.where(id: report.processed_ids).without_likes.with_media.not_private.pluck(:id)
+        get_likes = User.in(id: report.processed_ids).without_likes.with_media.not_private.pluck(:id)
         if get_likes.size == 0
           report.steps << 'likes'
         else
@@ -64,7 +65,7 @@ class Report::Users < Report::Base
       end
 
       if report.output_data.include?('location') && !report.steps.include?('location')
-        get_location = User.where(id: report.processed_ids).without_location.with_media.not_private.pluck(:id)
+        get_location = User.in(id: report.processed_ids).without_location.with_media.not_private.pluck(:id)
         if get_location.size == 0
           report.steps << 'location'
         else
@@ -76,9 +77,9 @@ class Report::Users < Report::Base
         with_website = []
         feedly_exists = []
         report.processed_ids.in_groups_of(5_000, false) do |ids|
-          for_process = User.where(id: ids).with_url.pluck(:id)
+          for_process = User.in(id: ids).with_url.pluck(:id)
           with_website.concat for_process
-          feedly_exists.concat Feedly.where(user_id: for_process).pluck(:user_id)
+          feedly_exists.concat Feedly.in(user_id: for_process).pluck(:user_id)
         end
 
         no_feedly = with_website - feedly_exists
@@ -115,7 +116,7 @@ class Report::Users < Report::Base
 
     csv_string = CSV.generate do |csv|
       csv << header
-      User.where(:id.in => report.processed_ids).each do |u|
+      User.in(id: report.processed_ids).each do |u|
         row = [u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email]
         row.concat [u.location_country, u.location_state, u.location_city] if report.output_data.include? 'location'
         row.concat [u.avg_likes] if report.output_data.include? 'likes'

@@ -113,18 +113,11 @@ class Media
     user = nil
     user = users_found.select{|el| el.insta_id == media_item_user['id'].to_i}.first if users_found.size > 0
     user = User.where(insta_id: media_item_user['id']).first_or_initialize unless user
-    # if user.new_record?
-    #   # with same username as we want to create
-    #   user2 = User.where(username: media_item_user['username']).first_or_initialize
-    #   unless user2.new_record?
-    #     user = user2
-    #     user.insta_id = media_item_user['id']
-    #   end
-    # end
+
     user.username = media_item_user['username']
     user.full_name = media_item_user['full_name']
 
-    begin
+    # begin
       user.save
     # rescue ActiveRecord::RecordNotUnique => e
     #   if e.message =~ /Duplicate entry/ && e.message =~ /index_users_on_username/
@@ -141,7 +134,7 @@ class Media
     #   else
     #     user = User.where(username: user.username).first
     #   end
-    end
+    # end
 
     self.user = user
   end

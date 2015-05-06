@@ -37,7 +37,8 @@ class Report::RecentMedia < Report::Base
     progress = 0
 
     unless report.steps.include?('user_info')
-      not_updated = User.where(id: report.processed_ids).where('grabbed_at is null OR grabbed_at < ?', 6.hours.ago).pluck(:id)
+      users = User.in(id: report.processed_ids).outdated(1.day).pluck(:id, :grabbed_at)
+      not_updated = users.select{|r| r[1].blank? || r[1] < 36.hours.ago}.map(&:first)
 
       if not_updated.size == 0
         report.steps << 'user_info'
@@ -84,7 +85,7 @@ class Report::RecentMedia < Report::Base
     users_media = {}
 
     report.processed_ids.in_groups_of(1000, false) do |uids|
-      Media.where(user_id: uids).order(created_time: :desc).pluck(:id, :user_id).each do |row|
+      Media.in(user_id: uids).order_by(created_time: :desc).pluck(:id, :user_id).each do |row|
         users_media[row[1]] = [] unless users_media[row[1]]
         users_media[row[1]] << row[0]
       end
@@ -94,13 +95,13 @@ class Report::RecentMedia < Report::Base
 
     csv_string = CSV.generate do |csv|
       csv << header
-      User.where(:id.in => report.processed_ids).each do |u|
+      User.in(id: report.processed_ids).each do |u|
         next unless users_media[u.id]
 
         media_ids = users_media[u.id][0,20]
-        tags_ids = MediaTag.where(:media_id.in => media_ids.join(',')).pluck(:tag_id, :media_id)
-        tags_all = Tag.where(:id.in => tags_ids.map{|r| r[0]}.uniq).pluck(:id, :name)
-        Media.where(:id.in => media_ids).order(created_time: :desc).pluck(:link, :likes_amount, :comments_amount, :created_time, :id).each do |media|
+        tags_ids = MediaTag.in(media_id: media_ids.join(',')).pluck(:tag_id, :media_id)
+        tags_all = Tag.in(id: tags_ids.map{|r| r[0]}.uniq).pluck(:id, :name)
+        Media.in(id: media_ids).order_by(created_time: :desc).pluck(:link, :likes_amount, :comments_amount, :created_time, :id).each do |media|
           tags = tags_ids.select{|r| r[1] == media[4]}.map{|r| r[0]}
           row = [
             u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email,

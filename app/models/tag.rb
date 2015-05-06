@@ -35,10 +35,12 @@ class Tag
   def recent_media *args
     options = args.extract_options!
 
+    max_tag_id = nil
+
     if options[:offset].present?
-      m = Media.where(:created_time.gte => options[:offset], :created_time.lte => (options[:offset] + 10.minutes)).order(created_time: :asc).first
+      m = Media.where(:created_time.gte => options[:offset]).and(:created_time.lte => (options[:offset] + 10.minutes)).order(created_time: :asc).first
       unless m
-        m = Media.where(:created_time.gte => options[:offset], :created_time.lte => (options[:offset] + 60.minutes)).order(created_time: :asc).first
+        m = Media.where(:created_time.gte => options[:offset]).and(:created_time.lte => (options[:offset] + 60.minutes)).order(created_time: :asc).first
       end
       if m
         max_tag_id = m.insta_id.match(/^(\d+)_/)[1]
@@ -77,7 +79,7 @@ class Tag
 
       media_found = Media.in(insta_id: data.map{|el| el['id']}).to_a
       tags_found.concat(Tag.in(name: data.map{|el| el['tags']}.flatten.uniq).to_a).uniq!
-      users_found = User.in(insta_id: data.map{|el| el['user']['id']}).to_a
+      users_found = User.in(insta_id: data.map{|el| el['user']['id']}.uniq).to_a
 
       data.each do |media_item|
         logger.debug "#{">>".green} Start process #{media_item['id']}"
@@ -85,9 +87,8 @@ class Tag
         media = media_found.select{|el| el.insta_id == media_item['id']}.first
         unless media
           media = Media.new(insta_id: media_item['id'])
+          added += 1
         end
-
-        added += 1 if media.new_record?
 
         media.set_user media_item['user'], users_found
         media.set_data media_item

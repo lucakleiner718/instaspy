@@ -48,10 +48,11 @@ class Report::Tags < Report::Base
       tag_id = row[1].to_i
       step_index = report.steps.index{|r| r[0].to_i == tag_id}
 
-      tag_media_ids = Tag.connection.execute("select media_id from media_tags where tag_id=#{tag_id}").to_a.map(&:first)
-      media = Media.where(id: tag_media_ids)
-      media = media.where('created_time >= ?', report.date_from) if report.date_from
-      media = media.where('created_time <= ?', report.date_to) if report.date_to
+
+      tag_media_ids = MediaTag.where(tag_id: tag_id).pluck(:media_id)
+      media = Media.in(id: tag_media_ids)
+      media = media.gte(created_time: report.date_from) if report.date_from
+      media = media.lte(created_time: report.date_to) if report.date_to
 
       media_ids = media.pluck(:id, :user_id).uniq{|r| r.last}
       publishers_ids = media_ids.map(&:last)
@@ -63,7 +64,7 @@ class Report::Tags < Report::Base
       unless report.steps[step_index][1].include?('publishers_info')
         users = []
         publishers_ids.in_groups_of(5_000, false) do |ids|
-          users.concat User.where(id: ids).outdated.pluck(:id)
+          users.concat User.in(id: ids).outdated.pluck(:id)
         end
         if users.size == 0
           report.steps[step_index][1] << 'publishers_info'
@@ -74,7 +75,7 @@ class Report::Tags < Report::Base
 
       if report.steps[step_index][1].include?('publishers_info')
         if report.output_data.include?('likes') && !report.steps[step_index][1].include?('likes')
-          get_likes = User.where(id: publishers_ids).without_likes.with_media.not_private.pluck(:id)
+          get_likes = User.in(id: publishers_ids).without_likes.with_media.not_private.pluck(:id)
           if get_likes.size == 0
             report.steps[step_index][1] << 'likes'
           else
@@ -83,7 +84,7 @@ class Report::Tags < Report::Base
         end
 
         if report.output_data.include?('location') && !report.steps[step_index][1].include?('location')
-          get_location = User.where(id: publishers_ids).without_location.with_media.not_private.pluck(:id)
+          get_location = User.in(id: publishers_ids).without_location.with_media.not_private.pluck(:id)
           if get_location.size == 0
             report.steps[step_index][1] << 'location'
           else
@@ -95,9 +96,9 @@ class Report::Tags < Report::Base
           with_website = []
           feedly_exists = []
           report.processed_ids.in_groups_of(5_000, false) do |ids|
-            for_process = User.where(id: ids).with_url.pluck(:id)
+            for_process = User.in(id: ids).with_url.pluck(:id)
             with_website.concat for_process
-            feedly_exists.concat Feedly.where(user_id: for_process).pluck(:user_id)
+            feedly_exists.concat Feedly.in(user_id: for_process).pluck(:user_id)
           end
 
           no_feedly = with_website - feedly_exists
@@ -138,7 +139,7 @@ class Report::Tags < Report::Base
 
       media_list = {}
       publishers_media[tag_id].values.in_groups_of(10_000, false) do |rows|
-        Media.where(:id.in => rows).pluck(:user_id, :likes_amount, :comments_amount, :link).each do |media_row|
+        Media.in(id: rows).pluck(:user_id, :likes_amount, :comments_amount, :link).each do |media_row|
           user_id = media_row.shift
           media_list[user_id] = media_row
         end
@@ -147,7 +148,7 @@ class Report::Tags < Report::Base
       csv_string = CSV.generate do |csv|
         csv << header
         tags_publishers[tag_id].in_groups_of(1000, false) do |ids|
-          User.where(:id.in => ids).each do |u|
+          User.in(id: ids).each do |u|
             media = media_list[u.id]
             next unless media
             row = [u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email]

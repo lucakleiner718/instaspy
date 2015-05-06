@@ -40,7 +40,8 @@ class Report::Followers < Report::Base
     progress = 0
 
     unless report.steps.include?('user_info')
-      not_updated = User.where(id: report.processed_ids).where('grabbed_at < ?', 6.hours.ago).pluck(:id)
+      users = User.in(id: report.processed_ids).outdated(1.day).pluck(:id, :grabbed_at)
+      not_updated = users.select{|r| r[1].blank? || r[1] < 36.hours.ago}.map(&:first)
 
       if not_updated.size == 0
         report.steps << 'user_info'
