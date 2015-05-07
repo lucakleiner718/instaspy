@@ -5,12 +5,12 @@ class DailyMediaStatWorker
     start = date.utc.beginning_of_day
     finish = start.end_of_day
 
-    amount = Media.where('created_time >= ? AND created_time <= ?', start, finish).size
+    amount = Media.gte(created_time: start).lte(created_time: finish).size
     mas = MediaAmountStat.where(date: start.to_date, action: 'published').first_or_initialize
     mas.amount = amount
     mas.save
 
-    amount = Media.where('created_at >= ? AND created_at <= ?', start, finish).size
+    amount = Media.gte(created_at: start).lte(created_at: finish).size
     mas = MediaAmountStat.where(date: start.to_date, action: 'added').first_or_initialize
     mas.amount = amount
     mas.save
@@ -20,8 +20,7 @@ class DailyMediaStatWorker
     first = Time.now.utc.beginning_of_day
     (0..14).each do |i|
       day = i.days.ago(first)
-      # self.perform_async day
-      self.new.perform day
+      DailyMediaStatWorker.new.perform day
     end
   end
 end

@@ -7,9 +7,9 @@ class Tag
 
   # has_many :media_tags#, class_name: 'Media'#, after_add: :increment_some_tag, after_remove: :decrement_some_tag
 
-  scope :observed, -> { where(:id.in => ObservedTag.all.pluck(:tag_id)) }
-  scope :chartable, -> { where(:id.in => ObservedTag.where(for_chart: true).pluck(:tag_id)) }
-  scope :exportable, -> { where(:id.in => ObservedTag.where(export_csv: true).pluck(:tag_id)) }
+  scope :observed, -> { all.in(id: ObservedTag.all.pluck(:tag_id)) }
+  scope :chartable, -> { all.in(id: ObservedTag.where(for_chart: true).pluck(:tag_id)) }
+  scope :exportable, -> { all.in(id: ObservedTag.where(export_csv: true).pluck(:tag_id)) }
 
   has_one :observed_tag, dependent: :destroy
 
@@ -154,14 +154,14 @@ class Tag
     amount_of_days.times do |i|
       day = (amount_of_days-i).days.ago.utc
       data[day.strftime('%m/%d')] =
-        self.media.where('created_time >= ?', day.beginning_of_day).where('created_time <= ?', day.end_of_day).size
+        self.media.gte(created_time: day.beginning_of_day).lte(created_time: day.end_of_day).size
     end
 
     data.reject{|k| !k.in?(blank) }.values
   end
 
   def self.add_to_csv tag_name
-    t = Tag.where(name: tag_name.downcase).first_or_create
+    t = Tag.get(tag_name)
     ot = t.observed_tag.present? ? t.observed_tag : t.build_observed_tag
     ot.export_csv = true
     ot.save
@@ -169,17 +169,31 @@ class Tag
   end
 
   def self.remove_from_csv tag_name
-    t = Tag.where(name: tag_name.downcase).first_or_initialize
+    t = Tag.get(tag_name)
     if t.observed_tag.present?
       t.observed_tag.update_attribute :export_csv, false
     end
   end
 
   def self.observe tag_name
-    t = Tag.where(name: tag_name.downcase).first_or_create
+    t = Tag.get(tag_name)
     ot = t.observed_tag.present? ? t.observed_tag : t.build_observed_tag
     ot.save
     t.update_media_count!
+  end
+
+  def self.add_to_chart tag_name
+    t = Tag.get(tag_name)
+    ot = t.observed_tag.present? ? t.observed_tag : t.build_observed_tag
+    ot.for_chart = true
+    ot.save
+  end
+
+  def self.remove_from_chart tag_name
+    t = Tag.get(tag_name)
+    if t.observed_tag.present?
+      t.observed_tag.update_attribute :for_chart, false
+    end
   end
 
   def self.get tag_name
@@ -187,7 +201,7 @@ class Tag
   end
 
   def publishers
-    ids = self.media.pluck('distinct user_id')
+    ids = self.media.pluck(:user_id).uniq
     User.where(id: ids)
   end
 

@@ -31,7 +31,7 @@ class PagesController < ApplicationController
     tags = params['tags']
     tags = tags.split(',') if tags && tags.is_a?(String)
 
-    @tags = tags && tags.size > 0 ? Tag.where(name: tags) : Tag.joins(:observed_tag).where(observed_tags: { for_chart: true })
+    @tags = tags && tags.size > 0 ? Tag.in(name: tags) : Tag.in(id: ObservedTag.where(for_chart: true).pluck(:tag_id))
     @tags = @tags.pluck(:name)
   end
 
