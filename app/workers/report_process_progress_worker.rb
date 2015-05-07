@@ -15,7 +15,7 @@ class ReportProcessProgressWorker
       when 'followees'
         rep = Report::Followees.new(report)
       when 'users'
-        rep = Report::User.new(report)
+        rep = Report::Users.new(report)
       when 'tags'
         rep = Report::Tags.new(report)
       when 'recent-media'
