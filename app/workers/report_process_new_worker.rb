@@ -11,16 +11,20 @@ class ReportProcessNewWorker
 
     case report.format
       when 'followers'
-        Report::Followers.reports_new report
+        rep = Report::Followers.new(report)
       when 'followees'
-        Report::Followees.reports_new report
+        rep = Report::Followees.new(report)
       when 'users'
-        Report::Users.reports_new report
+        rep = Report::User.new(report)
       when 'tags'
-        Report::Tags.reports_new report
+        rep = Report::Tags.new(report)
       when 'recent-media'
-        Report::RecentMedia.reports_new report
+        rep = Report::RecentMedia.new(report)
+      else
+        rep = nil
     end
+
+    rep.reports_new report if rep
   end
 
   def self.spawn

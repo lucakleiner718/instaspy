@@ -1,90 +1,68 @@
 class Report::RecentMedia < Report::Base
 
-  def self.reports_new report
-    processed_input = report.original_csv
-    processed_input.map! do |row|
-      user = User.get(row[0])
-      if user
-        [row[0], user.id]
-      else
-        report.not_processed << row[0]
-        []
-      end
-    end
-    processed_input.select! { |r| r[0].present? }
+  def reports_new
+    self.process_users_input
 
-    csv_string = CSV.generate do |csv|
-      processed_input.each do |row|
-        csv << row
-      end
-    end
+    @report.status = :in_process
+    @report.started_at = Time.now
+    @report.save
 
-    filepath = "reports/reports_data/report-#{report.id}-processed-input.csv"
-    FileManager.save_file filepath, csv_string
-    report.processed_input = filepath
-
-    report.status = :in_process
-    report.started_at = Time.now
-    report.save
-
-    ReportProcessProgressWorker.perform_async report.id
+    ReportProcessProgressWorker.perform_async @report.id
   end
 
-
-  def self.reports_in_process report
+  def reports_in_process
     parts_amount = 2
 
     progress = 0
 
-    unless report.steps.include?('user_info')
-      users = User.in(id: report.processed_ids).outdated(1.day).pluck(:id, :grabbed_at)
+    unless @report.steps.include?('user_info')
+      users = User.in(id: @report.processed_ids).outdated(1.day).pluck(:id, :grabbed_at)
       not_updated = users.select{|r| r[1].blank? || r[1] < 36.hours.ago}.map(&:first)
 
       if not_updated.size == 0
-        report.steps << 'user_info'
+        @report.steps << 'user_info'
       else
         not_updated.each do |uid|
           UserWorker.perform_async uid, true
         end
 
-        progress += not_updated.size / report.processed_ids.size.to_f / parts_amount
+        progress += not_updated.size / @report.processed_ids.size.to_f / parts_amount
       end
     end
 
-    if report.steps.include?('user_info')
-      unless report.steps.include?('recent_media')
-        not_processed = report.processed_ids - report.tmp_list1
+    if @report.steps.include?('user_info')
+      unless @report.steps.include?('recent_media')
+        not_processed = @report.processed_ids - @report.tmp_list1
         if not_processed.size == 0
-          report.steps << 'recent_media'
+          @report.steps << 'recent_media'
         else
           not_processed.each do |uid|
-            ReportRecentMediaWorker.perform_async uid, report.id
+            ReportRecentMediaWorker.perform_async uid, @report.id
           end
 
-          progress += not_processed.size / report.processed_ids.size.to_f / parts_amount
+          progress += not_processed.size / @report.processed_ids.size.to_f / parts_amount
         end
       end
     end
 
-    progress += report.steps.size.to_f / parts_amount
+    progress += @report.steps.size.to_f / parts_amount
 
-    report.progress = progress.round(2) * 100
+    @report.progress = progress.round(2) * 100
 
-    if parts_amount == report.steps.size
-      report.status = 'finished'
-      self.finish report
+    if parts_amount == @report.steps.size
+      @report.status = 'finished'
+      self.finish
     end
 
-    report.save
+    @report.save
   end
 
-
-  def self.finish report
+  def finish
     files = []
 
     users_media = {}
 
-    report.processed_ids.in_groups_of(1000, false) do |uids|
+    @report.processed_ids.in_groups_of(1000, false) do |uids|
       Media.in(user_id: uids).order_by(created_time: :desc).pluck(:id, :user_id).each do |row|
         users_media[row[1]] = [] unless users_media[row[1]]
         users_media[row[1]] << row[0]
@@ -95,7 +73,7 @@ class Report::RecentMedia < Report::Base
 
     csv_string = CSV.generate do |csv|
       csv << header
-      User.in(id: report.processed_ids).each do |u|
+      User.in(id: @report.processed_ids).each do |u|
         next unless users_media[u.id]
 
         media_ids = users_media[u.id][0,20]
@@ -112,7 +90,7 @@ class Report::RecentMedia < Report::Base
       end
     end
 
-    basename = "users-#{report.processed_ids.size}-report-#{Time.now.to_i}"
+    basename = "users-#{@report.processed_ids.size}-report-#{Time.now.to_i}"
 
     files << ["#{basename}.csv", csv_string]
 
@@ -128,12 +106,12 @@ class Report::RecentMedia < Report::Base
 
       filepath = "reports/#{basename}.zip"
       FileManager.save_file filepath, binary_data
-      report.result_data = filepath
+      @report.result_data = filepath
     end
 
-    report.finished_at = Time.now
-    report.save
+    @report.finished_at = Time.now
+    @report.save
 
-    ReportMailer.users(report.id).deliver if report.notify_email.present?
+    ReportMailer.users(@report.id).deliver if @report.notify_email.present?
   end
 end
