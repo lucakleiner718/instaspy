@@ -160,6 +160,13 @@ class Tag
     data.reject{|k| !k.in?(blank) }.values
   end
 
+  def self.observe tag_name
+    t = Tag.get(tag_name)
+    ot = t.observed_tag.present? ? t.observed_tag : t.build_observed_tag
+    ot.save
+    t.update_media_count!
+  end
+
   def self.add_to_csv tag_name
     t = Tag.get(tag_name)
     ot = t.observed_tag.present? ? t.observed_tag : t.build_observed_tag
@@ -173,13 +180,6 @@ class Tag
     if t.observed_tag.present?
       t.observed_tag.update_attribute :export_csv, false
     end
-  end
-
-  def self.observe tag_name
-    t = Tag.get(tag_name)
-    ot = t.observed_tag.present? ? t.observed_tag : t.build_observed_tag
-    ot.save
-    t.update_media_count!
   end
 
   def self.add_to_chart tag_name

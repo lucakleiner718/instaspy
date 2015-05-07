@@ -1,20 +1,33 @@
 class Report::Users < Report::Base
 
   def self.reports_new report
-    processed_input = report.original_csv
-    processed_input.map! do |row|
-      user = User.get(row[0])
-      if user
-        [row[0], user.id]
-      else
-        report.not_processed << row[0]
-        []
+    processed_input = report.original_csv.map(&:first)
+
+    insta_ids = processed_input.select{|r| r.numeric?}.map(&:to_i)
+    usernames = processed_input - insta_ids
+
+    processed_data = []
+
+    if insta_ids.size > 0
+      found_insta_ids = User.in(insta_id: insta_ids).pluck(:insta_id, :id)
+      (insta_ids - found_insta_ids.map(&:first)).each do |insta_id|
+        u = User.create(insta_id: insta_id)
+        found_insta_ids << [u.insta_id, u.id] if u && u.valid?
       end
+      processed_data.concat found_insta_ids
     end
-    processed_input.select! { |r| r[0].present? }
+
+    if usernames.size > 0
+      found_usernames = User.in(username: usernames).pluck(:username, :id)
+      (usernames - found_usernames.map(&:first)).each do |username|
+        u = User.get(username)
+        found_usernames << [u.username, u.id] if u && u.valid?
+      end
+      processed_data.concat found_usernames
+    end
 
     csv_string = CSV.generate do |csv|
-      processed_input.each do |row|
+      processed_data.each do |row|
         csv << row
       end
     end
