@@ -18,8 +18,8 @@ class TagStatWorker
 
   def self.spawn beginning=1.day
     Tag.chartable.each do |tag|
-      # self.perform_async(tag.id)
-      self.new.perform(tag.id, beginning)
+      self.perform_async(tag.id, beginning)
+      # self.new.perform(tag.id, beginning)
     end
   end
 

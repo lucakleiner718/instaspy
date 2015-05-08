@@ -20,7 +20,8 @@ class DailyMediaStatWorker
     first = Time.now.utc.beginning_of_day
     (0..14).each do |i|
       day = i.days.ago(first)
-      DailyMediaStatWorker.new.perform day
+      # DailyMediaStatWorker.new.perform day
+      DailyMediaStatWorker.perform_async day
     end
   end
 end
