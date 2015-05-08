@@ -11,72 +11,24 @@ class Report::Users < Report::Base
   end
 
   def reports_in_process
-    parts_amount = 1
+    @parts_amount = 1
     ['likes', 'location', 'feedly'].each do |info|
-      parts_amount += 1 if @report.output_data.include?(info)
+      @parts_amount += 1 if @report.output_data.include?(info)
     end
 
-    progress = 0
-
-    unless @report.steps.include?('user_info')
-      users = User.in(id: @report.processed_ids).outdated(1.day).pluck(:id, :grabbed_at)
-      not_updated = users.select{|r| r[1].blank? || r[1] < 36.hours.ago}.map(&:first)
-
-      if not_updated.size == 0
-        @report.steps << 'user_info'
-      else
-        not_updated.each do |uid|
-          UserWorker.perform_async uid, true
-        end
-
-        progress += not_updated.size / @report.processed_ids.size.to_f / parts_amount
-      end
-    end
+    self.process_user_info
 
     if @report.steps.include?('user_info')
-      if @report.output_data.include?('likes') && !@report.steps.include?('likes')
-        get_likes = User.in(id: @report.processed_ids).without_likes.with_media.not_private.pluck(:id)
-        if get_likes.size == 0
-          @report.steps << 'likes'
-        else
-          get_likes.each { |uid| UserAvgLikesWorker.perform_async uid }
-        end
-      end
-
-      if @report.output_data.include?('location') && !@report.steps.include?('location')
-        get_location = User.in(id: @report.processed_ids).without_location.with_media.not_private.pluck(:id)
-        if get_location.size == 0
-          @report.steps << 'location'
-        else
-          get_location.each { |uid| UserLocationWorker.perform_async uid }
-        end
-      end
-
-      if @report.output_data.include?('feedly') && !@report.steps.include?('feedly')
-        with_website = []
-        feedly_exists = []
-        @report.processed_ids.in_groups_of(5_000, false) do |ids|
-          for_process = User.in(id: ids).with_url.pluck(:id)
-          with_website.concat for_process
-          feedly_exists.concat Feedly.in(user_id: for_process).pluck(:user_id)
-        end
-
-        no_feedly = with_website - feedly_exists
-
-        if no_feedly.size == 0
-          @report.steps << 'feedly'
-        else
-          no_feedly.each { |uid| UserFeedlyWorker.perform_async uid }
-          progress += feedly_exists.size / with_website.size.to_f / parts_amount
-        end
-      end
+      self.process_likes @report.processed_ids
+      self.process_location @report.processed_ids
+      self.process_feedly @report.processed_ids
     end
 
-    progress += @report.steps.size.to_f / parts_amount
+    @progress += @report.steps.size.to_f / @parts_amount
 
-    @report.progress = progress.round(2) * 100
+    @report.progress = @progress.round(2) * 100
 
-    if parts_amount == @report.steps.size
+    if @parts_amount == @report.steps.size
       @report.status = 'finished'
       self.finish
     end
@@ -91,6 +43,8 @@ class Report::Users < Report::Base
     header += ['Country', 'State', 'City'] if @report.output_data.include? 'location'
     header += ['AVG Likes'] if @report.output_data.include? 'likes'
     header += ['Feedly Subscribers'] if @report.output_data.include? 'feedly'
+
+    binding.pry
 
     csv_string = CSV.generate do |csv|
       csv << header

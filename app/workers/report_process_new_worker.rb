@@ -24,7 +24,7 @@ class ReportProcessNewWorker
         rep = nil
     end
 
-    rep.reports_new report if rep
+    rep.reports_new if rep
   end
 
   def self.spawn

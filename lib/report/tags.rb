@@ -32,9 +32,9 @@ class Report::Tags < Report::Base
   end
 
   def reports_in_process
-    parts_amount = 1
+    @parts_amount = 1
     ['likes', 'location', 'feedly'].each do |info|
-      parts_amount += 1 if @report.output_data.include?(info)
+      @parts_amount += 1 if @report.output_data.include?(info)
     end
 
     @tags_publishers = {}
@@ -103,13 +103,14 @@ class Report::Tags < Report::Base
             @report.steps << 'feedly'
           else
             no_feedly.each { |uid| UserFeedlyWorker.new.perform uid }
-            progress += feedly_exists.size / with_website.size.to_f / parts_amount
+            @progress += feedly_exists.size / with_website.size.to_f / @parts_amount
           end
         end
       end
     end
 
-    @report.progress = ((@report.steps.inject(0) { |sum, tag_data| sum + tag_data[1].size}.to_f / (@report.processed_csv.size*parts_amount)).round(2) * 100).to_i
+    @progress += ((@report.steps.inject(0) { |sum, tag_data| sum + tag_data[1].size}.to_f / (@report.processed_csv.size*@parts_amount)).round(2) * 100).to_i
+    @report.progress = @progress
 
     if @report.progress == 100
       @report.status = 'finished'

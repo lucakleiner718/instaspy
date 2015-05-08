@@ -11,24 +11,9 @@ class Report::RecentMedia < Report::Base
   end
 
   def reports_in_process
-    parts_amount = 2
+    @parts_amount = 2
 
-    progress = 0
-
-    unless @report.steps.include?('user_info')
-      users = User.in(id: @report.processed_ids).outdated(1.day).pluck(:id, :grabbed_at)
-      not_updated = users.select{|r| r[1].blank? || r[1] < 36.hours.ago}.map(&:first)
-
-      if not_updated.size == 0
-        @report.steps << 'user_info'
-      else
-        not_updated.each do |uid|
-          UserWorker.perform_async uid, true
-        end
-
-        progress += not_updated.size / @report.processed_ids.size.to_f / parts_amount
-      end
-    end
+    self.process_user_info
 
     if @report.steps.include?('user_info')
       unless @report.steps.include?('recent_media')
@@ -40,16 +25,16 @@ class Report::RecentMedia < Report::Base
             ReportRecentMediaWorker.perform_async uid, @report.id
           end
 
-          progress += not_processed.size / @report.processed_ids.size.to_f / parts_amount
+          @progress += not_processed.size / @report.processed_ids.size.to_f / @parts_amount
         end
       end
     end
 
-    progress += @report.steps.size.to_f / parts_amount
+    @progress += @report.steps.size.to_f / @parts_amount
 
-    @report.progress = progress.round(2) * 100
+    @report.progress = @progress.round(2) * 100
 
-    if parts_amount == @report.steps.size
+    if @parts_amount == @report.steps.size
       @report.status = 'finished'
       self.finish
     end

@@ -12,26 +12,12 @@ class Report::Followees < Report::Base
   end
 
   def reports_in_process
-    parts_amount = 3
+    @parts_amount = 3
     ['likes', 'location', 'feedly'].each do |info|
-      parts_amount += 1 if @report.output_data.include?(info)
+      @parts_amount += 1 if @report.output_data.include?(info)
     end
 
-    progress = 0
-
-    unless @report.steps.include?('user_info')
-      users = User.in(id: @report.processed_ids).outdated(1.day).pluck(:id, :grabbed_at)
-      not_updated = users.select{|r| r[1].blank? || r[1] < 36.hours.ago}.map(&:first)
-
-      if not_updated.size == 0
-        @report.steps << 'user_info'
-      else
-        not_updated.each do |uid|
-          UserWorker.perform_async uid, true
-        end
-        progress += (@report.processed_ids.size - not_updated.size) / @report.processed_ids.size.to_f / parts_amount
-      end
-    end
+    self.process_user_info
 
     if @report.steps.include?('user_info')
       unless @report.steps.include?('followees')
@@ -42,7 +28,7 @@ class Report::Followees < Report::Base
           @report.steps << 'followees'
         else
           for_update.each { |row| UserFolloweesWorker.perform_async(row[0], ignore_exists: true) }
-          progress += (users.size - for_update.size) / users.size.to_f/ parts_amount
+          @progress += (users.size - for_update.size) / users.size.to_f/ @parts_amount
         end
       end
 
@@ -73,69 +59,24 @@ class Report::Followees < Report::Base
             @report.steps << 'followees_info'
           else
             not_updated.each { |uid| UserWorker.perform_async uid }
-            progress += (followees_ids.size - not_updated.size) / followees_ids.size.to_f / parts_amount
+            @progress += (followees_ids.size - not_updated.size) / followees_ids.size.to_f / @parts_amount
           end
         end
 
         # after followees list grabbed and all followees updated
         if @report.steps.include?('followees_info')
-
-          # if we need avg likes data and it is not yet grabbed
-          if @report.output_data.include?('likes') && !@report.steps.include?('likes')
-            get_likes = []
-            followees_ids.in_groups_of(5_000, false) do |ids|
-              get_likes.concat User.in(id: ids).without_likes.with_media.not_private.pluck(:id)
-            end
-            if get_likes.size == 0
-              @report.steps << 'likes'
-            else
-              get_likes.each { |uid| UserAvgLikesWorker.perform_async uid }
-              progress += (followees_ids.size - get_likes.size) / followees_ids.size.to_f / parts_amount
-            end
-          end
-
-          # if we need location data and it is not yet grabbed
-          if @report.output_data.include?('location') && !@report.steps.include?('location')
-            get_location = []
-            followees_ids.in_groups_of(5_000, false) do |ids|
-              get_location.concat User.in(id: ids).without_location.with_media.not_private.pluck(:id)
-            end
-            if get_location.size == 0
-              @report.steps << 'location'
-            else
-              get_location.each { |uid| UserLocationWorker.perform_async(uid) }
-              progress += (followees_ids.size - get_location.size) / followees_ids.size.to_f / parts_amount
-            end
-          end
-
-          # if we need feedly subscribers amount and it is not yet grabbed
-          if @report.output_data.include?('feedly') && !@report.steps.include?('feedly')
-            with_website = []
-            feedly_exists = []
-            followees_ids.in_groups_of(5_000, false) do |ids|
-              for_process = User.in(id: ids).with_url.pluck(:id)
-              with_website.concat for_process
-              feedly_exists.concat Feedly.in(user_id: for_process).pluck(:user_id)
-            end
-
-            no_feedly = with_website - feedly_exists
-
-            if no_feedly.size == 0
-              @report.steps << 'feedly'
-            else
-              no_feedly.each { |uid| UserFeedlyWorker.perform_async uid }
-              progress += feedly_exists.size / with_website.size.to_f / parts_amount
-            end
-          end
+          self.process_likes followees_ids
+          self.process_location followees_ids
+          self.process_feedly followees_ids
         end
       end
     end
 
-    progress += @report.steps.size.to_f / parts_amount
+    @progress += @report.steps.size.to_f / @parts_amount
 
-    @report.progress = progress.round(2) * 100
+    @report.progress = @progress.round(2) * 100
 
-    if parts_amount == @report.steps.size
+    if @parts_amount == @report.steps.size
       @report.status = 'finished'
       self.finish
     end

@@ -24,7 +24,7 @@ class ReportProcessProgressWorker
         rep = nil
     end
 
-    rep.reports_in_process report if rep
+    rep.reports_in_process if rep
   end
 
   def self.spawn
