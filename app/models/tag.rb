@@ -56,7 +56,7 @@ class Tag
         media_list = client.tag_recent_media(URI.escape(self.name), max_tag_id: max_tag_id, count: 100)
       rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::BadRequest,
         Instagram::InternalServerError, Instagram::GatewayTimeout, Instagram::InternalServerError,
-        JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE, Errno::EOPNOTSUPP => e
+        JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE, Errno::EOPNOTSUPP, Errno::ETIMEDOUT => e
         Rails.logger.debug e
         retries += 1
         sleep 5*retries

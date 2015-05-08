@@ -2,6 +2,7 @@ class DailyMediaStatWorker
   include Sidekiq::Worker
 
   def perform date
+    date = DateTime.parse(date) if date.class.name == 'String'
     start = date.utc.beginning_of_day
     finish = start.end_of_day
 
