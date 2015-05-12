@@ -41,8 +41,8 @@ class Report::Tags < Report::Base
     @publishers_media = {}
 
     @report.processed_csv.each do |row|
-      tag_id = row[1].to_i
-      step_index = @report.steps.index{|r| r[0].to_i == tag_id}
+      tag_id = row[1]
+      step_index = @report.steps.index{|r| r[0] == tag_id}
 
 
       tag_media_ids = MediaTag.where(tag_id: tag_id).pluck(:media_id)
@@ -130,7 +130,7 @@ class Report::Tags < Report::Base
     header += ['Media Link', 'Media Likes', 'Media Comments']
 
     @report.processed_csv.each do |row|
-      tag_id = row[1].to_i
+      tag_id = row[1]
       tag = Tag.find(tag_id)
 
       media_list = {}

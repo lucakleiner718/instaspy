@@ -3,7 +3,6 @@ class Report::Followees < Report::Base
   def reports_new
     self.process_users_input
 
-    @report.data = { 'followees' => [] }
     @report.status = :in_process
     @report.started_at = Time.now
     @report.save
@@ -45,7 +44,7 @@ class Report::Followees < Report::Base
           FileManager.save_file filepath, followees_ids.join(',')
           @report.data['followees_file'] = filepath
         else
-          followees_ids = FileManager.read_file(@report.data['followees_file']).split(',').map(&:to_i)
+          followees_ids = FileManager.read_file(@report.data['followees_file']).split(',')
         end
 
         # update followees info, so in report we will have actual media amount, followees and etc. data

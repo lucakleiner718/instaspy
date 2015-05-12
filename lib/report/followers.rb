@@ -46,7 +46,7 @@ class Report::Followers < Report::Base
           FileManager.save_file filepath, followers_ids.join(',')
           @report.data['followers_file'] = filepath
         else
-          followers_ids = FileManager.read_file(@report.data['followers_file']).split(',').map(&:to_i)
+          followers_ids = FileManager.read_file(@report.data['followers_file']).split(',')
         end
 
         # update followers info, so in report we will have actual media amount, followers and etc. data
