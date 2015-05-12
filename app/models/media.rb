@@ -419,10 +419,16 @@ class Media
 
   def tags=tags
     tags_list = []
+    MediaTag.where(media_id: self.id).destroy_all
     tags.each do |t|
-      tags_list << MediaTag.new(tag_id: t.id)
+      tags_list << MediaTag.create(tag_id: t.id, media_id: self.id)
     end
-    self.media_tags = tags_list
+    # self.media_tags = tags_list
+    tags_list
+  end
+
+  def media_tags
+    MediaTag.where(media_id: self.id)
   end
 
   private
