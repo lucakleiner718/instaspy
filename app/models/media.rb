@@ -360,10 +360,10 @@ class Media
           added_media << media
         end
 
-        begin
+        # begin
           media.save unless media.new_record? && Media.where(insta_id: media_item['id']).size == 1
-        rescue ActiveRecord::RecordNotUnique => e
-        end
+        # rescue ActiveRecord::RecordNotUnique => e
+        # end
 
         media.set_tags media_item['tags']
 
