@@ -6,6 +6,6 @@ class MediaTag
 
   index media_id: 1
   index tag_id: 1
-  index({ media_id: 1, tag_id: 1}, { drop_dups: true })
+  index({ tag_id: 1, media_id: 1 }, { drop_dups: true })
 
 end
