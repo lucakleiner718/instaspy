@@ -22,9 +22,18 @@ class Tag
     write_attribute(:name, value)
   end
 
-  # offset (DateTime) - start point of user grabbing
-  # total_limit (integer) - amount of media, stop grabbing when code receive provided amount
-  # created_from (DateTime) - last point, until code should grab data
+  # Grabbing latest media for tag from Instagram via API
+  #
+  # Params:
+  #   offset [DateTime] - start point of user grabbing
+  #   total_limit [integer] - amount of media, stop grabbing when code receive provided amount
+  #   created_from [DateTime] - last point, until code should grab data
+  #
+  # Example:
+  #
+  #   Tag.where(username: 'shopbop').first.recent_media
+  #   Tag.get('fashion').recent_media offset: 10.days.ago, created_from: 11.days.ago
+  #
   def recent_media *args
     options = args.extract_options!
 
@@ -160,6 +169,7 @@ class Tag
     data.reject{|k| !k.in?(blank) }.values
   end
 
+  # Add provided tag name to observed tags list
   def self.observe tag_name
     t = Tag.get(tag_name)
     ot = t.observed_tag.present? ? t.observed_tag : t.build_observed_tag
@@ -196,13 +206,14 @@ class Tag
     end
   end
 
+  # Short tag access method by name
+  # @return [Tag] Instance of Tag class
   def self.get tag_name
     Tag.where(name: tag_name.downcase).first_or_create
   end
 
   def publishers
-    ids = self.media.pluck(:user_id).uniq
-    User.where(id: ids)
+    User.in(id: self.media.pluck(:user_id).uniq)
   end
 
   def count_media

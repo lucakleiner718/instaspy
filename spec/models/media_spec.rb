@@ -46,7 +46,7 @@ RSpec.describe Media, type: :model do
   end
 
   it "should update location" do
-    media = FactoryGirl.create(:media_location)
+    media = create(:media_location)
     VCR.use_cassette("media_#{media.insta_id}_location") do
       media.update_location!
     end
@@ -57,8 +57,31 @@ RSpec.describe Media, type: :model do
   end
 
   it "should return media" do
-    media = FactoryGirl.create(:media2)
+    media = create(:media2)
     expect(Media.get(media.insta_id).id).to eq media.id
+  end
+
+  it 'should set and return tags' do
+    media = create(:media2)
+    expect(media.tags.class.name).to eq 'Array'
+    expect(media.tags.size).to eq 0
+
+    tag = Tag.get('shopbop')
+    tag2 = Tag.get('russia')
+    media.tags = [tag, tag2]
+
+    expect(media.tags.size).to eq 2
+  end
+
+  it 'should set tags by names' do
+    media = create(:media2)
+
+    media.set_tags(['shopbop', 'russia', 'test'])
+    expect(media.tags.size).to eq 3
+
+    media.set_tags(['shopbop'])
+    expect(media.tags.size).to eq 1
+    expect(media.tags.first.name).to eq 'shopbop'
   end
 
 end

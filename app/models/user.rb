@@ -40,13 +40,6 @@ class User
   index website: 1
 
   has_many :media, class_name: 'Media', dependent: :destroy
-
-  # has_many :user_followers, class_name: 'Follower'#, foreign_key: :user_id, dependent: :destroy
-  # has_many :followers, through: :user_followers
-
-  # has_many :user_followees, class_name: 'Follower'#, foreign_key: :follower_id, dependent: :destroy
-  # has_many :followees, through: :user_followees
-
   has_many :feedly
 
   validates :insta_id, uniqueness: true, if: 'insta_id.present?'
@@ -85,12 +78,12 @@ class User
   end
 
   def full_name=(value)
-    value = value.strip if value.present?
+    value.strip! if value.present?
     write_attribute(:full_name, value)
   end
 
   def bio=(value)
-    value = value.strip if value.present?
+    value.strip! if value.present?
     write_attribute(:bio, value)
   end
 

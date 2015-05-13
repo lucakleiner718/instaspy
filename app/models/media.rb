@@ -25,25 +25,12 @@ class Media
   index user_id: 1
   index({ insta_id: 1 }, { drop_dups: true })
 
-  # has_many :media_tags#, after_add: :increment_some_tag, after_remove: :decrement_some_tag
   has_many :media_tags
   belongs_to :user
 
   scope :with_coordinates, -> { where(:location_lat.ne => nil).and(:location_lat.ne => '') }
   scope :with_country, -> { where(:location_country.ne => nil).and(:location_country.ne => '') }
   scope :without_location, -> { scoped.or(location_lat: nil).or(:location_lat.ne => '').where(location_present: nil) }
-
-  def location_name=(value)
-    if value.present?
-      value = value.encode( "UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
-      value = value.encode(value.encoding, "binary", invalid: :replace, undef: :replace, replace: ' ')
-      value.strip!
-      value = value[0, 255]
-    end
-
-    # this is same as self[:attribute_name] = value
-    write_attribute(:location_name, value)
-  end
 
   def location
     loc = []
@@ -53,6 +40,8 @@ class Media
     loc.join(', ')
   end
 
+  # Update current media info, including publisher and tags
+  # @return [Boolean] success save or not
   def update_info!
     return false if self.user && self.user.private?
 
@@ -84,7 +73,6 @@ class Media
     self.set_user response.data['user']
     self.set_data response.data
     self.set_tags response.data['tags']
-    self.updated_at = Time.now
 
     save_result = self.save
 
@@ -118,7 +106,7 @@ class Media
     user.full_name = media_item_user['full_name']
 
     user = user.must_save if user.changed?
-    self.user = user
+    self.user_id = user.id
   end
 
   def set_tags tags_names, tags_found=[]
@@ -140,28 +128,14 @@ class Media
     tags_list = []
     tags_names.each do |tag_name|
       tag = nil
-      if tags_found
-        tag = tags_found.select{|el| el.name.downcase == tag_name.downcase}.first
-      end
-      unless tag
-        begin
-          # if tags_found
-          #   tag = Tag.unscoped.where(name: tag_name).create
-          # else
-          tag = Tag.where(name: tag_name).first_or_create
-            # end
-        # rescue ActiveRecord::RecordNotUnique => e
-        #   # Rails.logger.info "#{"Duplicated entry #{tag_name}".red} / #{tags_found.map{|el| el.name}.join(',')}"
-        #   tag = Tag.unscoped.where(name: tag_name).first
-        end
-      end
+      tag = tags_found.select{|el| el.name.downcase == tag_name.downcase}.first if tags_found.size > 0
+      tag = Tag.where(name: tag_name).first_or_create unless tag
       tags_list << tag if tag && tag.valid?
     end
 
     self.tag_names = tags_names
     self.tags = tags_list.uniq{|el| el.id}
   end
-
 
   def set_location *args
     options = args.extract_options!
@@ -413,17 +387,25 @@ class Media
     false
   end
 
-  def tags
-    self.media_tags.map{|mt| mt.tag}
+  def tag_names
+    Tag.in(id: self.media_tags.pluck(:tag_id)).pluck(:name)
   end
 
-  def tags=tags
+  # List of tags for media
+  def tags
+    Tag.in(id: self.media_tags.pluck(:tag_id)).to_a
+  end
+
+  # Update media's tag list
+  # Params:
+  #   tags [Array] Array of Tag model instances
+  # @return [Array] Array of MediaTag model instances
+  def tags=(tags)
     tags_list = []
     MediaTag.where(media_id: self.id).destroy_all
     tags.each do |t|
       tags_list << MediaTag.create(tag_id: t.id, media_id: self.id)
     end
-    # self.media_tags = tags_list
     tags_list
   end
 
@@ -432,16 +414,6 @@ class Media
   end
 
   private
-
-  def increment_some_tag tag
-    # Rails.logger.debug "increment_some_tag #{tag.id}"
-    Tag.increment_counter tag.id
-  end
-
-  def decrement_some_tag tag
-    # Rails.logger.debug "decrement_some_tag #{tag.id}"
-    Tag.decrement_counter tag.id
-  end
 
   def self.delete_old amount=100_000
     split_size = 10_000
