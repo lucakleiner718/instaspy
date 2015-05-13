@@ -24,19 +24,17 @@ class Tag
 
   # Grabbing latest media for tag from Instagram via API
   #
-  # Params:
-  #   offset [DateTime] - start point of user grabbing
-  #   total_limit [integer] - amount of media, stop grabbing when code receive provided amount
-  #   created_from [DateTime] - last point, until code should grab data
-  #
-  # Example:
-  #
+  # @example
   #   Tag.where(username: 'shopbop').first.recent_media
   #   Tag.get('fashion').recent_media offset: 10.days.ago, created_from: 11.days.ago
   #
-  def recent_media *args
-    options = args.extract_options!
-
+  # @option options :offset [DateTime] start point of user grabbing
+  # @option options :total_limit [Integer] amount of media, stop grabbing when code receive provided amount
+  # @option options :created_from [DateTime] last point, until code should grab data
+  #
+  # @return [Integer] total amount of added media items
+  #
+  def recent_media **options
     max_tag_id = nil
 
     if options[:offset].present?
@@ -145,6 +143,8 @@ class Tag
       # stop if we don't have next page
       break unless max_tag_id
     end
+
+    total_added
   end
 
   def chart_data amount_of_days=14

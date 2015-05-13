@@ -1108,7 +1108,7 @@ class User
   end
 
   def followers
-    User.in(id: self.user_followers.pluck(:id))
+    User.in(id: self.user_followers.pluck(:follower_id))
   end
 
   def followers_size
@@ -1121,7 +1121,7 @@ class User
   end
 
   def followees
-    User.in(id: self.user_followees.pluck(:id))
+    User.in(id: self.user_followees.pluck(:user_id))
   end
 
   def followees_size

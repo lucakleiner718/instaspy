@@ -9,6 +9,7 @@ class Follower
 
   include Mongoid::Timestamps
 
+  index({ user_id: 1, follower_id: 1}, { drop_dups: true })
   index followed_at: 1
   index follower_id: 1
   index user_id: 1

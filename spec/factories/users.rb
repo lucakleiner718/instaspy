@@ -24,28 +24,28 @@ FactoryGirl.define do
   end
 
   factory :user_with_email, class: User do
-    insta_id 891079859
-    username "beth__winter"
+    insta_id 89107985911
+    username "beth__winter2"
     bio "This is just my account email@gmail.com | 123"
   end
 
   factory :outdated, class: User do
-    insta_id 891079859
-    username "beth__winter"
+    insta_id 89107985937
+    username "beth__winter1"
     bio "This is just my account email@gmail.com | 123"
     grabbed_at nil
   end
 
   factory :outdated2, class: User do
-    insta_id 8910798592
-    username "beth__winter1"
+    insta_id 89107985924
+    username "beth__winter13"
     bio "This is just my account email@gmail.com | 123"
     grabbed_at 10.days.ago
   end
 
   factory :recently_grabbed, class: User do
-    insta_id 8910798593
-    username "beth__winter2"
+    insta_id 89107985935
+    username "beth__winter24"
     bio "This is just my account email@gmail.com | 123"
     grabbed_at 1.day.ago
   end

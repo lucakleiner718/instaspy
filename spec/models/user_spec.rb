@@ -118,7 +118,7 @@ RSpec.describe User, type: :model do
   end
 
   it 'should update location!' do
-
+    # pending 'Need to write test'
   end
 
   it 'should return outdated users list' do
@@ -138,6 +138,26 @@ RSpec.describe User, type: :model do
   it 'should have lower website' do
     u = User.create username: 'TEST', insta_id: 1, website: 'http://AWESOME.coM'
     expect(u.website).to eq 'http://awesome.com'
+  end
+
+  it 'should set followers' do
+    user = create(:user_with_email)
+    expect(user.followers_size).to eq 0
+
+    user2 = create(:outdated)
+    Follower.create(user_id: user.id, follower_id: user2.id)
+
+    expect(user.followers_size).to eq 1
+  end
+
+  it 'should set followees' do
+    user = create(:user_with_email)
+    expect(user.followees_size).to eq 0
+
+    user2 = create(:outdated)
+    Follower.create(user_id: user2.id, follower_id: user.id)
+
+    expect(user.followees_size).to eq 1
   end
 
 end
