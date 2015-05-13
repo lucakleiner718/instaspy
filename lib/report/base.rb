@@ -5,6 +5,16 @@ class Report::Base
     @progress = 0
   end
 
+  def reports_new
+    self.process_users_input
+
+    @report.status = :in_process
+    @report.started_at = Time.now
+    @report.save
+
+    ReportProcessProgressWorker.perform_async @report.id
+  end
+
   protected
 
   def process_users_input
