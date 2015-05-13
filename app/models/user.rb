@@ -326,11 +326,10 @@ class User
 
     return false if self.destroyed? || self.private?
 
-    followed = self.followed_by
-    logger.debug ">> [#{self.username.green}] followed by: #{followed}"
+    logger.debug ">> [#{self.username.green}] followed by: #{self.followed_by}"
 
     if options[:continue]
-      last_follow_time = Follower.where(user_id: self.id).where('followed_at is not null').order(followed_at: :asc).first
+      last_follow_time = Follower.where(user_id: self.id).not(followed_at: nil).order(followed_at: :asc).first
       if last_follow_time
         cursor = last_follow_time.followed_at.to_i * 1_000
       end
@@ -339,9 +338,10 @@ class User
     options[:count] ||= 100
 
     if options[:reload]
-      self.follower_ids = []
+      Follower.where(user_id: self.id).destroy_all
     end
 
+    followers_ids = []
     total_exists = 0
     total_added = 0
 
@@ -401,6 +401,8 @@ class User
 
         user.must_save if user.changed?
 
+        followers_ids << user.id
+
         followed_at = Time.now
         followed_at = Time.at(cursor.to_i/1000) if cursor
 
@@ -450,13 +452,22 @@ class User
       total_added += added
 
       finish = Time.now
-      logger.debug ">> [#{self.username.green}] followers:#{followed} request: #{(finish-start).to_f.round(2)}s :: IG request: #{(end_ig-start).to_f.round(2)}s / exists: #{exists} (#{total_exists.to_s.light_black}) / added: #{added} (#{total_added.to_s.light_black})"
+      logger.debug ">> [#{self.username.green}] followers:#{self.followed_by} request: #{(finish-start).to_f.round(2)}s :: IG request: #{(end_ig-start).to_f.round(2)}s / exists: #{exists} (#{total_exists.to_s.light_black}) / added: #{added} (#{total_added.to_s.light_black})"
 
       break if !options[:ignore_exists] && exists >= 5
 
       cursor = resp.pagination['next_cursor']
 
-      break unless cursor
+      unless cursor
+        unless options[:reload]
+          current_followers = Follower.where(user_id: self.id).pluck(:follower_id)
+          left = current_followers - followers_ids
+          if left.size > 0
+            Follower.where(user_id: self.id).in(follower_id: left).destroy_all
+          end
+        end
+        break
+      end
 
       if finish_cursor && cursor.to_i < finish_cursor
         Rails.logger.info "#{"Stopped".red} by finish_cursor point finish_cursor: #{Time.at(finish_cursor/1000)} (#{finish_cursor}) / cursor: #{Time.at(cursor.to_i/1000)} (#{cursor}) / added: #{total_added}"
@@ -485,17 +496,18 @@ class User
     ProcessFollowersWorker.spawn self.id
   end
 
-
   # Update list of all profiles user follow
   #
   # @example
-  #   User.get('anton_zaytsev').update_followers continue: true
+  #   User.get('anton_zaytsev').update_followees continue: true
   #
   # @option options :reload [Boolean] default: false, if reload is set to true,
   #     code will download whole list of followers and replace exists list by new one
-  # @option options :ignore_exists [Boolean] default: false, iterates over all followers list
-  #
   # @option options :deep [Boolean] default: false, if need to updated info for each added user in background
+  # @option options :ignore_exists [Boolean] default: false, iterates over all followees list
+  # @option options :start_cursor [Integer] start time for followers lookup in seconds (timestamp)
+  # @option options :finish_cursor [Integer] end time for followers lookup in seconds (timestamp)
+  # @option options :continue [Boolean] find oldest follower and start looking for followers from it, by default: false
   # @option options :count [Integer] amount of users requesting from Instagram per request
   #
   # @note
@@ -504,35 +516,53 @@ class User
   def update_followees **options
     return false if self.insta_id.blank?
 
-    self.update_info! force: true
+    options = Hash[options.map{ |k, v| [k.to_sym, v] }] # convert all string keys to symbols
 
-    return false if self.destroyed? || self.private? || self.follows == 0
+    cursor = options[:start_cursor] ? options[:start_cursor].to_f.round(3).to_i * 1_000 : nil
+    finish_cursor = options[:finish_cursor] ?  options[:finish_cursor].to_f.round(3).to_i * 1_000 : nil
+
+    self.update_info!
+
+    return false if self.destroyed? || self.private?
 
     logger.debug ">> [#{self.username.green}] follows: #{self.follows}"
+
+    if options[:continue]
+      last_follow_time = Follower.where(follower_id: self.id).not(followed_at: nil).order(followed_at: :asc).first
+      if last_follow_time
+        cursor = last_follow_time.followed_at.to_i * 1_000
+      end
+    end
+
+    options[:count] ||= 100
 
     if options[:reload]
       Follower.where(follower_id: self.id).destroy_all
     end
 
-    next_cursor = nil
-    options[:count] ||= 100
-    exists = 0
-    followee_ids = []
+    followees_ids = []
+    total_exists = 0
+    total_added = 0
 
     while true
       start = Time.now
+
+      exists = 0
+      added = 0
       retries = 0
+
       begin
         client = InstaClient.new.client
-        resp = client.user_follows self.insta_id, cursor: next_cursor, count: options[:count]
-      rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::InternalServerError, Instagram::GatewayTimeout,
-        JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
-        logger.info "#{">> issue".red} #{e.class.name} :: #{e.message}"
-        sleep 10
+        resp = client.user_follows self.insta_id, cursor: cursor, count: options[:count]
+      rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::InternalServerError,
+        Instagram::GatewayTimeout, JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError,
+        Errno::EPIPE => e
+        Rails.logger.info e.message
+        sleep 10*retries
         retries += 1
         retry if retries <= 5
-        raise e
       rescue Instagram::BadRequest => e
+        Rails.logger.info e.message
         if e.message =~ /you cannot view this resource/
           break
         elsif e.message =~ /this user does not exist/
@@ -541,47 +571,112 @@ class User
         end
         raise e
       end
-      next_cursor = resp.pagination['next_cursor']
 
-      data = resp.data
+      end_ig = Time.now
 
-      users = User.in(insta_id: data.map{|el| el['id']}).to_a
-      fols = Follower.where(follower_id: self.id, user_id: users.map{|el| el.id}) unless options[:reload]
+      users = User.in(insta_id: resp.data.map{|el| el['id']}).to_a
+      fols = Follower.where(follower_id: self.id, user_id_id: users.map(&:id)).to_a
 
-      data.each do |user_data|
+      resp.data.each do |user_data|
+        logger.debug "Row #{user_data['username']} start"
+        row_start = Time.now
+
+        new_record = false
+
         user = users.select{|el| el.insta_id == user_data['id'].to_i}.first
         unless user
-          user = User.new(insta_id: user_data['id'])
+          user = User.new insta_id: user_data['id']
+          new_record = true
+        end
+
+        # some unexpected behavior
+        if user.insta_id.present? && user_data['id'].present? && user.insta_id != user_data['id'].to_i
+          raise Exception
         end
 
         user.set_data user_data
 
-        if options[:deep] && !user.private && (user.updated_at.blank? || user.updated_at < 1.month.ago || user.website.nil? || user.follows.blank? || user.followed_by.blank? || user.media_amount.blank?)
-          user.update_info!
-        end
+        UserWorker.perform_async(user.id, true) if options[:deep]
 
         user.must_save if user.changed?
 
-        fol = nil
-        fol = fols.select{|el| el.user_id == user.id }.first unless options[:reload]
-        fol = Follower.where(follower_id: self.id, user_id: user.id).first_or_initialize unless fol
+        followees_ids << user.id
 
-        if !options[:reload] && !fol.new_record?
-          exists += 1
+        followed_at = Time.now
+        followed_at = Time.at(cursor.to_i/1000) if cursor
+
+        if new_record
+          Follower.create(follower_id: self.id, user_id: user.id, followed_at: followed_at)
+          added += 1
+        else
+          fol = Follower.where(follower_id: self.id, user_id: user.id)
+
+          if options[:reload]
+            fol.first_or_initialize
+            if fol.followed_at.blank? || fol.followed_at > followed_at
+              fol.followed_at = followed_at
+              fol.save
+            end
+            added += 1
+          else
+            fol_exists = fols.select{|el| el.user_id == user.id }.first
+
+            if fol_exists
+              if fol_exists.followed_at.blank? || fol_exists.followed_at > followed_at
+                fol_exists.followed_at = followed_at
+                fol_exists.save
+              end
+              exists += 1
+            else
+              fol = fol.first_or_initialize
+              if fol.new_record?
+                fol.followed_at = followed_at
+                fol.save
+                added += 1
+              else
+                if fol.followed_at.blank? || fol.followed_at > followed_at
+                  fol.followed_at = followed_at
+                  fol.save
+                end
+                exists += 1
+              end
+            end
+          end
         end
 
-        fol.save if fol.changed?
-
-        followee_ids << user.id
+        logger.debug "Row #{user_data['username']} end / time: #{(Time.now - row_start).round(2)}s"
       end
 
-      logger.debug "followees: #{followee_ids.size}/#{follows} / request:#{(Time.now-start).to_f.round(2)}s / exists: #{exists}"
+      total_exists += exists
+      total_added += added
+
+      finish = Time.now
+      logger.debug ">> [#{self.username.green}] followees:#{self.follows} request: #{(finish-start).to_f.round(2)}s :: IG request: #{(end_ig-start).to_f.round(2)}s / exists: #{exists} (#{total_exists.to_s.light_black}) / added: #{added} (#{total_added.to_s.light_black})"
 
       break if !options[:ignore_exists] && exists >= 5
-      break unless next_cursor
+
+      cursor = resp.pagination['next_cursor']
+
+      unless cursor
+        unless options[:reload]
+          current_followees = Follower.where(follower_id: self.id).pluck(:user_id)
+          left = current_followees - followees_ids
+          if left.size > 0
+            Follower.where(follower_id: self.id).in(user_id: left).destroy_all
+          end
+        end
+        break
+      end
+
+      if finish_cursor && cursor.to_i < finish_cursor
+        Rails.logger.info "#{"Stopped".red} by finish_cursor point finish_cursor: #{Time.at(finish_cursor/1000)} (#{finish_cursor}) / cursor: #{Time.at(cursor.to_i/1000)} (#{cursor}) / added: #{total_added}"
+        break
+      end
     end
 
     self.save
+
+    true
   end
 
   def user_followees
