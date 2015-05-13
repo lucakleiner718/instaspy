@@ -225,7 +225,9 @@ class Tag
   end
 
   def media_count
-    TagMediaCounter.get(self.id).media_count
+    tmc = TagMediaCounter.get(self.id)
+    tmc.update_media_count!
+    tmc.media_count
   end
 
   def self.count_media tag_id

@@ -20,7 +20,7 @@
   <% @tags.each do |tag| %>
     <tr>
       <td><%= tag.name %></td>
-      <td><%= number_with_delimiter tag.media.size %></td>
+      <td><%= number_with_delimiter tag.media_count %></td>
       <td><%= link_to 'Report', new_report_path(params: {format: 'tags', input: tag.name }), target: :_blank %></td>
     </tr>
   <% end %>
