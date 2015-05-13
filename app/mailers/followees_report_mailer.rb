@@ -33,11 +33,10 @@ class FolloweesReportMailer < ActionMailer::Base
     files = []
 
     origins.each do |origin|
-      followees = origin.followees
-
       csv_string = CSV.generate do |csv|
         csv << ['Name', 'Username', 'Website', 'Follows', 'Followers', 'Media amount', 'Private account']
-        followees.find_each do |user|
+        origin.followees.each do |user|
+          user.update_info!
           csv << [user.full_name, user.username, user.website, user.follows, user.followed_by, user.media_amount, (user.private ? 'Yes' : 'No')]
         end
       end
@@ -70,9 +69,7 @@ class FolloweesReportMailer < ActionMailer::Base
       Dir.mkdir('public/reports') unless Dir.exists?('public/reports')
       file_path = "reports/followees-archive-#{Time.now.to_i}.zip"
       @file_urls << "#{root_url}#{file_path}"
-      File.open("public/#{file_path}", 'w') do |f|
-        f.puts binary_data
-      end
+      File.write("public/#{file_path}", binary_data)
     else
       attachments['followees.zip'] = binary_data
     end

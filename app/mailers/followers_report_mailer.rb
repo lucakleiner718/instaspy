@@ -26,27 +26,19 @@ class FollowersReportMailer < ActionMailer::Base
 
   def full origin
     followers_ids = origin.user_followers.pluck(:follower_id)
+    followers = User.in(id: followers_ids)
 
     csv_string = CSV.generate do |csv|
       csv << ['Insta ID', 'Username', 'Name', 'Bio', 'Website', 'Follows', 'Followers', 'Media amount', 'Email']
-      followers_ids.in_groups_of(10_000, false) do |group|
-        User.where(id: group).each do |user|
-          user.update_info! if user.outdated?
-          csv << [user.insta_id, user.username, user.full_name, user.bio, user.website, user.follows, user.followed_by, user.media_amount, user.email]
-        end
+      followers.each do |user|
+        user.update_info!
+        csv << [user.insta_id, user.username, user.full_name, user.bio, user.website, user.follows, user.followed_by, user.media_amount, user.email]
       end
     end
 
-    if followers.size < 10_000
-      attachments["#{origin.username}-followers.csv"] = csv_string
-    else
-      Dir.mkdir('public/reports') unless Dir.exists?('public/reports')
-      file_path = "reports/#{origin.username}-followers-#{Time.now.to_i}.csv"
-      @file_url = "#{root_url}#{file_path}"
-      File.open("public/#{file_path}", 'w') do |f|
-        f.puts csv_string
-      end
-    end
+    file_path = "reports/#{origin.username}-followers-#{Time.now.to_i}.csv"
+    @file_url = "#{root_url}#{file_path}"
+    File.write("public/#{file_path}", csv_string)
 
     if ENV['insta_debug'] || Rails.env.development?
       mail to: 'me@antonzaytsev.com', subject: "InstaSpy followers full report #{origin.username}", from: 'dev@antonzaytsev.com'
@@ -63,35 +55,20 @@ class FollowersReportMailer < ActionMailer::Base
     origins = [origins] unless origins.is_a?(Array)
 
     origins.each do |origin|
-      followers = Follower.where(user_id: origin.id)
-      followers = followers.includes(:follower).where('followers.created_at >= :start AND followers.created_at <= :finish', start: @start, finish: @finish)
+      followers_ids = Follower.in(user_id: origin.id).gte(created_at: @start).lte(created_at: @finish).pluck(:follower_id)
+      followers = User.in(id: followers_ids)
 
       csv_string = CSV.generate do |csv|
         csv << ['Insta ID', 'Username', 'Name', 'Bio', 'Website', 'Follows', 'Followers', 'Media amount', 'Email']
-        followers.find_each do |follower|
-          user = follower.follower
-          begin
-            user.update_info!
-            csv << [user.insta_id, user.username, user.full_name, user.bio, user.website, user.follows, user.followed_by, user.media_amount, user.email]
-          rescue => e
-            # somehow we don't have user record, just delete link-follower
-            puts "Catched error #{e.message.red}"
-            if user.blank?
-              follower.destroy
-            end
-          end
+        followers.each do |user|
+          user.update_info!
+          csv << [user.insta_id, user.username, user.full_name, user.bio, user.website, user.follows, user.followed_by, user.media_amount, user.email]
         end
       end
 
-      if followers.size < 10
-        attachments["#{origin.username}-followers.csv"] = csv_string
-      else
-        file_path = "reports/#{origin.username}-followers-#{Time.now.to_i}.csv"
-        @files << [origin, "#{root_url}#{file_path}"]
-        File.open("public/#{file_path}", 'w') do |f|
-          f.puts csv_string
-        end
-      end
+      file_path = "reports/#{origin.username}-followers-#{Time.now.to_i}.csv"
+      @files << [origin, "#{root_url}#{file_path}"]
+      File.write("public/#{file_path}", csv_string)
     end
 
     if ENV['insta_debug'] || Rails.env.development?

@@ -20,7 +20,7 @@ class User
   field :avg_likes_updated_at, type: DateTime
   field :avg_comments, type: Integer
   field :avg_comments_updated_at, type: DateTime
-  include Mongoid::Timestamps::Updated
+  include Mongoid::Timestamps # created_at need to know when user added to database and filter only new added users
 
   index({ insta_id: 1 }, { drop_dups: true, background: true })
   index({ username: 1 }, { drop_dups: true, background: true })

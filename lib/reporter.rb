@@ -72,11 +72,8 @@ class Reporter
     GeneralMailer.avg_likes_comments(csv_string, usernames, not_processed).deliver
   end
 
-  def self.media_report *args
-    options = args.extract_options!
-
+  def self.media_report **options
     ends = options[:ends] || 1.day.ago.end_of_day
-    # ends = Time.now
     starts = options[:starts] || 6.days.ago(ends).beginning_of_day
 
     Rails.logger.info "#{"[Media Report]".cyan} Started with #{Tag.exportable.size.to_s.red} tags"
@@ -88,61 +85,48 @@ class Reporter
 
         start_time = Time.now
         # catching all users, which did post media with specified tag
-        users_ids = tag.media.where('created_at > ? AND created_at <= ?', starts, ends).pluck(:user_id).uniq
-        users = User.where(id: users_ids).where("website is not null AND website != ''").where('users.created_at >= ?', starts).where('users.created_at <= ?', ends)
+        media_users_ids = Media.in(id: MediaTag.where(tag_id: tag.id).pluck(:media_id).uniq).gt(created_at: starts).lte(created_at: ends).pluck(:user_id).uniq
+        users = User.in(id: media_users_ids).nin(website: [nil, '']).gte(created_at: starts).lte(created_at: ends)
 
         users_ids = users.pluck(:id)
         users_size = users_ids.size
+        processed = 0
 
         Rails.logger.debug "#{"[Media Report]".cyan} Total users for tag #{tag.name.red}: #{users_size} / Initial request: #{(Time.now - start_time).to_f.round(2)}s"
 
-        processed = 0
-
         users_ids.in_groups_of(1000, false) do |users_group_ids|
-
-          users = User.where(id: users_group_ids)
-
+          users = User.in(id: users_group_ids)
           ts = Time.now
 
-          media_items = Media.connection.execute(
-                "SELECT *
-                 FROM (
-                   SELECT m.id, m.user_id
-                   FROM media AS m
-                   INNER JOIN media_tags AS mt ON mt.media_id = m.id
-                   INNER JOIN tags AS t on t.id = mt.tag_id
-                   WHERE t.name='#{tag.name}' AND m.created_at < '#{1.day.ago.strftime('%Y-%m-%d %H:%M:%S')}'
-                         AND m.user_id in (#{users_group_ids.join(',')})
-                   ORDER BY m.created_at DESC
-                 ) as result1
-                 GROUP BY result1.user_id"
-          ).to_a
+          # select latest media item with current tag for each user from group
+          media_items = Media.in(user_id: users_group_ids).where(tag_names: tag.name).order(created_time: :desc).uniq{|m| m.user_id}
 
           Rails.logger.debug "#{"[Media Report]".cyan} Media Item request took #{(Time.now - ts).to_f.round(2)}s"
 
           users.each do |user|
-            user.update_info! force: true
+            user.update_info!
             next if user.destroyed?
 
             start_time = Time.now
             retries = 0
             processed += 1
+            media = nil
 
             Rails.logger.debug "#{"[Media Report]".cyan} Processing #{user.username} (#{user.id})"
 
             while true
-              media_found = media_items.select{|el| el[1] == user.id}.first
+              media = media_items.select{|m| m.user_id.to_s == user.id}.first
               # Rails.logger.info "#{"[Media Report]".cyan} Media found #{media_found}"
-              if media_found
-                media_items.slice! media_items.index{|el| el[1] == user.id}
-                media = Media.find(media_found[0])
+              if media
+                media_items.slice! media_items.index{|m| m.user_id.to_s == user.id}
+                # media = Media.find(media_found[0])
               else
-                media = user.media.joins(:tags).where('tags.name = ?', tag.name).order(created_at: :desc).where('created_time < ?', 1.day.ago).first
-                media = user.media.joins(:tags).where('tags.name = ?', tag.name).order(created_at: :desc).first if media.blank?
+                media = Media.where(user_id: user.id).where(tag_names: tag.name).order(created_time: :desc).first
               end
 
               # if we don't have media for that user and tag
               break unless media
+
               if !user.private? && (media.updated_at < 3.days.ago || media.likes_amount.blank? || media.comments_amount.blank? || media.link.blank?)
                 # Rails.logger.info "#{"[Media Report]".cyan} Updating media #{media.id} / retries: #{retries}"
                 unless media.update_info! && retries < 5
@@ -236,8 +220,7 @@ class Reporter
     GeneralMailer.location_report(data, not_processed).deliver if send_email
   end
 
-  def self.by_location lat, lng, *args
-    options = args.extract_options!
+  def self.by_location lat, lng, **options
     options[:distance] ||= 100
 
     media_list = Media.near([lat, lng], options[:distance]/1000, units: :km).includes(:user)
