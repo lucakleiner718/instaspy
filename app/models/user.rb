@@ -93,10 +93,16 @@ class User
   end
 
 
-  # force (boolean) - if false and user not outdated, user will not be updated with fresh request to IG
-  def update_info! *args
-    options = args.extract_options!
-
+  # Update user info
+  #
+  # @option options :force [Boolean] if false and user not outdated, user will not be updated with fresh request to IG
+  #
+  # @return [Boolean] if user was updated
+  #
+  # @note
+  #   User will be update only if it is not actual (see :actual?)
+  #
+  def update_info! **options
     return true if self.actual? && !options[:force]
 
     # if we know only username, but no insta id
@@ -213,6 +219,10 @@ class User
     true
   end
 
+  # Update user via http request to instagram public version
+  #
+  # @return [Boolean] if update was success
+  #
   def update_via_http!
     retries = 0
     begin
@@ -249,9 +259,12 @@ class User
     self.save
   end
 
-  # what the avg interval between followers
+  # What the avg interval between followers
+  #
+  # @return [Float] how own new user following current user, in seconds what avg time between followers
+  #
   def follow_speed
-    dates = self.user_followers.where(:followed_at.ne => nil).order_by(followed_at: :asc).pluck(:followed_at)
+    dates = self.user_followers.ne(followed_at: nil).order_by(followed_at: :asc).pluck(:followed_at)
     ((dates.last - dates.first) / dates.size.to_f).round(2)
   end
 
@@ -278,28 +291,32 @@ class User
     amount.times do |i|
       start_cursor = start-i*speed*100
       finish_cursor = i+1 < amount ? start-(i+1)*speed*100 : nil
-      # puts "#{Time.at(start_cursor)} - #{Time.at(finish_cursor) if finish_cursor}"
       jobs << UserFollowersWorker.perform_async(self.id, start_cursor: start_cursor, finish_cursor: finish_cursor, ignore_exists: true)
-      # a = Follower.where(user_id: self.id).where('followed_at < ?', Time.at(start_cursor.to_i))
-      # a = a.where('followed_at >= ?', Time.at(finish_cursor.to_i)) if finish_cursor
-      # puts "#{i}: #{a.size}"
     end
 
     jobs
   end
 
-  # Script stops if found more than 5 exists followers from list in database
-  # Params
-  # reload (boolean) - default: false, if reload is set to true, code will download whole list of followers and replace exists list by new one
-  # deep (boolean) - default: false, if need to updated info for each added user in background
-  # ignore_exists (boolean) - default: false, iterates over all followers list
-  # start_cursor (timestamp) - start time for followers lookup
-  # finish_cursor (timestamp) - end time for followers lookup
-  # continue (boolean) - find oldest follower and start looking for followers from it
-  def update_followers *args
+  # Updating list of all followers for current user
+  #
+  # @example
+  #   User.get('anton_zaytsev').update_followers continue: true
+  #
+  # @option options :reload [Boolean] default: false, if reload is set to true,
+  #     code will download whole list of followers and replace exists list by new one
+  # @option options :deep [Boolean] default: false, if need to updated info for each added user in background
+  # @option options :ignore_exists [Boolean] default: false, iterates over all followers list
+  # @option options :start_cursor [Integer] start time for followers lookup in seconds (timestamp)
+  # @option options :finish_cursor [Integer] end time for followers lookup in seconds (timestamp)
+  # @option options :continue [Boolean] find oldest follower and start looking for followers from it, by default: false
+  # @option options :count [Integer] amount of users requesting from Instagram per request
+  #
+  # @note
+  #   Script stops if found more than 5 exists followers from list in database
+  #
+  def update_followers **options
     return false if self.insta_id.blank?
 
-    options = args.extract_options!
     options = Hash[options.map{ |k, v| [k.to_sym, v] }] # convert all string keys to symbols
 
     cursor = options[:start_cursor] ? options[:start_cursor].to_f.round(3).to_i * 1_000 : nil
@@ -319,6 +336,8 @@ class User
       end
     end
 
+    options[:count] ||= 100
+
     if options[:reload]
       self.follower_ids = []
     end
@@ -335,7 +354,7 @@ class User
 
       begin
         client = InstaClient.new.client
-        resp = client.user_followed_by self.insta_id, cursor: cursor, count: 100
+        resp = client.user_followed_by self.insta_id, cursor: cursor, count: options[:count]
       rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::InternalServerError,
              Instagram::GatewayTimeout, JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError,
              Errno::EPIPE => e
@@ -356,10 +375,8 @@ class User
 
       end_ig = Time.now
 
-      users = User.where(insta_id: resp.data.map{|el| el['id']})
-      fols = Follower.where(user_id: self.id, follower_id: users.map{|el| el.id}).to_a
-
-      # follower_ids_list = Follower.where(user_id: self.id).pluck(:follower_id)
+      users = User.in(insta_id: resp.data.map{|el| el['id']}).to_a
+      fols = Follower.where(user_id: self.id, follower_id: users.map(&:id)).to_a
 
       resp.data.each do |user_data|
         logger.debug "Row #{user_data['username']} start"
@@ -373,9 +390,11 @@ class User
           new_record = true
         end
 
+        # some unexpected behavior
         if user.insta_id.present? && user_data['id'].present? && user.insta_id != user_data['id'].to_i
           raise Exception
         end
+
         user.set_data user_data
 
         UserWorker.perform_async(user.id, true) if options[:deep]
@@ -424,10 +443,6 @@ class User
           end
         end
 
-        # unless follower_ids_list.include?(user.id)
-        #   follower_ids_list << user.id
-        # end
-
         logger.debug "Row #{user_data['username']} end / time: #{(Time.now - row_start).round(2)}s"
       end
 
@@ -454,48 +469,62 @@ class User
     true
   end
 
+  def user_followers
+    Follower.where(user_id: self.id)
+  end
+
+  def followers
+    User.in(id: self.user_followers.pluck(:follower_id))
+  end
+
+  def followers_size
+    self.user_followers.size
+  end
 
   def update_followers_async
     ProcessFollowersWorker.spawn self.id
   end
 
 
-  # Params:
-  # reload (boolean) - fully re-check all followers
-  # ignore_exists (boolean)
-  def update_followees *args
+  # Update list of all profiles user follow
+  #
+  # @example
+  #   User.get('anton_zaytsev').update_followers continue: true
+  #
+  # @option options :reload [Boolean] default: false, if reload is set to true,
+  #     code will download whole list of followers and replace exists list by new one
+  # @option options :ignore_exists [Boolean] default: false, iterates over all followers list
+  #
+  # @option options :deep [Boolean] default: false, if need to updated info for each added user in background
+  # @option options :count [Integer] amount of users requesting from Instagram per request
+  #
+  # @note
+  #   Script stops if found more than 5 exists followers from list in database
+  #
+  def update_followees **options
     return false if self.insta_id.blank?
 
-    options = args.extract_options!
+    self.update_info! force: true
 
-    next_cursor = nil
-
-    self.update_info!
-
-    return false if self.destroyed? || self.private?
+    return false if self.destroyed? || self.private? || self.follows == 0
 
     logger.debug ">> [#{self.username.green}] follows: #{self.follows}"
 
-    return false if self.follows == 0
-
     if options[:reload]
-      self.followee_ids = []
+      Follower.where(follower_id: self.id).destroy_all
     end
 
-    # total_exists = 0
-    # total_added = 0
-
+    next_cursor = nil
+    options[:count] ||= 100
     exists = 0
-
     followee_ids = []
-    begining_time = Time.now
 
     while true
       start = Time.now
       retries = 0
       begin
         client = InstaClient.new.client
-        resp = client.user_follows self.insta_id, cursor: next_cursor, count: 100
+        resp = client.user_follows self.insta_id, cursor: next_cursor, count: options[:count]
       rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::InternalServerError, Instagram::GatewayTimeout,
         JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
         logger.info "#{">> issue".red} #{e.class.name} :: #{e.message}"
@@ -516,7 +545,7 @@ class User
 
       data = resp.data
 
-      users = User.where(insta_id: data.map{|el| el['id']})
+      users = User.in(insta_id: data.map{|el| el['id']}).to_a
       fols = Follower.where(follower_id: self.id, user_id: users.map{|el| el.id}) unless options[:reload]
 
       data.each do |user_data|
@@ -553,6 +582,18 @@ class User
     end
 
     self.save
+  end
+
+  def user_followees
+    Follower.where(follower_id: self.id)
+  end
+
+  def followees
+    User.in(id: self.user_followees.pluck(:user_id))
+  end
+
+  def followees_size
+    self.user_followees.size
   end
 
   def set_data data
@@ -1101,31 +1142,6 @@ class User
     record.save
 
     true
-  end
-
-  def user_followers
-    Follower.where(user_id: self.id)
-  end
-
-  def followers
-    User.in(id: self.user_followers.pluck(:follower_id))
-  end
-
-  def followers_size
-    self.user_followers.size
-  end
-
-
-  def user_followees
-    Follower.where(follower_id: self.id)
-  end
-
-  def followees
-    User.in(id: self.user_followees.pluck(:user_id))
-  end
-
-  def followees_size
-    self.user_followees.size
   end
 
   def must_save
