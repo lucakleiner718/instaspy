@@ -129,6 +129,6 @@ class Report::Followees < Report::Base
     @report.finished_at = Time.now
     @report.save
 
-    ReportMailer.followers(@report.id).deliver if @report.notify_email.present?
+    ReportMailer.followees(@report.id).deliver if @report.notify_email.present?
   end
 end

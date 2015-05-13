@@ -70,7 +70,7 @@ class Report::Followers < Report::Base
         if @report.steps.include?('followers_info')
           self.process_likes followers_ids
           self.process_location followers_ids
-          self.process_feedly followees_ids
+          self.process_feedly followers_ids
         end
       end
     end
