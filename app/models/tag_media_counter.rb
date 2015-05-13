@@ -1,7 +1,7 @@
 class TagMediaCounter
 
   include Mongoid::Document
-  field :tag_id, type: Integer
+  field :tag_id, type: String
   field :media_count, type: Integer, default: 0
   include Mongoid::Timestamps::Updated
 
@@ -16,7 +16,7 @@ class TagMediaCounter
   end
 
   def update_media_count!
-    return false if self.updated_at > 1.week.ago
+    return false if self.updated_at && self.updated_at > 1.week.ago
     self.update_attribute :media_count, MediaTag.where(tag_id: self.tag_id).size
   end
 
