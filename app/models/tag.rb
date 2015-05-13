@@ -38,9 +38,10 @@ class Tag
     max_tag_id = nil
 
     if options[:offset].present?
-      m = Media.where(:created_time.gte => options[:offset]).and(:created_time.lte => (options[:offset] + 10.minutes)).order(created_time: :asc).first
+      options[:offset] = DateTime.parse(options[:offset]) if options[:offset].class.name == 'String'
+      m = Media.gte(created_time: options[:offset]).lte(created_time: (options[:offset] + 10.minutes)).order(created_time: :asc).first
       unless m
-        m = Media.where(:created_time.gte => options[:offset]).and(:created_time.lte => (options[:offset] + 60.minutes)).order(created_time: :asc).first
+        m = Media.gte(created_time: options[:offset]).lte(created_time: (options[:offset] + 60.minutes)).order(created_time: :asc).first
       end
       if m
         max_tag_id = m.insta_id.match(/^(\d+)_/)[1]
