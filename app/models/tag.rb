@@ -94,13 +94,12 @@ class Tag
         media.set_user media_item['user'], users_found
         media.set_data media_item
 
+        media.tag_names = media_item['tags']
+
         # we need to have media_id before tag saving
-        media.save
+        media.save #unless media.id
 
         media.set_tags media_item['tags'], tags_found
-
-        # save data from set_tags
-        media.save
 
         tags_found.concat(media.tags).uniq!
 

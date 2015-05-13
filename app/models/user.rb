@@ -828,17 +828,13 @@ class User
         media = media_found.select{|el| el.insta_id == media_item['id']}.first
         unless media
           media = Media.new(insta_id: media_item['id'], user_id: self.id)
+          added += 1
         end
 
         media.set_data media_item
+        media.tag_names = media_item['tags']
 
-        added += 1 if media.new_record?
-
-        # begin
-          media.save
-        # rescue ActiveRecord::RecordNotUnique => e
-        #   media = Media.where(insta_id: media_item['id']).first
-        # end
+        media.save if media.changed?
 
         media.set_tags media_item['tags'], tags_found
         tags_found.concat(media.tags.to_a).uniq!

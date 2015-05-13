@@ -17,8 +17,10 @@ RSpec.describe Tag, type: :model do
     VCR.use_cassette('tag_shopbop_recent_media_50') do
       tag.recent_media total_limit: 50
     end
-    # tag.media.reload
+    
     expect(tag.media.length).to be > 50
+    media = tag.media.first
+    expect(media.tag_names).to eq media.tags.map(&:name)
   end
 
   it 'should add to csv report' do
