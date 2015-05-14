@@ -5,7 +5,7 @@ class ImportWorker
   include Sidekiq::Worker
 
   def perform i
-    return false if File.exists?("tmp/import/#{i}")
+    return false if File.exists?("tmp/cache/import/#{i}")
 
     ts = Time.now
     begin
@@ -45,7 +45,7 @@ class ImportWorker
       # puts "#{exists}/#{added} / Time: #{(Time.now - t1).round(2)}s"
     end
 
-    FileUtils.touch "tmp/import/#{i}"
+    FileUtils.touch "tmp/cache/import/#{i}"
 
     puts "File: #{i} /  #{exists}/#{added} / time: #{(Time.now - ts).round(2)}s"
   end
