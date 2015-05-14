@@ -5,6 +5,8 @@ class ImportWorker
   include Sidekiq::Worker
 
   def perform i
+    return false if File.exists?("tmp/import/#{i}")
+
     ts = Time.now
     begin
       file = open("http://charts.socialroot.co/reports/users-pack/#{i}.csv")
@@ -43,11 +45,13 @@ class ImportWorker
       # puts "#{exists}/#{added} / Time: #{(Time.now - t1).round(2)}s"
     end
 
+    FileUtils.touch "tmp/import/#{i}"
+
     puts "File: #{i} /  #{exists}/#{added} / time: #{(Time.now - ts).round(2)}s"
   end
 
   def self.spawn start=0
-    (start..1000).each do |i|
+    (start..2000).each do |i|
       self.perform_async i
     end
   end
