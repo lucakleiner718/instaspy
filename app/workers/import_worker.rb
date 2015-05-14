@@ -45,9 +45,11 @@ class ImportWorker
       # puts "#{exists}/#{added} / Time: #{(Time.now - t1).round(2)}s"
     end
 
-    FileUtils.touch "tmp/cache/import/#{i}"
+    time = (Time.now - ts).round(2)
 
-    puts "File: #{i} /  #{exists}/#{added} / time: #{(Time.now - ts).round(2)}s"
+    File.write "tmp/cache/import/#{i}", time
+
+    puts "File: #{i} / #{exists}/#{added} / time: #{time}s"
   end
 
   def self.spawn start=0
