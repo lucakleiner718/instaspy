@@ -4,8 +4,7 @@ class UserFolloweesWorker
 
   sidekiq_options unique: true, unique_args: -> (args) { [ args.first ] }
 
-  def perform user_id, *args
-    user = User.find(user_id)
-    user.update_followees *args
+  def perform user_id, **options
+    User.find(user_id).update_followees **options
   end
 end
