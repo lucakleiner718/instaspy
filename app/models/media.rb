@@ -18,12 +18,12 @@ class Media
 
   index created_at: 1
   index created_time: 1
-  index location_city: 1
+  index location_city: 1  
   index location_country: 1
   index location_state: 1
   index updated_at: 1
   index user_id: 1
-  index({ insta_id: 1 }, { drop_dups: true })
+  index({ insta_id: 1 }, { drop_dups: true, background: true })
 
   has_many :media_tags
   belongs_to :user
