@@ -56,7 +56,7 @@ class User
 
   before_save do
     # Catch email from bio
-    if self.bio.present?
+    if self.bio_changed? && self.bio.present?
       email_regex = /([\w+\-.]+@[a-z\d\-]+(\.[a-z]+)*\.[a-z]+)/
       m = self.bio.downcase.match(email_regex)
       if m && m[1]
