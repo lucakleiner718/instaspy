@@ -4,9 +4,13 @@ class UserWorker
   sidekiq_options queue: :middle, unique: true, unique_args: -> (args) { [ args.first ] },
     unique_unlock_order: :before_yield
 
-  def perform user_id, force=false
+  def perform user_id, *args
+    options = args.extract_options!
+    if args.size == 1 && args.first.class.name == 'Boolean'
+      options[:force] = args.first
+    end
     User.where(id: user_id).each do |u|
-      u.update_info! force: force
+      u.update_info! options
     end
   end
 

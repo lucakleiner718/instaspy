@@ -10,7 +10,7 @@ class UserFollowersWorker
       end
     }
 
-  def perform user_id, **options
-    User.find(user_id).update_followers **options
+  def perform user_id, *args
+    User.find(user_id).update_followers args.extract_options!
   end
 end
