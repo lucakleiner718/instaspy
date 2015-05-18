@@ -99,8 +99,9 @@
   ["538dbda0b4ae4efabfa8e5b1fa3acca4", "d0f52b0036344d048b852d2aab19be42", [[35938880, "35938880.538dbda.8ada9f926cbc40b99703efffdb207847"]]],
   ["41f9573c8f3e4404a190adda60823d53", "46fea3c8c05f4edfadc47069f0380f37", [[35938880, "35938880.41f9573.e2b34b0b8a3d4a299ecf28eae79c3ad4"]]],
   ["9a266c5ee1ab420fa3f45f2066416aec", "e3986232920444ce9969600a17ab6ae2", [[35938880, "35938880.9a266c5.e55be4ddd5ff4dcb9e4485c05724730c"]]],
-  ["bd13bd37539b494fb74035fa79bcd776", "13d91c6ce18a451cb5c072444a7ea260", [[35938880, "35938880.bd13bd3.4e33eabf7c504319966c89b4f2f3c9c8"]]]].each do |r|
-  ia = InstagramAccount.where(client_id: r[0], client_secret: r[1]).first_or_create(redirect_uri: (r[2] || 'http://107.170.110.156/oauth/signin'))
+  ["bd13bd37539b494fb74035fa79bcd776", "13d91c6ce18a451cb5c072444a7ea260", [[35938880, "35938880.bd13bd3.4e33eabf7c504319966c89b4f2f3c9c8"]]]
+].each do |r|
+  ia = InstagramAccount.where(client_id: r[0], client_secret: r[1]).first_or_create(redirect_uri: 'http://107.170.110.156/oauth/signin')
   r[2].each do |k|
     ia.logins.where(access_token: k[1], ig_id: k[0]).first_or_create
   end
