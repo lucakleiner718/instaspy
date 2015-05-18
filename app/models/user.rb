@@ -102,7 +102,8 @@ class User
   # @note
   #   User will be update only if it is not actual (see :actual?)
   #
-  def update_info! **options
+  def update_info! *args
+    options = args.extract_options!
     return true if self.actual? && !options[:force]
 
     # if we know only username, but no insta id
@@ -314,10 +315,11 @@ class User
   # @note
   #   Script stops if found more than 5 exists followers from list in database
   #
-  def update_followers **options
+  def update_followers *args
+    options = args.extract_options!
     return false if self.insta_id.blank?
 
-    options = Hash[options.map{ |k, v| [k.to_sym, v] }] # convert all string keys to symbols
+    options = options.inject({}){|obj, (k, v)| obj[k.to_sym] = v; obj} # convert all string keys to symbols
 
     cursor = options[:start_cursor] ? options[:start_cursor].to_f.round(3).to_i * 1_000 : nil
     finish_cursor = options[:finish_cursor] ?  options[:finish_cursor].to_f.round(3).to_i * 1_000 : nil
@@ -513,10 +515,11 @@ class User
   # @note
   #   Script stops if found more than 5 exists followers from list in database
   #
-  def update_followees **options
+  def update_followees *args
+    options = args.extract_options!
     return false if self.insta_id.blank?
 
-    options = Hash[options.map{ |k, v| [k.to_sym, v] }] # convert all string keys to symbols
+    options = options.inject({}){|obj, (k, v)| obj[k.to_sym] = v; obj} # convert all string keys to symbols
 
     cursor = options[:start_cursor] ? options[:start_cursor].to_f.round(3).to_i * 1_000 : nil
     finish_cursor = options[:finish_cursor] ?  options[:finish_cursor].to_f.round(3).to_i * 1_000 : nil

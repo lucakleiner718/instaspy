@@ -34,7 +34,8 @@ class Tag
   #
   # @return [Integer] total amount of added media items
   #
-  def recent_media **options
+  def recent_media *args
+    options = args.extract_options!
     max_tag_id = nil
 
     if options[:offset].present?

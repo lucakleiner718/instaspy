@@ -72,7 +72,8 @@ class Reporter
     GeneralMailer.avg_likes_comments(csv_string, usernames, not_processed).deliver
   end
 
-  def self.media_report **options
+  def self.media_report *args
+    options = args.extract_options!
     ends = options[:ends] || 1.day.ago.end_of_day
     starts = options[:starts] || 6.days.ago(ends).beginning_of_day
 
@@ -220,7 +221,8 @@ class Reporter
     GeneralMailer.location_report(data, not_processed).deliver if send_email
   end
 
-  def self.by_location lat, lng, **options
+  def self.by_location lat, lng, *args
+    options = args.extract_options!
     options[:distance] ||= 100
 
     media_list = Media.near([lat, lng], options[:distance]/1000, units: :km).includes(:user)
