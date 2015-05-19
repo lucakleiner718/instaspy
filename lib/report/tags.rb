@@ -183,5 +183,7 @@ class Report::Tags < Report::Base
     @report.save
 
     ReportMailer.users(@report.id).deliver if @report.notify_email.present?
+
+    self.after_finish
   end
 end

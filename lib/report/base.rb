@@ -17,6 +17,10 @@ class Report::Base
 
   protected
 
+  def after_finish
+    ReportProcessProgressWorker.spawn
+  end
+
   def process_users_input
     processed_input = @report.original_csv.map(&:first)
 

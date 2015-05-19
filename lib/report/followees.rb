@@ -120,5 +120,7 @@ class Report::Followees < Report::Base
     @report.save
 
     ReportMailer.followees(@report.id).deliver if @report.notify_email.present?
+
+    self.after_finish
   end
 end
