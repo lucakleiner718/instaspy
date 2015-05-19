@@ -911,8 +911,6 @@ class User
       users2 << user if user
     end
 
-    binding.pry
-
   end
 
   def update_location! *args

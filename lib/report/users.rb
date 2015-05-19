@@ -34,8 +34,6 @@ class Report::Users < Report::Base
     header += ['AVG Likes'] if @report.output_data.include? 'likes'
     header += ['Feedly Subscribers'] if @report.output_data.include? 'feedly'
 
-    binding.pry
-
     csv_string = CSV.generate do |csv|
       csv << header
       User.in(id: @report.processed_ids).each do |u|
