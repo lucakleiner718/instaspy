@@ -28,8 +28,7 @@ class ReportProcessProgressWorker
   end
 
   def self.spawn
-    Report.where(status: :in_process).each do |report|
-      self.perform_async report.id.to_s
-    end
+    report = Report.where(status: :in_process).first
+    self.perform_async report.id.to_s if report
   end
 end

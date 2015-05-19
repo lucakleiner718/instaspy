@@ -7,7 +7,7 @@ class ReportProcessNewWorker
   def perform report_id
     report = Report.where(status: :new, id: report_id).first
 
-    return unless report
+    return if !report || Report.where(status: :in_process).size > 0
 
     case report.format
       when 'followers'
@@ -28,8 +28,7 @@ class ReportProcessNewWorker
   end
 
   def self.spawn
-    Report.where(status: :new).each do |report|
-      self.perform_async report.id.to_s
-    end
+    report = Report.where(status: :new).first
+    self.perform_async report.id.to_s if report
   end
 end
