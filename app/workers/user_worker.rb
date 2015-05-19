@@ -6,9 +6,10 @@ class UserWorker
 
   def perform user_id, *args
     options = args.extract_options!
-    if args.size == 1 && args.first.class.name == 'Boolean'
+    if args.size == 1 && args.first.is_a?(Boolean)
       options[:force] = args.first
     end
+
     User.where(id: user_id).each do |u|
       u.update_info! options
     end

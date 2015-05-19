@@ -66,7 +66,7 @@ class Report::Base
       if not_updated.size == 0
         @report.steps << 'user_info'
       else
-        not_updated.each { |uid| UserWorker.perform_async uid, true }
+        not_updated.map { |uid| UserWorker.perform_async uid, true }
         @progress += (ids.size - not_updated.size) / ids.size.to_f / @parts_amount
       end
     end

@@ -28,7 +28,7 @@ class ReportProcessNewWorker
   end
 
   def self.spawn
-    report = Report.where(status: :new).first
+    report = Report.where(status: :new).order(created_at: :asc).first
     self.perform_async report.id.to_s if report
   end
 end
