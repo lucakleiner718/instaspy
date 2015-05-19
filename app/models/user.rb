@@ -233,11 +233,11 @@ class User
       end.get("/#{self.username}/") do |req|
         req.headers["User-Agent"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.93 Safari/537.36"
       end
-    rescue Faraday::ConnectionFailed => e
+    rescue Faraday::ConnectionFailed, Errno::ETIMEDOUT => e
       retries += 1
       sleep 10*retries
       retry if retries <= 5
-      return false
+      raise e
     end
 
     # accounts is private and username is changed
