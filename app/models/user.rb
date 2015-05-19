@@ -311,6 +311,7 @@ class User
   # @option options :finish_cursor [Integer] end time for followers lookup in seconds (timestamp)
   # @option options :continue [Boolean] find oldest follower and start looking for followers from it, by default: false
   # @option options :count [Integer] amount of users requesting from Instagram per request
+  # @option options :skip_exists [Boolean] skip exists
   #
   # @note
   #   Script stops if found more than 5 exists followers from list in database
@@ -331,7 +332,7 @@ class User
     logger.debug ">> [#{self.username.green}] followed by: #{self.followed_by}"
 
     if options[:continue]
-      last_follow_time = Follower.where(user_id: self.id).not(followed_at: nil).order(followed_at: :asc).first
+      last_follow_time = Follower.where(user_id: self.id).ne(followed_at: nil).order(followed_at: :asc).first
       if last_follow_time
         cursor = last_follow_time.followed_at.to_i * 1_000
       end
@@ -346,6 +347,7 @@ class User
     followers_ids = []
     total_exists = 0
     total_added = 0
+    skipped = false
 
     while true
       start = Time.now
@@ -456,12 +458,23 @@ class User
       finish = Time.now
       logger.debug ">> [#{self.username.green}] followers:#{self.followed_by} request: #{(finish-start).to_f.round(2)}s :: IG request: #{(end_ig-start).to_f.round(2)}s / exists: #{exists} (#{total_exists.to_s.light_black}) / added: #{added} (#{total_added.to_s.light_black})"
 
-      break if !options[:ignore_exists] && exists >= 5
+      if exists > 5
+        if options[:skip_exists] && !skipped
+          last_follow_time = Follower.where(user_id: self.id).ne(followed_at: nil).order(followed_at: :asc).first
+          if last_follow_time
+            cursor = last_follow_time.followed_at.to_i * 1_000
+            skipped = true
+            next
+          end
+        end
+      end
+
+      break if !options[:ignore_exists] && exists > 5
 
       cursor = resp.pagination['next_cursor']
 
       unless cursor
-        unless options[:reload]
+        if !options[:reload] && !skipped
           current_followers = Follower.where(user_id: self.id).pluck(:follower_id)
           left = current_followers - followers_ids
           if left.size > 0
