@@ -18,7 +18,15 @@ class Tag
   CHART_DAYS = 14
 
   def name=(value)
-    value = value.strip.downcase if value.present?
+    if value.present?
+      value = value.strip
+      if value =~ /\A\w+\Z/i
+        value = value.downcase
+      else
+        value = value.mb_chars.downcase.to_s
+      end
+    end
+
     write_attribute(:name, value)
   end
 
