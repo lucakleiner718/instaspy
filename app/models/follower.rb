@@ -7,7 +7,7 @@ class Follower
   belongs_to :followee, class_name: 'User', foreign_key: :user_id
   field :followed_at, type: DateTime
 
-  include Mongoid::Timestamps
+  include Mongoid::Timestamps::Created
 
   index({ user_id: 1, follower_id: 1}, { drop_dups: true })
   index followed_at: 1
