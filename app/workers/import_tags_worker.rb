@@ -5,7 +5,7 @@ class ImportTagsWorker
   include Sidekiq::Worker
 
   def perform i
-    return if File.exists?("tmp/cache/import/tag-#{i}")
+    return if Import.where(format: :tags, file_id: i).size > 0
 
     ts = Time.now
     begin
@@ -29,7 +29,7 @@ class ImportTagsWorker
 
     time = (Time.now - ts).round(2)
 
-    File.write "tmp/cache/import/tag-#{i}", time
+    Import.create(format: :tags, file_id: i, time: time)
 
     puts "File: #{i} / #{exists}/#{added} / time: #{time}s"
   end
