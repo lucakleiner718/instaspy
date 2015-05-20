@@ -10,9 +10,8 @@ class UserWorker
       options[:force] = args.first
     end
 
-    User.where(id: user_id).each do |u|
-      u.update_info! options
-    end
+    user = User.find(user_id)
+    user.update_info! options
   end
 
   def self.spawn amount=10_000
