@@ -50,7 +50,7 @@ gem 'httparty'
 gem 'render_csv'
 
 gem 'sidekiq', '~> 3.3.2'
-gem 'sidekiq-failures', github: 'antonzaytsev/sidekiq-failures'
+gem 'sidekiq-failures', github: 'antonzaytsev/sidekiq-failures', branch: 'short-error-message'
 gem 'sidekiq-unique-jobs'
 # gem 'sidekiq-status'
 

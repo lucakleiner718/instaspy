@@ -1,6 +1,7 @@
 GIT
   remote: git://github.com/antonzaytsev/sidekiq-failures.git
-  revision: 3b3068df5b8d9674f9005f86c3146f820da56c12
+  revision: 69f99197c5c274aa3c49b843ae0b8014792e8e25
+  branch: short-error-message
   specs:
     sidekiq-failures (0.4.4)
       sidekiq (>= 2.16.0)
