@@ -6,7 +6,7 @@ set :stage, :production
 # property set.  Don't declare `role :all`, it's a meta role.
 
 role :app, %w{app@app1.socialrootdata.com}
-role :web, %w{app@socialrootdata.com:2271}
+role :web, %w{app@socialrootdata.com}
 
 set :filter, :roles => %w{app web}
 
