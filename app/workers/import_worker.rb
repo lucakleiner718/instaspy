@@ -56,8 +56,8 @@ class ImportWorker
     end
   end
 
-  def self.spawn start=0
-    (start..2000).each do |i|
+  def self.spawn start: 0, finish: 1600
+    (start..finish).each do |i|
       self.perform_async i
     end
   end

@@ -18,7 +18,7 @@ class Report::Base
   protected
 
   def after_finish
-    ReportProcessProgressWorker.spawn
+    ReportProcessNewWorker.spawn
   end
 
   def process_users_input
