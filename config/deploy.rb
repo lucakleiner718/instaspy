@@ -41,28 +41,28 @@ after 'deploy:restart', 'puma:restart'
 namespace :god do
 
   task :restart do
-    on roles(:app), in: :sequence, wait: 5 do
+    on roles(:app), in: :parallel do
       within release_path do
         with rails_env: fetch(:rails_env) do
           execute :bundle, :exec, 'god terminate' if test(*("[ -f /home/app/instaspy/shared/tmp/pids/god.pid ]").split(' '))
-          execute :bundle, :exec, 'god -c config/procs.god --pid tmp/pids/god.pid'
+          execute :bundle, :exec, 'god -c config/procs.god --pid tmp/pids/god.pid' unless test(*("[ -f /home/app/instaspy/shared/tmp/pids/god.pid ]").split(' '))
         end
       end
     end
   end
 
   task :start do
-    on roles(:app), in: :sequence, wait: 5 do
+    on roles(:app), in: :parallel do
       within release_path do
         with rails_env: fetch(:rails_env) do
-          execute :bundle, :exec, 'god -c config/procs.god --pid tmp/pids/god.pid'
+          execute :bundle, :exec, 'god -c config/procs.god --pid tmp/pids/god.pid' unless test(*("[ -f /home/app/instaspy/shared/tmp/pids/god.pid ]").split(' '))
         end
       end
     end
   end
 
   task :stop do
-    on roles(:app), in: :sequence, wait: 5 do
+    on roles(:app), in: :parallel do
       within release_path do
         with rails_env: fetch(:rails_env) do
           execute :bundle, :exec, 'god terminate' if test(*("[ -f /home/app/instaspy/shared/tmp/pids/god.pid ]").split(' '))
