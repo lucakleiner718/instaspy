@@ -2,7 +2,7 @@
 <p><%#= link_to "Get all users from all #{Tag.observed.size} tags", export_path(format: :csv) %></p>
 
 <ul>
-  <li>Totally tracking tags: <%= Tag.observed.size %>. <%= link_to 'List', tags_path(filter: :observed) %></li>
-  <li>Tags in csv: <%= Tag.exportable.size %></li>
-  <li>Tags in charts: <%= Tag.chartable.size %></li>
+  <li>Totally tracking tags: <%= @observed_amount %>. <%= link_to 'List', tags_path(filter: :observed) %></li>
+  <li>Tags in csv: <%= @exportable_amount %></li>
+  <li>Tags in charts: <%= @chartable_amount %></li>
 </ul>

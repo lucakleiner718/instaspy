@@ -9,7 +9,9 @@ class PagesController < ApplicationController
   end
 
   def home
-
+    @observed_amount = ObservedTag.all.size
+    @exportable_amount = ObservedTag.where(export_csv: true).size
+    @chartable_amount = ObservedTag.where(for_chart: true).size
   end
 
   def chart
