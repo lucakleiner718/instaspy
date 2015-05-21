@@ -16,9 +16,6 @@ class ImportTagsWorker
     data = CSV.parse(file.read).map{|row| row[0].force_encoding('UTF-8').mb_chars.downcase.to_s}
     data.shift # header
 
-    added = 0
-    exists = 0
-
     tags = Tag.in(name: data).pluck(:name)
 
     not_exists = data - tags
@@ -31,7 +28,7 @@ class ImportTagsWorker
 
     Import.create(format: :tags, file_id: i, time: time)
 
-    puts "File: #{i} / #{exists}/#{added} / time: #{time}s"
+    puts "File: #{i} / time: #{time}s"
   end
 
   def self.spawn start: 0, finish: 2000

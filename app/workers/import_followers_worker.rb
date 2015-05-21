@@ -43,7 +43,7 @@ class ImportFollowersWorker
 
     Import.create(format: :followers, file_id: i, time: time)
 
-    puts "File: #{i} / #{exists}/#{added} / time: #{time}s"
+    puts "File: #{i} / time: #{time}s"
   end
 
   def self.spawn start: 0, finish: 350
