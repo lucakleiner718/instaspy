@@ -62,8 +62,8 @@ class Media
         raise e
       end
     rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::BadRequest,
-      Instagram::InternalServerError,
-      JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
+      Instagram::InternalServerError, JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError,
+      Errno::EPIPE, Faraday::TimeoutError => e
       sleep 10
       retries += 1
       retry if retries <= 5
