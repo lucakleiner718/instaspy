@@ -11,13 +11,13 @@ class Report::Followers < Report::Base
     if @report.steps.include?('user_info')
       unless @report.steps.include?('followers')
         users = User.in(id: @report.processed_ids).where(private: false).map{|u| [u.id, u.followed_by, u.followers_size]}
-        for_update = users.select{|r| r[2]/r[1].to_f < 0.95}
+        for_update = users.select{|r| r[2]/r[1].to_f < 0.95 || r[2]/r[1].to_f > 1.1}
 
         if for_update.size == 0
           @report.steps << 'followers'
         else
           for_update.each do |row|
-            UserFollowersWorker.perform_async(row[0], ignore_exists: true, skip_exists: true)
+            UserFollowersWorker.perform_async(row[0], ignore_exists: true, skip_exists: row[2]/r[1].to_f < 1.1)
           end
           @progress += (users.size - for_update.size) / users.size.to_f / @parts_amount
         end

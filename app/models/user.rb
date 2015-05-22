@@ -476,9 +476,9 @@ class User
       unless cursor
         if !options[:reload] && !skipped
           current_followers = Follower.where(user_id: self.id).pluck(:follower_id)
-          left = current_followers - followers_ids
-          if left.size > 0
-            Follower.where(user_id: self.id).in(follower_id: left).destroy_all
+          unfollowed = current_followers - followers_ids
+          if unfollowed.size > 0
+            Follower.where(user_id: self.id).in(follower_id: unfollowed).destroy_all
           end
         end
         break
