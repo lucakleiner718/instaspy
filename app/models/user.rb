@@ -332,7 +332,7 @@ class User
     logger.debug ">> [#{self.username.green}] followed by: #{self.followed_by}"
 
     if options[:continue]
-      last_follow_time = Follower.where(user_id: self.id).ne(followed_at: nil).order(followed_at: :asc).first
+      last_follow_time = Follower.where(user_id: self.id).ne(followed_at: nil).order(followed_at: :asc).only(:followed_at).first
       if last_follow_time
         cursor = last_follow_time.followed_at.to_i * 1_000
       end
@@ -407,7 +407,9 @@ class User
 
         followers_ids << user.id
 
+        # if request is first, withour cursor
         followed_at = Time.now
+        # cursor is kind of timestamp
         followed_at = Time.at(cursor.to_i/1000) if cursor
 
         if new_record
@@ -490,7 +492,7 @@ class User
       end
     end
 
-    self.save
+    self.save if self.changed?
 
     true
   end
@@ -509,6 +511,15 @@ class User
 
   def update_followers_async
     ProcessFollowersWorker.spawn self.id
+  end
+
+  def delete_duplicated_followers!
+    followers_ids = Follower.where(user_id: self.id).pluck(:follower_id)
+    return true if followers_ids.size == followers_ids.uniq.size
+    dups = followers_ids.inject({}){ |obj, el| obj[el] ||= 0; obj[el] += 1; obj }.select{ |k, v| v > 1 }
+    dups.each do |k, v|
+      Follower.where(user_id: self.id, follower_id: k).limit(v-1).destroy_all
+    end
   end
 
   # Update list of all profiles user follow

@@ -41,18 +41,22 @@ class Report::Followers < Report::Base
 
         # update followers info, so in report we will have actual media amount, followers and etc. data
         unless @report.steps.include?('followers_info')
-          not_updated = []
-          followers_ids.in_groups_of(10_000, false) do |ids|
+          not_updated_size = 0
+          followers_ids.in_groups_of(100_000, false) do |ids|
             # grab all users without data and data outdated for 7 days
             users = User.in(id: ids).outdated(7.days).pluck(:id, :grabbed_at)
             # select users only without data and outdated for 8 days, to avoid adding new users on each iteration
-            not_updated.concat users.select{|r| r[1].blank? || r[1] < 8.days.ago}.map(&:first)
+            list = users.select{|r| r[1].blank? || r[1] < 8.days.ago}.map(&:first)
+            if list.size > 0
+              not_updated_size += list.size
+              list.each { |uid| UserWorker.perform_async uid }
+            end
           end
-          if not_updated.size == 0
+          if not_updated_size == 0
             @report.steps << 'followers_info'
           else
-            not_updated.each { |uid| UserWorker.perform_async uid }
-            @progress += (followers_ids.size - not_updated.size) / followers_ids.size.to_f / @parts_amount
+            # not_updated.each { |uid| UserWorker.perform_async uid }
+            @progress += (followers_ids.size - not_updated_size) / followers_ids.size.to_f / @parts_amount
           end
         end
 
@@ -88,7 +92,7 @@ class Report::Followers < Report::Base
     User.in(id: @report.processed_ids).each do |user|
       csv_string = CSV.generate do |csv|
         csv << header
-        followers_ids = Follower.where(user_id: user.id).pluck(:follower_id)
+        followers_ids = Follower.where(user_id: user.id).pluck(:follower_id).uniq
         User.in(id: followers_ids).each do |u|
           row = [u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email]
           row.concat [u.location_country, u.location_state, u.location_city] if @report.output_data.include? 'location'
