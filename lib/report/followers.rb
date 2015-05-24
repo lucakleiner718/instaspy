@@ -41,22 +41,31 @@ class Report::Followers < Report::Base
 
         # update followers info, so in report we will have actual media amount, followers and etc. data
         unless @report.steps.include?('followers_info')
-          not_updated_size = 0
-          followers_ids.in_groups_of(100_000, false) do |ids|
+          followers_to_update = followers_ids
+          if @report.data['followers_to_update']
+            followers_to_update = FileManager.read_file(@report.data['followers_to_update']).split(',')
+          end
+
+          not_updated = []
+          followers_to_update.in_groups_of(100_000, false) do |ids|
             # grab all users without data and data outdated for 7 days
             users = User.in(id: ids).outdated(7.days).pluck(:id, :grabbed_at)
             # select users only without data and outdated for 8 days, to avoid adding new users on each iteration
             list = users.select{|r| r[1].blank? || r[1] < 8.days.ago}.map(&:first)
             if list.size > 0
-              not_updated_size += list.size
+              not_updated += list.size
               list.each { |uid| UserWorker.perform_async uid }
             end
           end
-          if not_updated_size == 0
+
+          filepath = "reports/reports_data/report-#{@report.id}-followers-to-update"
+          if not_updated.size == 0
+            FileManager.delete_file filepath if @report.data['followers_to_update']
             @report.steps << 'followers_info'
           else
-            # not_updated.each { |uid| UserWorker.perform_async uid }
-            @progress += (followers_ids.size - not_updated_size) / followers_ids.size.to_f / @parts_amount
+            FileManager.save_file filepath, not_updated.join(',')
+            @report.data['followers_to_update'] = filepath
+            @progress += (followers_ids.size - not_updated.size) / followers_ids.size.to_f / @parts_amount
           end
         end
 
