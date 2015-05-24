@@ -35,6 +35,6 @@ class OauthController < ApplicationController
 
     account.save
 
-    redirect_to clients_status_path
+    redirect_to clients_status_path(page: session[:clients_status_page])
   end
 end

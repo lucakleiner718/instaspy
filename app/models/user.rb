@@ -170,8 +170,6 @@ class User
           exists_username.save
         end
       end
-
-
     rescue Instagram::BadRequest => e
       if e.message =~ /you cannot view this resource/
 
