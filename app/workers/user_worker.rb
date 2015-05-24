@@ -10,8 +10,13 @@ class UserWorker
       options[:force] = args.first
     end
 
-    user = User.find(user_id)
-    user.update_info! options
+    begin
+      user = User.find(user_id)
+    rescue Mongoid::Errors::DocumentNotFound => e
+      return
+    end
+
+    user.update_info! options if user
   end
 
   def self.spawn amount=10_000
