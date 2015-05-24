@@ -50,7 +50,7 @@ module FileManager
     file.destroy if file
   end
 
-  def self.open filepath, &block
+  def self.open_file filepath, &block
     tmp = "tmp/#{File.basename(filepath)}-#{Time.now.to_i}"
     File.open tmp, block
     self.save_file filepath, File.read(tmp)
