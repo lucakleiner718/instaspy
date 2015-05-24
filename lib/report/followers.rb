@@ -53,7 +53,7 @@ class Report::Followers < Report::Base
             # select users only without data and outdated for 8 days, to avoid adding new users on each iteration
             list = users.select{|r| r[1].blank? || r[1] < 8.days.ago}.map(&:first)
             if list.size > 0
-              not_updated += list.size
+              not_updated.concat list.size
               list.each { |uid| UserWorker.perform_async uid }
             end
           end
