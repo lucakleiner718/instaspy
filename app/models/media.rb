@@ -49,8 +49,8 @@ class Media
     retries = 0
 
     begin
-      client = InstaClient.new.client
-      response = client.media_item(self.insta_id)
+      client = InstaClient.new
+      response = client.client.media_item(self.insta_id)
     rescue Instagram::BadRequest => e
       if e.message =~ /invalid media id/
         self.destroy
@@ -58,6 +58,9 @@ class Media
       elsif e.message =~ /you cannot view this resource/
         self.user.update_info! force: true
         return false
+      elsif e.message =~ /The access_token provided is invalid/
+        client.login.destroy
+        retry
       else
         raise e
       end

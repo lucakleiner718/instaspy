@@ -92,7 +92,6 @@ class Report::Followers < Report::Base
     @report.save
 
     if @parts_amount == @report.steps.size
-      @report.status = 'finished'
       self.finish
     end
 
@@ -148,6 +147,7 @@ class Report::Followers < Report::Base
     end
 
     @report.finished_at = Time.now
+    @report.status = :finished
     @report.save
 
     ReportMailer.followers(@report.id).deliver if @report.notify_email.present?

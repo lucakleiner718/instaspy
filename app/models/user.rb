@@ -815,8 +815,8 @@ class User
       time_start = Time.now
       retries = 0
       begin
-        client = InstaClient.new.client
-        media_list = client.user_recent_media self.insta_id, count: 100, max_id: max_id
+        client = InstaClient.new
+        media_list = client.client.user_recent_media self.insta_id, count: 100, max_id: max_id
       rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::InternalServerError,
              Instagram::GatewayTimeout, JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError,
              Errno::EPIPE => e
@@ -832,6 +832,9 @@ class User
         elsif e.message =~ /this user does not exist/
           self.destroy
           return false
+        elsif e.message =~ /The access_token provided is invalid/
+          client.login.destroy
+          retry
         end
         raise e
       end
