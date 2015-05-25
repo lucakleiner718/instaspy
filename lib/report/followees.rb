@@ -31,7 +31,7 @@ class Report::Followees < Report::Base
           followees_ids = followees_ids.pluck(:user_id).uniq
 
           filepath = "reports/reports_data/report-#{@report.id}-followees-ids"
-          FileManager.save_file filepath, followees_ids.join(',')
+          FileManager.save_file filepath, content: followees_ids.join(',')
           @report.data['followees_file'] = filepath
         else
           followees_ids = FileManager.read_file(@report.data['followees_file']).split(',')
@@ -112,7 +112,7 @@ class Report::Followees < Report::Base
       binary_data = stringio.sysread
 
       filepath = "reports/users-followees-#{files.size}-#{Time.now.to_i}.zip"
-      FileManager.save_file filepath, binary_data
+      FileManager.save_file filepath, content: binary_data
       @report.result_data = filepath
     end
 

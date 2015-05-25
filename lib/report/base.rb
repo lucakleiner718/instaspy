@@ -57,7 +57,7 @@ class Report::Base
     end
 
     filepath = "reports/reports_data/report-#{@report.id}-processed-input.csv"
-    FileManager.save_file filepath, csv_string
+    FileManager.save_file filepath, content: csv_string
     @report.processed_input = filepath
   end
 

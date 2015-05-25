@@ -2,7 +2,7 @@ require 'open-uri'
 
 module FileManager
 
-  def self.save_file filepath, content
+  def self.save_file filepath, content: nil, file: nil
     # if Rails.env.production?
       connection = Fog::Storage.new({
         provider:              'AWS',
@@ -17,7 +17,7 @@ module FileManager
 
       file = dir.files.create(
         key: File.basename(filepath),
-        body: content,
+        body: content ? content : File.open(file),
         public: true
       )
 

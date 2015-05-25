@@ -39,7 +39,7 @@ class ReportsController < ApplicationController
       csv_string = Report.process_input report_params[:input]
 
       filepath = "reports/reports_data/report-#{@report.id}-original-input.csv"
-      FileManager.save_file filepath, csv_string
+      FileManager.save_file filepath, content: csv_string
       @report.update_attribute :original_input, filepath
 
       ReportProcessNewWorker.perform_async @report.id

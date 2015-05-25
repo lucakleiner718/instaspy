@@ -33,7 +33,7 @@ class Report::Followers < Report::Base
           followers_ids = followers_ids.pluck(:follower_id).uniq
 
           filepath = "reports/reports_data/report-#{@report.id}-followers-ids"
-          FileManager.save_file filepath, followers_ids.join(',')
+          FileManager.save_file filepath, content: followers_ids.join(',')
           @report.data['followers_file'] = filepath
         else
           followers_ids = FileManager.read_file(@report.data['followers_file']).split(',')
@@ -67,9 +67,10 @@ class Report::Followers < Report::Base
           filepath = "reports/reports_data/report-#{@report.id}-followers-to-update"
           if not_updated.size == 0
             FileManager.delete_file filepath if @report.data['followers_to_update']
+            @report.data.delete('followers_to_update')
             @report.steps << 'followers_info'
           else
-            FileManager.save_file filepath, not_updated.join(',')
+            FileManager.save_file filepath, content: not_updated.join(',')
             @report.data['followers_to_update'] = filepath
             @progress += (followers_ids.size - not_updated.size) / followers_ids.size.to_f / @parts_amount
           end
@@ -88,6 +89,8 @@ class Report::Followers < Report::Base
 
     @report.progress = @progress.round(2) * 100
 
+    @report.save
+
     if @parts_amount == @report.steps.size
       @report.status = 'finished'
       self.finish
@@ -105,38 +108,43 @@ class Report::Followers < Report::Base
     header += ['Feedly Subscribers'] if @report.output_data.include? 'feedly'
 
     User.in(id: @report.processed_ids).each do |user|
-      csv_string = CSV.generate do |csv|
-        csv << header
-        followers_ids = Follower.where(user_id: user.id).pluck(:follower_id).uniq
-        User.in(id: followers_ids).each do |u|
-          row = [u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email]
-          row.concat [u.location_country, u.location_state, u.location_city] if @report.output_data.include? 'location'
-          row.concat [u.avg_likes] if @report.output_data.include? 'likes'
-          if @report.output_data.include? 'feedly'
-            feedly = u.feedly.first
-            row.concat [feedly ? feedly.subscribers_amount : '']
+      filename = "#{@report.id}-#{user.username}-followers.csv"
+      unless File.exists? Rails.root.join('tmp', filename)
+        csv_string = CSV.generate do |csv|
+          csv << header
+          followers_ids = Follower.where(user_id: user.id).pluck(:follower_id).uniq
+          User.in(id: followers_ids).each do |u|
+            row = [u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email]
+            row.concat [u.location_country, u.location_state, u.location_city] if @report.output_data.include? 'location'
+            row.concat [u.avg_likes] if @report.output_data.include? 'likes'
+            if @report.output_data.include? 'feedly'
+              feedly = u.feedly.first
+              row.concat [feedly ? feedly.subscribers_amount : '']
+            end
+
+            csv << row
           end
-
-          csv << row
         end
-      end
 
-      files << ["#{user.username}-followers-#{Time.now.to_i}.csv", csv_string]
+        File.write Rails.root.join('tmp', filename), csv_string
+      end
+      files << filename
     end
 
     if files.size > 0
-      stringio = Zip::OutputStream.write_buffer do |zio|
-        files.each do |file|
-          zio.put_next_entry(file[0])
-          zio.write file[1]
+      zipfilename = Rails.root.join("tmp", "followers-report-#{Time.now.to_i}.zip")
+      Zip::File.open(zipfilename, Zip::File::CREATE) do |zipfile|
+        files.each do |filename|
+          zipfile.add(filename, Rails.root.join('tmp', filename))
         end
       end
-      stringio.rewind
-      binary_data = stringio.sysread
 
       filepath = "reports/users-followers-#{files.size}-#{Time.now.to_i}.zip"
-      FileManager.save_file filepath, binary_data
+      FileManager.save_file filepath, file: zipfilename
       @report.result_data = filepath
+
+      File.delete(zipfilename)
+      files.each { |filename| File.delete(Rails.root.join('tmp', filename)) }
     end
 
     @report.finished_at = Time.now

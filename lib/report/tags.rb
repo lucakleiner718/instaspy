@@ -17,7 +17,7 @@ class Report::Tags < Report::Base
     end
 
     filepath = "reports/reports_data/report-#{@report.id}-processed-input.csv"
-    FileManager.save_file filepath, csv_string
+    FileManager.save_file filepath, content: csv_string
     @report.processed_input = filepath
 
     @report.processed_csv.each do |row|
@@ -175,7 +175,7 @@ class Report::Tags < Report::Base
       binary_data = stringio.sysread
 
       filepath = "reports/tag-#{@report.processed_csv.size}-publishers-#{Time.now.to_i}.zip"
-      FileManager.save_file filepath, binary_data
+      FileManager.save_file filepath, content: binary_data
       @report.result_data = filepath
     end
 

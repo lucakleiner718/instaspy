@@ -64,7 +64,7 @@ class Report::Users < Report::Base
       binary_data = stringio.sysread
 
       filepath = "reports/#{basename}.zip"
-      FileManager.save_file filepath, binary_data
+      FileManager.save_file filepath, content: binary_data
       @report.result_data = filepath
     end
 
