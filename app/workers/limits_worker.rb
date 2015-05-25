@@ -7,20 +7,25 @@ class LimitsWorker
     total_remaining = 0
     logins = 0
     InstagramAccount.all.each do |account|
-      logins += account.logins.size
       account.logins.each do |login|
         resp = nil
 
         begin
-          client = InstaClient.new(login).client
-          resp = client.utils_raw_response
-        rescue => e
+          client = InstaClient.new(login)
+          resp = client.client.utils_raw_response
+        rescue Instagram::BadRequest => e
+          if e.message =~ /The access_token provided is invalid/
+            client.login.destroy
+            next
+          end
         end
 
         if resp.present?
           total_remaining += resp.headers[:x_ratelimit_remaining].to_i
         end
       end
+
+      logins += InstagramLogin.where(account_id: account.id).size
     end
 
     total_limit = logins * 5_000
