@@ -1,9 +1,10 @@
 class TagCompleteMediaWorker
   include Sidekiq::Worker
 
-  def perform tag_id, offset: nil, created_from: nil, total_limit: nil
+  def perform tag_id, *args
+    options = args.extract_options!
     tag = Tag.find tag_id
-    tag.recent_media offset: offset, created_from: created_from, total_limit: total_limit
+    tag.recent_media offset: options[:offset], created_from: options[:created_from], total_limit: options[:total_limit]
   end
 
   def self.spawn tag_id, days: 30
