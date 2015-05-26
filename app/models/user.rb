@@ -481,6 +481,7 @@ class User
             Follower.where(user_id: self.id).in(follower_id: unfollowed).destroy_all
           end
         end
+        self.delete_duplicated_followers!
         break
       end
 
