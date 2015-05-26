@@ -44,7 +44,6 @@ class Report::Tags < Report::Base
       tag_id = row[1]
       step_index = @report.steps.index{|r| r[0] == tag_id}
 
-
       tag_media_ids = MediaTag.where(tag_id: tag_id).pluck(:media_id)
       media = Media.in(id: tag_media_ids)
       media = media.gte(created_time: @report.date_from) if @report.date_from

@@ -48,11 +48,7 @@ class Report::Followers < Report::Base
           end
 
           not_updated = []
-          i = 0
           followers_to_update.in_groups_of(10_000, false) do |ids|
-            i += 1
-            ts = Time.now
-            puts "started #{i}"
             # grab all users without data and data outdated for 7 days
             users = User.in(id: ids).outdated(7.days).pluck(:id, :grabbed_at)
             # select users only without data and outdated for 8 days, to avoid adding new users on each iteration
@@ -61,7 +57,6 @@ class Report::Followers < Report::Base
               not_updated.concat list
               list.each { |uid| UserWorker.perform_async uid }
             end
-            puts "finished #{Time.now.to_i - ts.to_i}; #{i}; #{not_updated.size}"
           end
 
           filepath = "reports/reports_data/report-#{@report.id}-followers-to-update"

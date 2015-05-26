@@ -33,6 +33,14 @@ class Report::Users < Report::Base
     header += ['Country', 'State', 'City'] if @report.output_data.include? 'location'
     header += ['AVG Likes'] if @report.output_data.include? 'likes'
     header += ['Feedly Subscribers'] if @report.output_data.include? 'feedly'
+    header += ['Last media date'] if @report.output_data.include? 'last_media_date'
+
+    if @report.output_data.include? 'last_media_date'
+      media_list = {}
+      @report.processed_ids.in_groups_of(1_000, false) do |uids|
+        media_list = media_list.merge Media.in(user_id: uids).group_by {|m| m.user_id }.inject({}){|o, (k,v)| o[k.to_s] = v.sort{|m1, m2| m1.created_time <=> m2.created_time }.last; o}
+      end
+    end
 
     csv_string = CSV.generate do |csv|
       csv << header
@@ -43,6 +51,9 @@ class Report::Users < Report::Base
         if @report.output_data.include? 'feedly'
           feedly = u.feedly.first
           row.concat [feedly ? feedly.subscribers_amount : '']
+        end
+        if @report.output_data.include? 'last_media_date'
+          row << media_list[u.id.to_s].created_time.strftime('%m/%d/%Y %H:%M:%S') if media_list[u.id.to_s]
         end
 
         csv << row
