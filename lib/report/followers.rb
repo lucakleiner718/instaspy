@@ -17,7 +17,7 @@ class Report::Followers < Report::Base
           @report.steps << 'followers'
         else
           for_update.map do |row|
-            UserFollowersWorker.perform_async(row[0], ignore_exists: true, skip_exists: row[2]/row[1].to_f < 1.1)
+            UserFollowersWorker.perform_async row[0], ignore_exists: true #, skip_exists: row[2]/row[1].to_f < 1.1
           end
           @progress += (users.size - for_update.size) / users.size.to_f / @parts_amount
         end
