@@ -13,5 +13,10 @@ jQuery ($) ->
     else
       $('.report_output_data').hide()
 
+    if $(this).val() == 'users'
+      $('#report_output_data_last_media_date').closest('.checkbox').show()
+    else
+      $('#report_output_data_last_media_date').closest('.checkbox').hide()
+
 
   $('#report_format').trigger('change')
