@@ -126,7 +126,7 @@ class Report::Tags < Report::Base
     header += ['Country', 'State', 'City'] if @report.output_data.include? 'location'
     header += ['AVG Likes'] if @report.output_data.include? 'likes'
     header += ['Feedly Subscribers'] if @report.output_data.include? 'feedly'
-    header += ['Media Link', 'Media Likes', 'Media Comments']
+    header += ['Media Link', 'Media Likes', 'Media Comments', 'Media Date']
 
     @report.processed_csv.each do |row|
       tag_id = row[1]
@@ -134,7 +134,7 @@ class Report::Tags < Report::Base
 
       media_list = {}
       @publishers_media[tag_id].values.in_groups_of(10_000, false) do |rows|
-        Media.in(id: rows).pluck(:user_id, :likes_amount, :comments_amount, :link).each do |media_row|
+        Media.in(id: rows).pluck(:user_id, :likes_amount, :comments_amount, :link, :created_time).each do |media_row|
           user_id = media_row.shift
           media_list[user_id] = media_row
         end
@@ -153,7 +153,7 @@ class Report::Tags < Report::Base
               feedly = u.feedly.first
               row += [feedly ? feedly.subscribers_amount : '']
             end
-            row += [media[2], media[0], media[1]]
+            row += [media[2], media[0], media[1], media[3].strftime('%m/%d/%Y %H:%M:%S')]
 
             csv << row
           end
