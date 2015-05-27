@@ -50,7 +50,7 @@
       <td><%= simple_format report.note %></td>
       <td>
         <div><%= link_to "Input data", report.original_input_url, target: :_blank %></div>
-        <div><%= link_to 'Download', report.result_data_url, target: :_blank if report.result_data.present? %></div>
+        <div><%= link_to 'Results file', report.result_data_url, target: :_blank if report.result_data.present? %></div>
       </td>
     </tr>
   <% end %>
