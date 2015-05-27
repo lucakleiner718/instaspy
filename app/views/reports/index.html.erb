@@ -29,7 +29,7 @@
   <% @reports.each do |report| %>
     <tr>
       <td>
-        <%= report.format == 'tags' ? 'Publishers' : report.format.titleize %> for <%= report.usernames.size %> <%= report.format != 'tags' ? 'usernames' : 'tags' %>
+        <%= report.format == 'tags' ? 'Publishers' : report.format.titleize %> for <%= report.input_amount %> <%= report.format != 'tags' ? 'usernames' : 'tags' %>
         <% if report.notify_email.present? %>
           <br>Notification to: <%= report.notify_email %>
         <% end %>

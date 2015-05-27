@@ -19,6 +19,7 @@ class Report
   field :data, type: Hash, default: {}
   field :tmp_list1, type: Array, default: []
   field :note, type: String
+  field :amounts, type: Hash, default: {}
   include Mongoid::Timestamps
 
   scope :active, -> { where(:status.in => ['new', 'in_process']) }
@@ -84,6 +85,14 @@ class Report
 
   def result_data_url
     "#{ENV['FILES_DIR']}/#{self.result_data}"
+  end
+
+  def input_amount
+    if self.amounts[:input].blank?
+      self.amounts[:input] = self.original_csv.size
+      self.save
+    end
+    self.amounts[:input]
   end
 
 end
