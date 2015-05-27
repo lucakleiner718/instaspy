@@ -18,5 +18,10 @@ jQuery ($) ->
     else
       $('#report_output_data_last_media_date').closest('.checkbox').hide()
 
+    if $(this).val() == 'followers'
+      $('#report_output_data_slim').closest('.checkbox').show()
+    else
+      $('#report_output_data_slim').closest('.checkbox').hide()
+
 
   $('#report_format').trigger('change')

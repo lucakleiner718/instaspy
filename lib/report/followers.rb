@@ -100,6 +100,7 @@ class Report::Followers < Report::Base
     header += ['Country', 'State', 'City'] if @report.output_data.include? 'location'
     header += ['AVG Likes'] if @report.output_data.include? 'likes'
     header += ['Feedly Subscribers'] if @report.output_data.include? 'feedly'
+    header.slice! 4,1 if @report.output_data.include? 'slim'
 
     User.in(id: @report.processed_ids).each do |user|
       filename = "#{@report.id}-#{user.username}-followers.csv"
@@ -107,8 +108,11 @@ class Report::Followers < Report::Base
         csv_string = CSV.generate do |csv|
           csv << header
           followers_ids = Follower.where(user_id: user.id).pluck(:follower_id).uniq
-          User.in(id: followers_ids).each do |u|
+          followers = User.in(id: followers_ids)
+          followers = followers.ne(email: nil).gte(followed_by: 1_000) if @report.output_data.include? 'slim'
+          followers.each do |u|
             row = [u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email]
+            row.slice! 4,1 if @report.output_data.include? 'slim'
             row.concat [u.location_country, u.location_state, u.location_city] if @report.output_data.include? 'location'
             row.concat [u.avg_likes] if @report.output_data.include? 'likes'
             if @report.output_data.include? 'feedly'
