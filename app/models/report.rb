@@ -18,6 +18,7 @@ class Report
   field :date_to, type: DateTime
   field :data, type: Hash, default: {}
   field :tmp_list1, type: Array, default: []
+  field :note, type: String
   include Mongoid::Timestamps
 
   scope :active, -> { where(:status.in => ['new', 'in_process']) }
