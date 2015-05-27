@@ -522,13 +522,13 @@ class Reporter
     amount = 0
 
     if options[:usernames]
-      users = User.where(username: options[:usernames])
+      users = User.in(username: options[:usernames])
       not_found = options[:usernames] - users.pluck(:username)
       amount = options[:usernames].size
     elsif options[:ids]
-      users = User.where(id: options[:ids])
+      users = User.in(id: options[:ids])
       if options[:additional_columns].include? :feedly
-        feedly_data_ar = Feedly.where(website: User.where(id: options[:ids]).pluck(:website)).select(:website, :subscribers_amount)
+        feedly_data_ar = Feedly.in(website: User.in(id: options[:ids]).pluck(:website)).select(:website, :subscribers_amount)
         feedly_data = {}
         feedly_data_ar.each do |fd|
           feedly_data[fd.website] = fd.subscribers_amount
@@ -536,7 +536,7 @@ class Reporter
       end
       amount = options[:ids].size
     elsif options[:insta_ids]
-      users = User.where(insta_id: options[:insta_ids])
+      users = User.in(insta_id: options[:insta_ids])
       amount = options[:insta_ids].size
     end
 
