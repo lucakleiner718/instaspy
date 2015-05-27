@@ -579,9 +579,8 @@ class Reporter
     end
 
     filepath = "reports/users-report-#{Time.now.to_i}.csv"
-    File.write "public/#{filepath}", csv_string
-
-    Rails.env.production? ? "http://107.170.110.156/#{filepath}" : "http://localhost:3000/#{filepath}"
+    FileManager.save_file filepath, csv_string
+    "#{ENV['FILES_DIR']}/#{filepath}"
   end
 
   def self.media_export media_list, *args
