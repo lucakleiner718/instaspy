@@ -5,12 +5,7 @@ class UserAvgLikesWorker
   sidekiq_options queue: :low, unique: true, unique_args: -> (args) { [ args.first ] }
 
   def perform user_id
-    # begin
-      user = User.find(user_id)
-    # rescue ActiveRecord::RecordNotFound => e
-    #   return true
-    # end
-
+    user = User.find(user_id)
     user.update_avg_data!
   end
 
