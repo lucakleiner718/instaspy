@@ -275,7 +275,7 @@ class User
       return true
     end
 
-    if self.user_followers.where(:followed_at.ne => nil).size > 2
+    if self.user_followers.ne(followed_at: nil).size > 2
       speed = self.follow_speed
     else
       speed = 2_000
