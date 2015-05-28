@@ -260,7 +260,7 @@ class User
 
   # What the avg interval between followers
   #
-  # @return [Float] how own new user following current user, in seconds what avg time between followers
+  # @return [Float] how often new user following current user, in seconds what avg time between followers
   #
   def follow_speed
     dates = self.user_followers.ne(followed_at: nil).order_by(followed_at: :asc).pluck(:followed_at)
@@ -381,7 +381,7 @@ class User
       end_ig = Time.now
 
       users = User.in(insta_id: resp.data.map{|el| el['id']}).to_a
-      fols = Follower.where(user_id: self.id, follower_id: users.map(&:id)).to_a
+      fols = Follower.where(user_id: self.id).in(follower_id: users.map(&:id)).to_a
 
       resp.data.each do |user_data|
         logger.debug "Row #{user_data['username']} start"
@@ -604,7 +604,7 @@ class User
       end_ig = Time.now
 
       users = User.in(insta_id: resp.data.map{|el| el['id']}).to_a
-      fols = Follower.where(follower_id: self.id, user_id_id: users.map(&:id)).to_a
+      fols = Follower.where(follower_id: self.id).in(user_id: users.map(&:id)).to_a
 
       resp.data.each do |user_data|
         logger.debug "Row #{user_data['username']} start"
