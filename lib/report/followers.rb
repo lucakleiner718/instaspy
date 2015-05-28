@@ -14,7 +14,7 @@ class Report::Followers < Report::Base
         for_update = users.select{|r| r[2]/r[1].to_f < 0.95 || r[2]/r[1].to_f > 1.1}
 
         if for_update.size == 0
-          @report.steps << 'followers'
+          @report.push steps: 'followers'
         else
           for_update.map do |row|
             # UserFollowersWorker.perform_async row[0], ignore_exists: true #, skip_exists: row[2]/row[1].to_f < 1.1
@@ -38,6 +38,7 @@ class Report::Followers < Report::Base
           @report.data['followers_file'] = filepath
 
           @report.amounts[:followers] = followers_ids.size
+          @report.save
         else
           followers_ids = FileManager.read_file(@report.data['followers_file']).split(',')
         end
@@ -66,7 +67,7 @@ class Report::Followers < Report::Base
           if not_updated.size == 0
             FileManager.delete_file filepath if @report.data['followers_to_update']
             @report.data.delete('followers_to_update')
-            @report.steps << 'followers_info'
+            @report.push steps: 'followers_info'
           else
             FileManager.save_file filepath, content: not_updated.join(',')
             @report.data['followers_to_update'] = filepath

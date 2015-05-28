@@ -68,7 +68,7 @@ class Report::Base
       not_updated = users.select{|r| r[1].blank? || r[1] < 36.hours.ago}.map(&:first)
 
       if not_updated.size == 0
-        @report.steps << 'user_info'
+        @report.push steps: 'user_info'
       else
         not_updated.map { |uid| UserWorker.perform_async uid, true }
         @progress += (ids.size - not_updated.size) / ids.size.to_f / @parts_amount
@@ -84,7 +84,7 @@ class Report::Base
         get_likes.concat User.in(id: ids).without_likes.with_media.not_private.pluck(:id)
       end
       if get_likes.size == 0
-        @report.steps << 'likes'
+        @report.push steps: 'likes'
       else
         get_likes.each { |uid| UserAvgLikesWorker.perform_async uid }
         @progress += (ids.size - get_likes.size) / ids.size.to_f / @parts_amount
@@ -100,7 +100,7 @@ class Report::Base
         get_location.concat User.in(id: ids).without_location.with_media.not_private.pluck(:id)
       end
       if get_location.size == 0
-        @report.steps << 'location'
+        @report.push steps: 'location'
       else
         get_location.each { |uid| UserLocationWorker.perform_async(uid) }
         @progress += (ids.size - get_location.size) / ids.size.to_f / @parts_amount
@@ -122,7 +122,7 @@ class Report::Base
       no_feedly = with_website - feedly_exists
 
       if no_feedly.size == 0
-        @report.steps << 'feedly'
+        @report.push steps: 'feedly'
       else
         no_feedly.each { |uid| UserFeedlyWorker.perform_async uid }
         @progress += feedly_exists.size / with_website.size.to_f / @parts_amount
