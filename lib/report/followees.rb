@@ -10,8 +10,8 @@ class Report::Followees < Report::Base
 
     if @report.steps.include?('user_info')
       unless @report.steps.include?('followees')
-        users = User.in(id: @report.processed_ids).not_private.map{ |u| [u.id, u.follows, u.followees_size] }
-        for_update = users.select{|r| r[2]/r[1].to_f < 0.95}
+        users = User.in(id: @report.processed_ids).not_private.or({followees_updated_at: nil}, {:followees_updated_at.lt => 3.days.ago}).map{ |u| [u.id, u.follows, u.followees_size] }
+        for_update = users.select{|r| r[2]/r[1].to_f < 0.95 || r[2]/r[1].to_f > 1.1 }
 
         if for_update.size == 0
           @report.steps << 'followees'

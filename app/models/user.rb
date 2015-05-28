@@ -20,6 +20,8 @@ class User
   field :avg_likes_updated_at, type: DateTime
   field :avg_comments, type: Integer
   field :avg_comments_updated_at, type: DateTime
+  field :followers_updated_at, type: DateTime
+  field :followees_updated_at, type: DateTime
   include Mongoid::Timestamps # created_at need to know when user added to database and filter only new added users
 
   index({ insta_id: 1 }, { drop_dups: true, background: true })
@@ -484,6 +486,7 @@ class User
             Follower.where(user_id: self.id).in(follower_id: unfollowed).destroy_all
           end
         end
+        self.update_attribute :followers_updated_at, Time.now
         self.delete_duplicated_followers!
         break
       end
@@ -694,6 +697,7 @@ class User
             Follower.where(follower_id: self.id).in(user_id: left).destroy_all
           end
         end
+        self.update_attribute :followees_updated_at, Time.now
         break
       end
 
