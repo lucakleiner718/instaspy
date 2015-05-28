@@ -79,14 +79,18 @@ class Report::Base
   def process_likes ids
     # if we need avg likes data and it is not yet grabbed
     if @report.output_data.include?('likes') && !@report.steps.include?('likes')
+      ids = self.get_cached('get_likes', ids)
       get_likes = []
       ids.in_groups_of(5_000, false) do |ids|
-        get_likes.concat User.in(id: ids).without_likes.with_media.not_private.pluck(:id)
+        users = User.in(id: ids).without_likes.with_media.not_private.pluck(:id)
+        users.each { |uid| UserAvgLikesWorker.perform_async uid }
+        get_likes.concat users
       end
       if get_likes.size == 0
+        self.delete_cached('get_likes')
         @report.push steps: 'likes'
       else
-        get_likes.each { |uid| UserAvgLikesWorker.perform_async uid }
+        self.save_cached('get_likes', get_likes)
         @progress += (ids.size - get_likes.size) / ids.size.to_f / @parts_amount
       end
     end
@@ -95,14 +99,18 @@ class Report::Base
   def process_location ids
     # if we need location data and it is not yet grabbed
     if @report.output_data.include?('location') && !@report.steps.include?('location')
+      ids = self.get_cached('get_location', ids)
       get_location = []
       ids.in_groups_of(5_000, false) do |ids|
-        get_location.concat User.in(id: ids).without_location.with_media.not_private.pluck(:id)
+        users = User.in(id: ids).without_location.with_media.not_private.pluck(:id)
+        users.each { |uid| UserLocationWorker.perform_async(uid) }
+        get_location.concat users
       end
       if get_location.size == 0
+        self.delete_cached('get_location')
         @report.push steps: 'location'
       else
-        get_location.each { |uid| UserLocationWorker.perform_async(uid) }
+        self.save_cached('get_location', get_location)
         @progress += (ids.size - get_location.size) / ids.size.to_f / @parts_amount
       end
     end
@@ -128,6 +136,34 @@ class Report::Base
         @progress += feedly_exists.size / with_website.size.to_f / @parts_amount
       end
     end
+  end
+
+  def get_cached name, default=nil
+    cached = nil
+
+    if @report.data[name]
+      begin
+        cached = FileManager.read_file(@report.data[name]).split(',')
+      rescue => e
+      end
+    end
+
+    cached || default
+  end
+
+  def save_cached name, data
+    filepath = "reports/reports_data/report-#{@report.id}-#{name.gsub(/_/, '-')}"
+    FileManager.save_file filepath, content: data.join(',')
+    @report.data[name] = filepath
+  end
+
+  def delete_cached name
+    filepath = "reports/reports_data/report-#{@report.id}-#{name.gsub(/_/, '-')}"
+    begin
+      FileManager.delete_file filepath if @report.data[name]
+    rescue => e
+    end
+    @report.data.delete(name)
   end
 
 end

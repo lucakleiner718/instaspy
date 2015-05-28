@@ -45,15 +45,8 @@ class Report::Followers < Report::Base
 
         # update followers info, so in report we will have actual media amount, followers and etc. data
         unless @report.steps.include?('followers_info')
-          if @report.data['followers_to_update']
-            begin
-              followers_to_update = FileManager.read_file(@report.data['followers_to_update']).split(',')
-            rescue
-              followers_to_update = followers_ids
-            end
-          else
-            followers_to_update = followers_ids
-          end
+
+          followers_to_update = self.get_cached('followers_to_update', followers_ids)
 
           not_updated = []
           followers_to_update.in_groups_of(10_000, false) do |ids|
@@ -67,16 +60,14 @@ class Report::Followers < Report::Base
             end
           end
 
-          filepath = "reports/reports_data/report-#{@report.id}-followers-to-update"
           if not_updated.size == 0
-            FileManager.delete_file filepath if @report.data['followers_to_update']
-            @report.data.delete('followers_to_update')
+            self.delete_cached('followers_to_update')
             @report.push steps: 'followers_info'
           else
-            FileManager.save_file filepath, content: not_updated.join(',')
-            @report.data['followers_to_update'] = filepath
+            self.save_cached('followers_to_update', not_updated)
             @progress += (followers_ids.size - not_updated.size) / followers_ids.size.to_f / @parts_amount
           end
+          @report.save
         end
 
         # after followers list grabbed and all followers updated

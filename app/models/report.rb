@@ -24,6 +24,17 @@ class Report
 
   scope :active, -> { where(:status.in => ['new', 'in_process']) }
 
+  after_destroy :delete_data_files
+
+  def delete_data_files
+    self.data[name].each do |name, filepath|
+      begin
+        FileManager.delete_file filepath
+      rescue => e
+      end
+    end
+  end
+
   # probably not best way
   def id
     self.read_attribute(:id).to_s
