@@ -25,3 +25,6 @@ jQuery ($) ->
 
 
   $('#report_format').trigger('change')
+
+  $('.report-info').popover
+    trigger: 'hover'

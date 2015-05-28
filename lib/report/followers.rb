@@ -35,6 +35,8 @@ class Report::Followers < Report::Base
           filepath = "reports/reports_data/report-#{@report.id}-followers-ids"
           FileManager.save_file filepath, content: followers_ids.join(',')
           @report.data['followers_file'] = filepath
+
+          @report.amounts[:followers] = followers_ids.size
         else
           followers_ids = FileManager.read_file(@report.data['followers_file']).split(',')
         end
