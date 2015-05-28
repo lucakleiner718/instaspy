@@ -46,7 +46,11 @@ class Report::Followers < Report::Base
         # update followers info, so in report we will have actual media amount, followers and etc. data
         unless @report.steps.include?('followers_info')
           if @report.data['followers_to_update']
-            followers_to_update = FileManager.read_file(@report.data['followers_to_update']).split(',')
+            begin
+              followers_to_update = FileManager.read_file(@report.data['followers_to_update']).split(',')
+            rescue
+              followers_to_update = followers_ids
+            end
           else
             followers_to_update = followers_ids
           end
