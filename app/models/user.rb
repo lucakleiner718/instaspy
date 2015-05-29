@@ -366,6 +366,7 @@ class User
         sleep 10*retries
         retries += 1
         retry if retries <= 5
+        raise e
       rescue Instagram::BadRequest => e
         Rails.logger.info e.message
         if e.message =~ /you cannot view this resource/
