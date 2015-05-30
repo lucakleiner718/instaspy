@@ -487,8 +487,12 @@ class User
             Follower.where(user_id: self.id).in(follower_id: unfollowed).destroy_all
           end
         end
-        self.update_attribute :followers_updated_at, Time.now
         self.delete_duplicated_followers!
+
+        followers_size = Follower.where(user_id: self.id).size
+        if self.followed_by/followers_size.to_f > 0.95
+          self.update_attribute :followers_updated_at, Time.now
+        end
         break
       end
 
