@@ -325,7 +325,7 @@ class User
     cursor = options[:start_cursor] ? options[:start_cursor].to_f.round(3).to_i * 1_000 : nil
     finish_cursor = options[:finish_cursor] ?  options[:finish_cursor].to_f.round(3).to_i * 1_000 : nil
 
-    return false if options[:start_cursor] < 0
+    return false if options[:start_cursor] && options[:start_cursor] < 0
 
     self.update_info!
 
