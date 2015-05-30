@@ -277,13 +277,12 @@ class User
       return true
     end
 
+    speed = nil
     if self.user_followers.ne(followed_at: nil).size > 2
       speed = self.follow_speed
-    else
-      speed = 2_000
     end
 
-    puts "Speed: #{speed}"
+    speed = 2_000 if !speed || speed > 2_000
 
     jobs = []
 
