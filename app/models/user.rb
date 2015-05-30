@@ -290,6 +290,7 @@ class User
     amount = (self.followed_by/1_000).ceil
     amount.times do |i|
       start_cursor = start-i*speed*100
+      next if start_cursor < 0
       finish_cursor = i+1 < amount ? start-(i+1)*speed*100 : nil
       jobs << UserFollowersWorker.perform_async(self.id, start_cursor: start_cursor, finish_cursor: finish_cursor, ignore_exists: true)
     end
