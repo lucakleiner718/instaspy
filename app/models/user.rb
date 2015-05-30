@@ -489,9 +489,11 @@ class User
         end
         self.delete_duplicated_followers!
 
-        followers_size = Follower.where(user_id: self.id).size
-        if self.followed_by/followers_size.to_f > 0.95
-          self.update_attribute :followers_updated_at, Time.now
+        unless options[:start_cursor]
+          followers_size = Follower.where(user_id: self.id).size
+          if self.followed_by/followers_size.to_f > 0.95
+            self.update_attribute :followers_updated_at, Time.now
+          end
         end
         break
       end
