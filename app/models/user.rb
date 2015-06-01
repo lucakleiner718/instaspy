@@ -486,7 +486,7 @@ class User
           current_followers = Follower.where(user_id: self.id).pluck(:follower_id)
           unfollowed = current_followers - followers_ids
           if unfollowed.size > 0
-            Follower.where(user_id: self.id).in(follower_id: unfollowed).destroy_all
+            Follower.where(user_id: self.id).in(follower_id: unfollowed).delete_all
           end
         end
         self.delete_duplicated_followers!
@@ -703,7 +703,7 @@ class User
           current_followees = Follower.where(follower_id: self.id).pluck(:user_id)
           left = current_followees - followees_ids
           if left.size > 0
-            Follower.where(follower_id: self.id).in(user_id: left).destroy_all
+            Follower.where(follower_id: self.id).in(user_id: left).delete_all
           end
         end
         self.update_attribute :followees_updated_at, Time.now
