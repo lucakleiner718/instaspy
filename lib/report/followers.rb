@@ -23,7 +23,7 @@ class Report::Followers < Report::Base
               row[3].update_followers_batch
             end
           end
-          @progress += (users.size - for_update.size) / users.size.to_f / @parts_amount
+          @progress += (@report.processed_ids.size - for_update.size) / @report.processed_ids.size.to_f / @parts_amount
         end
       end
 
