@@ -1,6 +1,8 @@
 class TagCompleteMediaWorker
   include Sidekiq::Worker
 
+  sidekiq_options queue: :low
+
   def perform tag_id, *args
     options = args.extract_options!
     tag = Tag.find tag_id
