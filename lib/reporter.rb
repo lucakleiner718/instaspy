@@ -528,10 +528,10 @@ class Reporter
     elsif options[:ids]
       users = User.in(id: options[:ids])
       if options[:additional_columns].include? :feedly
-        feedly_data_ar = Feedly.in(website: User.in(id: options[:ids]).pluck(:website)).select(:website, :subscribers_amount)
+        feedly_data_ar = Feedly.in(website: User.in(id: options[:ids]).pluck(:website)).pluck(:website, :subscribers_amount)
         feedly_data = {}
         feedly_data_ar.each do |fd|
-          feedly_data[fd.website] = fd.subscribers_amount
+          feedly_data[fd[0]] = fd[1]
         end
       end
       amount = options[:ids].size
