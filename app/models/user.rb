@@ -254,7 +254,15 @@ class User
     return false unless shared_data_element
     content = shared_data_element.text.sub('window._sharedData = ', '').sub(/;$/, '')
     json = JSON.parse content
-    data = json['entry_data']['UserProfile'].first['user']
+    data = json['entry_data']['ProfilePage'].first['user']
+
+    data['bio'] = data['biography'] || ''
+    data['website'] = data['external_url'] || ''
+    data['counts'] = {
+      'media' => data['media']['count'],
+      'followed_by' => data['followed_by']['count'],
+      'follows' => data['follows']['count']
+    }
 
     self.set_data data
     self.save
