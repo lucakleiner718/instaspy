@@ -32,7 +32,7 @@ class Report::Tags < Report::Base
   end
 
   def reports_in_process
-    @parts_amount = 1
+    @parts_amount = 2
     ['likes', 'location', 'feedly'].each do |info|
       @parts_amount += 1 if @report.output_data.include?(info)
     end
@@ -49,12 +49,28 @@ class Report::Tags < Report::Base
       media = media.gte(created_time: @report.date_from) if @report.date_from
       media = media.lte(created_time: @report.date_to) if @report.date_to
 
-      media_ids = media.pluck(:id, :user_id).uniq{|r| r.last}
-      publishers_ids = media_ids.map(&:last)
+      media_ids = media.pluck_to_hash(:id, :user_id)#.uniq{ |r| r[:user_id] }
+      publishers_ids = media_ids.map{ |m| m[:user_id] }
       @tags_publishers[tag_id] = publishers_ids
 
       @publishers_media[tag_id] = {}
-      media_ids.each { |r| @publishers_media[tag_id][r[1]] = r[0] }
+      media_ids.each do |r|
+        @publishers_media[tag_id][r[:user_id]] ||= []
+        @publishers_media[tag_id][r[:user_id]] << r[:id]
+      end
+
+      unless @report.steps[step_index][1].include?('media_actual')
+        media_for_update = []
+        media_ids.select{ |m| m[:id] }.in_groups_of(10_000, false) do |ids|
+          media_for_update.concat Media.in(id: ids).or(image: nil).pluck(:id)
+        end
+
+        if media_for_update.size == 0
+          @report.steps[step_index][1] << 'media_actual'
+        else
+          media_for_update.each { |mid| MediaUpdateWorker.perform_async mid }
+        end
+      end
 
       unless @report.steps[step_index][1].include?('publishers_info')
         users = []
@@ -127,16 +143,17 @@ class Report::Tags < Report::Base
     header += ['AVG Likes'] if @report.output_data.include? 'likes'
     header += ['Feedly Subscribers'] if @report.output_data.include? 'feedly'
     header += ['Media Link', 'Media Likes', 'Media Comments', 'Media Date']
+    header += ['Media Image'] if @report.output_data.include? 'media_url'
 
     @report.processed_csv.each do |row|
       tag_id = row[1]
       tag = Tag.find(tag_id)
 
       media_list = {}
-      @publishers_media[tag_id].values.in_groups_of(10_000, false) do |rows|
-        Media.in(id: rows).pluck(:user_id, :likes_amount, :comments_amount, :link, :created_time).each do |media_row|
-          user_id = media_row.shift
-          media_list[user_id] = media_row
+      @publishers_media[tag_id].values.flatten.in_groups_of(10_000, false) do |rows|
+        Media.in(id: rows).pluck_to_hash(:user_id, :likes_amount, :comments_amount, :link, :image, :created_time).each do |media_row|
+          media_list[media_row[:user_id]] ||= []
+          media_list[media_row[:user_id]] << media_row
         end
       end
 
@@ -144,18 +161,24 @@ class Report::Tags < Report::Base
         csv << header
         @tags_publishers[tag_id].in_groups_of(1000, false) do |ids|
           User.in(id: ids).each do |u|
-            media = media_list[u.id]
-            next unless media
-            row = [u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email]
-            row += [u.location_country, u.location_state, u.location_city] if @report.output_data.include? 'location'
-            row += [u.avg_likes] if @report.output_data.include? 'likes'
-            if @report.output_data.include? 'feedly'
-              feedly = u.feedly.first
-              row += [feedly ? feedly.subscribers_amount : '']
+            users_media = media_list[u.id]
+            next unless users_media
+            unless @report.output_data.include? 'all_media'
+              users_media = [users_media.last]
             end
-            row += [media[2], media[0], media[1], media[3].strftime('%m/%d/%Y %H:%M:%S')]
+            users_media.each do |media|
+              row = [u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email]
+              row += [u.location_country, u.location_state, u.location_city] if @report.output_data.include? 'location'
+              row += [u.avg_likes] if @report.output_data.include? 'likes'
+              if @report.output_data.include? 'feedly'
+                feedly = u.feedly.first
+                row += [feedly ? feedly.subscribers_amount : '']
+              end
+              row += [media[:link], media[:likes_amount], media[:comments_amount], media[:created_time].strftime('%m/%d/%Y %H:%M:%S')]
+              row += [media[:image]] if @report.output_data.include? 'media_url'
 
-            csv << row
+              csv << row
+            end
           end
         end
       end

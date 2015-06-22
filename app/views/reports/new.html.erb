@@ -6,7 +6,7 @@
       <%= f.input :input, as: :text, hint: 'Each Username or Instagram ID or Tag should be on new line', input_html: { value: params[:input] } %>
       <%= f.input :notify_email, hint: 'Enter your email if you want to be notified after report finished', input_html: { value: session['report_notify_email'] } %>
       <%= f.input :note, as: :text %>
-      <%= f.input :output_data, as: :check_boxes, collection: [['AVG Likes', 'likes'], ['Location', 'location'], ['Feedly subscribers amount', 'feedly'], ['Last media date', 'last_media_date'], ['Slim (1k+ followers, with email)', 'slim'], ['Slim (1k+ followers)', 'slim_followers']] %>
+      <%= f.input :output_data, as: :check_boxes, collection: [['AVG Likes', 'likes'], ['Location', 'location'], ['Feedly subscribers amount', 'feedly'], ['Last media date', 'last_media_date'], ['Slim (1k+ followers, with email)', 'slim'], ['Slim (1k+ followers)', 'slim_followers'], ['Media Image URL', 'media_url'], ['Include All Media', 'all_media']] %>
       <%= f.input :date_from, input_html: { class: 'report_date_range' } %>
       <%= f.input :date_to, input_html: { class: 'report_date_range' } %>
       <div class="pull-right"><%= f.button :submit %></div>

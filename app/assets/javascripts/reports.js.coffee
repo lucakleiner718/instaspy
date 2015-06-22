@@ -23,6 +23,11 @@ jQuery ($) ->
     else
       $('#report_output_data_slim, #report_output_data_slim_followers').closest('.checkbox').hide()
 
+    if $(this).val() == 'tags'
+      $('#report_output_data_media_url, #report_output_data_all_media').closest('.checkbox').show()
+    else
+      $('#report_output_data_media_url, #report_output_data_all_media').closest('.checkbox').hide()
+
 
   $('#report_format').trigger('change')
 

@@ -14,6 +14,7 @@ class Media
   field :location_country, type: String
   field :location_present, type: Boolean, default: nil
   field :tag_names, type: Array, default: []
+  field :image, type: String
   include Mongoid::Timestamps
 
   index created_at: 1
@@ -98,6 +99,7 @@ class Media
     self.comments_amount = media_item['comments']['count']
     self.link = media_item['link']
     self.created_time = Time.at media_item['created_time'].to_i
+    self.image = media_item['images']['standard_resolution']['url']
   end
 
   def set_user media_item_user, users_found=[]
