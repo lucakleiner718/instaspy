@@ -61,8 +61,8 @@ class Report::Tags < Report::Base
 
       unless @report.steps[step_index][1].include?('media_actual')
         media_for_update = []
-        media_ids.select{ |m| m[:id] }.in_groups_of(10_000, false) do |ids|
-          media_for_update.concat Media.in(id: ids).or(image: nil).pluck(:id)
+        media_ids.map{ |m| m[:id] }.in_groups_of(10_000, false) do |ids|
+          media_for_update.concat Media.in(id: ids).where(image: nil).pluck(:id)
         end
 
         if media_for_update.size == 0
@@ -72,53 +72,55 @@ class Report::Tags < Report::Base
         end
       end
 
-      unless @report.steps[step_index][1].include?('publishers_info')
-        users = []
-        publishers_ids.in_groups_of(5_000, false) do |ids|
-          users.concat User.in(id: ids).outdated.pluck(:id)
-        end
-        if users.size == 0
-          @report.steps[step_index][1] << 'publishers_info'
-        else
-          users.each { |uid| UserWorker.perform_async uid }
-        end
-      end
-
-      if @report.steps[step_index][1].include?('publishers_info')
-        if @report.output_data.include?('likes') && !@report.steps[step_index][1].include?('likes')
-          get_likes = User.in(id: publishers_ids).without_likes.with_media.not_private.pluck(:id)
-          if get_likes.size == 0
-            @report.steps[step_index][1] << 'likes'
+      if @report.steps[step_index][1].include?('media_actual')
+        unless @report.steps[step_index][1].include?('publishers_info')
+          users = []
+          publishers_ids.in_groups_of(5_000, false) do |ids|
+            users.concat User.in(id: ids).outdated.pluck(:id)
+          end
+          if users.size == 0
+            @report.steps[step_index][1] << 'publishers_info'
           else
-            get_likes.each { |uid| UserAvgLikesWorker.perform_async uid }
+            users.each { |uid| UserWorker.perform_async uid }
           end
         end
 
-        if @report.output_data.include?('location') && !@report.steps[step_index][1].include?('location')
-          get_location = User.in(id: publishers_ids).without_location.with_media.not_private.pluck(:id)
-          if get_location.size == 0
-            @report.steps[step_index][1] << 'location'
-          else
-            get_location.each { |uid| UserLocationWorker.perform_async uid }
-          end
-        end
-
-        if @report.output_data.include?('feedly') && !@report.steps[step_index][1].include?('feedly')
-          with_website = []
-          feedly_exists = []
-          @report.processed_ids.in_groups_of(5_000, false) do |ids|
-            for_process = User.in(id: ids).with_url.pluck(:id)
-            with_website.concat for_process
-            feedly_exists.concat Feedly.in(user_id: for_process).pluck(:user_id)
+        if @report.steps[step_index][1].include?('publishers_info')
+          if @report.output_data.include?('likes') && !@report.steps[step_index][1].include?('likes')
+            get_likes = User.in(id: publishers_ids).without_likes.with_media.not_private.pluck(:id)
+            if get_likes.size == 0
+              @report.steps[step_index][1] << 'likes'
+            else
+              get_likes.each { |uid| UserAvgLikesWorker.perform_async uid }
+            end
           end
 
-          no_feedly = with_website - feedly_exists
+          if @report.output_data.include?('location') && !@report.steps[step_index][1].include?('location')
+            get_location = User.in(id: publishers_ids).without_location.with_media.not_private.pluck(:id)
+            if get_location.size == 0
+              @report.steps[step_index][1] << 'location'
+            else
+              get_location.each { |uid| UserLocationWorker.perform_async uid }
+            end
+          end
 
-          if no_feedly.size == 0
-            @report.steps << 'feedly'
-          else
-            no_feedly.each { |uid| UserFeedlyWorker.new.perform uid }
-            @progress += feedly_exists.size / with_website.size.to_f / @parts_amount
+          if @report.output_data.include?('feedly') && !@report.steps[step_index][1].include?('feedly')
+            with_website = []
+            feedly_exists = []
+            @report.processed_ids.in_groups_of(5_000, false) do |ids|
+              for_process = User.in(id: ids).with_url.pluck(:id)
+              with_website.concat for_process
+              feedly_exists.concat Feedly.in(user_id: for_process).pluck(:user_id)
+            end
+
+            no_feedly = with_website - feedly_exists
+
+            if no_feedly.size == 0
+              @report.steps << 'feedly'
+            else
+              no_feedly.each { |uid| UserFeedlyWorker.new.perform uid }
+              @progress += feedly_exists.size / with_website.size.to_f / @parts_amount
+            end
           end
         end
       end
