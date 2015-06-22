@@ -4,7 +4,7 @@ module PluckToHash
   module Mongoid
     module CriteriaMethods
       def pluck_to_hash *keys
-        pluck(*keys).map{|row| Hash[Array(keys).zip(Array(row))]}
+        only(*keys).to_a.inject({}) {|obj, r| keys.each{|key| obj[key] = r[key]}; obj}
       end
     end
 

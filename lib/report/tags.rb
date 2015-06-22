@@ -174,6 +174,7 @@ class Report::Tags < Report::Base
                 feedly = u.feedly.first
                 row += [feedly ? feedly.subscribers_amount : '']
               end
+
               row += [media[:link], media[:likes_amount], media[:comments_amount], media[:created_time].strftime('%m/%d/%Y %H:%M:%S')]
               row += [media[:image]] if @report.output_data.include? 'media_url'
 
