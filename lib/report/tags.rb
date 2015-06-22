@@ -62,7 +62,9 @@ class Report::Tags < Report::Base
       unless @report.steps[step_index][1].include?('media_actual')
         media_for_update = []
         media_ids.map{ |m| m[:id] }.in_groups_of(10_000, false) do |ids|
-          media_for_update.concat Media.in(id: ids).where(image: nil).pluck(:id)
+          media_ids = Media.in(id: ids).where(image: nil).pluck(:id, :user_id)
+          users = User.in(id: media_ids.map{|m| m[1]}).where(private: false).pluck(:id)
+          media_for_update.concat media_ids.select{|r| r[1].in?(users)}.map(&:first)
         end
 
         if media_for_update.size == 0
