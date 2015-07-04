@@ -1,0 +1,14 @@
+<div class="row">
+  <div class="col-sm-6 col-sm-offset-3">
+    <h1>Observe Tags</h1>
+    <%= form_tag tags_observe_path do %>
+      <div class="form-group text optional report_input">
+        <label class="text optional control-label" for="tags_list">Tags list</label>
+        <%= text_area_tag :tags, '', class: 'form-control', id: 'tags_list' %>
+        <p class="help-block">Each Tag name should be on new line</p>
+      </div>
+
+      <%= button_tag 'Submit', class: 'btn btn-primary' %>
+    <% end %>
+  </div>
+</div>

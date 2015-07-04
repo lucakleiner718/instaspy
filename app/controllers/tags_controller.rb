@@ -25,6 +25,18 @@ class TagsController < ApplicationController
     redirect_to tags_path(filter: :observed)
   end
 
+  def observe
+
+  end
+
+  def observe_process
+    tags = params[:tags].split("\r\n")
+    tags.each do |tag_name|
+      Tag.observe tag_name
+    end
+    redirect_to tags_path(filter: :observed)
+  end
+
   private
 
   def sort_direction

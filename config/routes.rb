@@ -28,6 +28,8 @@ Rails.application.routes.draw do
   post 'tag_media/added' => 'pages#tag_media_added'
 
   get 'tags' => 'tags#index'
+  get 'tags/observe' => 'tags#observe', as: :tags_observe
+  post 'tags/observe' => 'tags#observe_process'
 
   get 'media/chart' => 'pages#media_chart', as: :media_chart
 
