@@ -1085,7 +1085,7 @@ class User
     options[:total_limit] ||= 50
     media_limit = [options[:total_limit], 100].max
 
-    self.update_info! unless self.insta_id
+    self.update_info! force: true
 
     media = self.media.order(created_time: :desc).lt(created_time: 1.day.ago).limit(media_limit)
 
