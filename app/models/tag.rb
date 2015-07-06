@@ -171,17 +171,20 @@ class Tag
     amount_of_days = amount_of_days.to_i
 
     amount_of_days.times do |i|
-      d = amount_of_days-i
-      cat = d.days.ago.utc.strftime('%m/%d')
-      blank[cat] = 0
+      blank[(amount_of_days-i).days.ago.utc.strftime('%m/%d')] = 0
     end
 
     data = blank.dup
 
     amount_of_days.times do |i|
       day = (amount_of_days-i).days.ago.utc
-      data[day.strftime('%m/%d')] =
-        self.media.gte(created_time: day.beginning_of_day).lte(created_time: day.end_of_day).size
+      media_size = 0
+      media_ids = MediaTag.where(tag_id: self.id).pluck(:media_id)
+      puts media_ids.size
+      media_ids.in_groups_of(10_000, false) do |group|
+        media_size += Media.in(id: group).gte(created_time: day.beginning_of_day).lte(created_time: day.end_of_day).size
+      end
+      data[day.strftime('%m/%d')] = media_size
     end
 
     data.reject{|k| !k.in?(blank) }.values
