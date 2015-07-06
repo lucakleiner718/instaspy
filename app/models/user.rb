@@ -490,7 +490,7 @@ class User
       cursor = resp.pagination['next_cursor']
 
       unless cursor
-        if !options[:reload] && !skipped
+        if !options[:reload] && !skipped && options[:start_cursor].blank? && options[:finish_cursor].blank?
           current_followers = Follower.where(user_id: self.id).pluck(:follower_id)
           unfollowed = current_followers - followers_ids
           if unfollowed.size > 0
