@@ -8,3 +8,4 @@
 //= require chart
 //= require media_chart
 //= require reports
+//= require users
