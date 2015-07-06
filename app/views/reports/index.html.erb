@@ -23,6 +23,7 @@
     <th>Dates</th>
     <th>Note</th>
     <th>Files</th>
+    <th></th>
   </tr>
   </thead>
   <tbody>
@@ -52,6 +53,13 @@
       <td>
         <div><%= link_to "Input data", report.original_input_url, target: :_blank %></div>
         <div><%= link_to 'Results file', report.result_data_url, target: :_blank if report.result_data.present? %></div>
+      </td>
+      <td>
+        <% if report.status == 'stopped' %>
+          <%= link_to 'Continue', report_update_status_path(report, status: :continue), remote: true, class: 'report-update-status btn btn-success', method: :patch %>
+        <% elsif report.status.in?(['in_process', 'new']) %>
+          <%= link_to 'Stop', report_update_status_path(report, status: :stop), remote: true, class: 'report-update-status btn btn-danger', method: :patch %>
+        <% end %>
       </td>
     </tr>
   <% end %>

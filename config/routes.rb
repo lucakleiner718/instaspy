@@ -18,6 +18,7 @@ Rails.application.routes.draw do
   get 'reports' => 'reports#index'
   get 'reports/new' => 'reports#new', as: :new_report
   post 'reports' => 'reports#create'
+  patch 'reports/:id/update_status' => 'reports#update_status', as: :report_update_status
 
   get 'reports/followers'
   post 'reports/followers' => 'reports#followers_report'

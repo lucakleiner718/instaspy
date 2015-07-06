@@ -16,7 +16,7 @@ class Report::Followers < Report::Base
         if for_update.size == 0
           @report.push steps: 'followers'
         else
-          for_update.map do |row|
+          for_update.each do |row|
             if row[1] < 20_000
               UserFollowersWorker.perform_async row[0], ignore_exists: true
             else

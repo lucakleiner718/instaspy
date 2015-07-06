@@ -61,6 +61,23 @@ class ReportsController < ApplicationController
     redirect_to :back
   end
 
+  def update_status
+    @report = Report.find(params[:id])
+    if params[:status] == 'continue' && @report.status == 'stopped'
+      @report.status = @report.started_at.nil? ? 'new' : 'in_process'
+    elsif params[:status] == 'stop' && @report.status.in?(['new', 'in_process'])
+      @report.status = 'stopped'
+    end
+
+    ReportProcessNewWorker.spawn
+    ReportProcessProgressWorker.spawn
+
+    @report.save
+    respond_to do |format|
+      format.json { render json: { success: true, status: @report.status } }
+    end
+  end
+
   private
 
   def sort_direction

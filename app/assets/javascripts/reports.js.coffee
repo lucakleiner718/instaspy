@@ -33,3 +33,7 @@ jQuery ($) ->
 
   $('.report-info').popover
     trigger: 'hover'
+
+  $('.report-update-status').on
+    'ajax:success': (resp) ->
+      window.location.reload()
