@@ -56,9 +56,9 @@
       </td>
       <td>
         <% if report.status == 'stopped' %>
-          <%= link_to 'Continue', report_update_status_path(report, status: :continue), remote: true, class: 'report-update-status btn btn-success', method: :patch %>
+          <%= link_to 'Continue', report_update_status_path(report, status: :continue), remote: true, class: 'report-update-status btn btn-success btn-xs', method: :patch %>
         <% elsif report.status.in?(['in_process', 'new']) %>
-          <%= link_to 'Stop', report_update_status_path(report, status: :stop), remote: true, class: 'report-update-status btn btn-danger', method: :patch %>
+          <%= link_to 'Stop', report_update_status_path(report, status: :stop), remote: true, class: 'report-update-status btn btn-danger btn-xs', method: :patch %>
         <% end %>
       </td>
     </tr>
