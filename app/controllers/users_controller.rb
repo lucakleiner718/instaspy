@@ -7,7 +7,7 @@ class UsersController < ApplicationController
     @user = User.find_by(username: params[:id])
 
     data = Follower.collection.aggregate(
-      { "$match" => { user_id: @user.id } },
+      { "$match" => { user_id: @user.id, followed_at: { '$ne' => nil } } },
       { "$group" => {
         _id: { month: { "$month" => "$followed_at" }, year: { "$year" => "$followed_at" } },
         count: { "$sum" => 1 } } },
