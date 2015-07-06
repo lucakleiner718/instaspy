@@ -86,10 +86,11 @@ class Reporter
 
         start_time = Time.now
         # catching all users, which did post media with specified tag
-        media_users_ids = Media.in(id: MediaTag.where(tag_id: tag.id).pluck(:media_id).uniq).gt(created_at: starts).lte(created_at: ends).pluck(:user_id).uniq
-        users = User.in(id: media_users_ids).nin(website: [nil, '']).gte(created_at: starts).lte(created_at: ends)
-
-        users_ids = users.pluck(:id)
+        media_users_ids = []
+        MediaTag.where(tag_id: tag.id).pluck(:media_id).uniq.in_groups_of(10_000, false) do |group|
+          media_users_ids += Media.in(id: group).gt(created_at: starts).lte(created_at: ends).pluck(:user_id).uniq
+        end
+        users_ids = User.in(id: media_users_ids).nin(website: [nil, '']).gte(created_at: starts).lte(created_at: ends).pluck(:id)
         users_size = users_ids.size
         processed = 0
 
