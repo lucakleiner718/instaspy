@@ -1,14 +1,4 @@
-class Feedly
-
-  include Mongoid::Document
-  field :website, type: String
-  field :feed_id, type: String
-  field :feedly_url, type: String
-  field :subscribers_amount, type: Integer
-  field :grabbed_at, type: DateTime
-  include Mongoid::Timestamps
-
-  index feed_id: 1
+class Feedly < ActiveRecord::Base
 
   belongs_to :user
 

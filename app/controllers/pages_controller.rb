@@ -33,7 +33,7 @@ class PagesController < ApplicationController
     tags = params['tags']
     tags = tags.split(',') if tags && tags.is_a?(String)
 
-    @tags = tags && tags.size > 0 ? Tag.in(name: tags) : Tag.in(id: ObservedTag.where(for_chart: true).pluck(:tag_id))
+    @tags = tags && tags.size > 0 ? Tag.where(name: tags) : Tag.where(id: ObservedTag.where(for_chart: true).pluck(:tag_id))
     @tags = @tags.pluck(:name)
   end
 
@@ -77,8 +77,8 @@ class PagesController < ApplicationController
   end
 
   def media_chart
-    @published = MediaAmountStat.where(:date.gt => (params[:days] || 14).days.ago.utc.beginning_of_day, action: :published).order_by(date: :asc).map{|el| [el.date.strftime('%m/%d'), el.amount]}
-    @added = MediaAmountStat.where(:date.gt => (params[:days] || 14).days.ago.utc.beginning_of_day, action: :added).order_by(date: :asc).map{|el| [el.date.strftime('%m/%d'), el.amount]}
+    @published = MediaAmountStat.where("date > ?", (params[:days] || 14).days.ago.utc.beginning_of_day).where(action: :published).order(date: :asc).map{|el| [el.date.strftime('%m/%d'), el.amount]}
+    @added = MediaAmountStat.where("date > ?", (params[:days] || 14).days.ago.utc.beginning_of_day).where(action: :added).order(date: :asc).map{|el| [el.date.strftime('%m/%d'), el.amount]}
   end
 
   private

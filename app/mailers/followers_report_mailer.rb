@@ -26,7 +26,7 @@ class FollowersReportMailer < ActionMailer::Base
 
   def full origin
     followers_ids = origin.user_followers.pluck(:follower_id)
-    followers = User.in(id: followers_ids)
+    followers = User.where(id: followers_ids)
 
     csv_string = CSV.generate do |csv|
       csv << ['Insta ID', 'Username', 'Name', 'Bio', 'Website', 'Follows', 'Followers', 'Media amount', 'Email']
@@ -55,8 +55,8 @@ class FollowersReportMailer < ActionMailer::Base
     origins = [origins] unless origins.is_a?(Array)
 
     origins.each do |origin|
-      followers_ids = Follower.in(user_id: origin.id).gte(created_at: @start).lte(created_at: @finish).pluck(:follower_id)
-      followers = User.in(id: followers_ids)
+      followers_ids = Follower.where(user_id: origin.id).where("created_at >= ?", @start).where("created_at <= ?", @finish).pluck(:follower_id)
+      followers = User.where(id: followers_ids)
 
       csv_string = CSV.generate do |csv|
         csv << ['Insta ID', 'Username', 'Name', 'Bio', 'Website', 'Follows', 'Followers', 'Media amount', 'Email']

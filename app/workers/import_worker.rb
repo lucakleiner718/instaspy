@@ -22,7 +22,7 @@ class ImportWorker
     cols = header
     cols.slice!(0,2)
 
-    users = User.scoped.in(insta_id: data.map{|r| r[1]}).to_a
+    users = User.scoped.where(insta_id: data.map{|r| r[1]}).to_a
 
     rows = {}
     users.each {|row| rows[row.insta_id] = row}

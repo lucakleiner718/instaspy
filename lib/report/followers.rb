@@ -10,7 +10,7 @@ class Report::Followers < Report::Base
 
     if @report.steps.include?('user_info')
       unless @report.steps.include?('followers')
-        users = User.in(id: @report.processed_ids).not_private.or({followers_updated_at: nil}, {:followers_updated_at.lt => 3.days.ago}).map{|u| [u.id, u.followed_by, u.followers_size, u]}
+        users = User.where(id: @report.processed_ids).not_private.where("followers_updated_at is null OR followers_updated_at < ?", 3.days.ago}).map{|u| [u.id, u.followed_by, u.followers_size, u]}
         for_update = users.select{ |r| r[2]/r[1].to_f < 0.95 || r[2]/r[1].to_f > 1.2 }
 
         if for_update.size == 0
@@ -31,9 +31,9 @@ class Report::Followers < Report::Base
 
         if @report.data['followers_file'].blank?
           # ids of ALL followers of provided users
-          followers_ids = Follower.in(user_id: @report.processed_ids)
-          followers_ids = followers_ids.gte(followed_at: @report.date_from) if @report.date_from
-          followers_ids = followers_ids.lte(followed_at: @report.date_to) if @report.date_to
+          followers_ids = Follower.where(user_id: @report.processed_ids)
+          followers_ids = followers_ids.where("followed_at >= ?", @report.date_from) if @report.date_from
+          followers_ids = followers_ids.where("followed_at >= ?", @report.date_to) if @report.date_to
           followers_ids = followers_ids.pluck(:follower_id).uniq
 
           filepath = "reports/reports_data/report-#{@report.id}-followers-ids"
@@ -54,7 +54,7 @@ class Report::Followers < Report::Base
           not_updated = []
           followers_to_update.in_groups_of(10_000, false) do |ids|
             # grab all users without data and data outdated for 7 days
-            users = User.in(id: ids).outdated(7.days).pluck(:id, :grabbed_at)
+            users = User.where(id: ids).outdated(7.days).pluck(:id, :grabbed_at)
             # select users only without data and outdated for 8 days, to avoid adding new users on each iteration
             list = users.select{|r| r[1].blank? || r[1] < 8.days.ago}.map(&:first)
             if list.size > 0
@@ -104,15 +104,15 @@ class Report::Followers < Report::Base
     header += ['Feedly Subscribers'] if @report.output_data.include? 'feedly'
     header.slice! 4,1 if @report.output_data.include?('slim') || @report.output_data.include?('slim_followers')
 
-    User.in(id: @report.processed_ids).each do |user|
+    User.where(id: @report.processed_ids).each do |user|
       filename = "#{@report.id}-#{user.username}-followers.csv"
       unless File.exists? Rails.root.join('tmp', filename)
         csv_string = CSV.generate do |csv|
           csv << header
           followers_ids = Follower.where(user_id: user.id).pluck(:follower_id).uniq
-          followers = User.in(id: followers_ids)
-          followers = followers.ne(email: nil).gte(followed_by: 1_000) if @report.output_data.include? 'slim'
-          followers = followers.gte(followed_by: 1_000) if @report.output_data.include? 'slim_followers'
+          followers = User.where(id: followers_ids)
+          followers = followers.where("email is not null").where("followed_by >= ?" 1_000) if @report.output_data.include? 'slim'
+          followers = followers.where("followed_by >= ?", 1_000) if @report.output_data.include? 'slim_followers'
           followers.each do |u|
             row = [u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email]
             row.slice! 4,1 if @report.output_data.include? 'slim' || @report.output_data.include?('slim_followers')

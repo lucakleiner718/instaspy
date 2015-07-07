@@ -33,7 +33,7 @@ class Report::Base
     processed_data = []
 
     if insta_ids.size > 0
-      found_insta_ids = User.in(insta_id: insta_ids).pluck(:insta_id, :id)
+      found_insta_ids = User.where(insta_id: insta_ids).pluck(:insta_id, :id)
       (insta_ids - found_insta_ids.map(&:first)).each do |insta_id|
         u = User.get(insta_id: insta_id)
         found_insta_ids << [u.insta_id, u.id] if u && u.valid?
@@ -42,7 +42,7 @@ class Report::Base
     end
 
     if usernames.size > 0
-      found_usernames = User.in(username: usernames).pluck(:username, :id)
+      found_usernames = User.where(username: usernames).pluck(:username, :id)
       (usernames - found_usernames.map(&:first)).each do |username|
         u = User.get(username)
         found_usernames << [u.username, u.id] if u && u.valid?
@@ -64,7 +64,7 @@ class Report::Base
   def process_user_info
     unless @report.steps.include?('user_info')
       ids = @report.processed_ids
-      users = User.in(id: ids).outdated(1.day).pluck(:id, :grabbed_at)
+      users = User.where(id: ids).outdated(1.day).pluck(:id, :grabbed_at)
       not_updated = users.select{|r| r[1].blank? || r[1] < 36.hours.ago}.map(&:first)
 
       if not_updated.size == 0
@@ -82,7 +82,7 @@ class Report::Base
       ids = self.get_cached('get_likes', ids)
       get_likes = []
       ids.in_groups_of(5_000, false) do |ids|
-        users = User.in(id: ids).without_likes.with_media.not_private.pluck(:id)
+        users = User.where(id: ids).without_likes.with_media.not_private.pluck(:id)
         users.each { |uid| UserAvgLikesWorker.perform_async uid }
         get_likes.concat users
       end
@@ -102,7 +102,7 @@ class Report::Base
       ids = self.get_cached('get_location', ids)
       get_location = []
       ids.in_groups_of(5_000, false) do |ids|
-        users = User.in(id: ids).without_location.with_media.not_private.pluck(:id)
+        users = User.where(id: ids).without_location.with_media.not_private.pluck(:id)
         users.each { |uid| UserLocationWorker.perform_async(uid) }
         get_location.concat users
       end
@@ -122,9 +122,9 @@ class Report::Base
       with_website = []
       feedly_exists = []
       ids.in_groups_of(5_000, false) do |ids|
-        for_process = User.in(id: ids).with_url.pluck(:id)
+        for_process = User.where(id: ids).with_url.pluck(:id)
         with_website.concat for_process
-        feedly_exists.concat Feedly.in(user_id: for_process).pluck(:user_id)
+        feedly_exists.concat Feedly.where(user_id: for_process).pluck(:user_id)
       end
 
       no_feedly = with_website - feedly_exists

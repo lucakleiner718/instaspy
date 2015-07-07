@@ -4,14 +4,14 @@ lock '3.2.1'
 set :application, 'instaspy'
 set :repo_url, 'git@github.com:luxagency/instaspy.git'
 
-set :branch, 'migrate-mongo'
+set :branch, 'pg'
 set :scm, :git
 set :format, :pretty
 set :pty, true
 
 set :log_level, :info #:debug
 
-set :linked_files, %w{config/mongoid.yml .env config/procs.god config/sidekiq.yml config/sidekiq2.yml}
+set :linked_files, %w{config/database.yml .env config/procs.god config/sidekiq.yml config/sidekiq2.yml}
 set :linked_dirs, %w{log tmp/pids tmp/cache tmp/sockets vendor/bundle public/system public/reports}
 
 set :keep_releases, 5

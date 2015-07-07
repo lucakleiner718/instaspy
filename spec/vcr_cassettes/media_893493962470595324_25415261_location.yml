@@ -690,4 +690,633 @@ http_interactions:
         Hills","PostalCode":"33021","AdditionalData":[{"value":"United States","key":"CountryName"},{"value":"Florida","key":"StateName"},{"value":"Broward","key":"CountyName"},{"value":"N","key":"PostalCodeType"}]},"MapReference":{"ReferenceId":"22484145","MapId":"NAAM151W4","MapVersion":"Q1/2015","SideOfStreet":"neither","CountryId":"21000001","StateId":"21023288","CountyId":"21023338","CityId":"21023353"}}}]}]}}'
     http_version: 
   recorded_at: Wed, 06 May 2015 17:51:51 GMT
+- request:
+    method: get
+    uri: http://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/reverseGeocode?f=pjson&location=-80.17822265625,26.007230758667&outFields=*
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Cache-Control:
+      - max-age=0,must-revalidate
+      Content-Type:
+      - text/plain;charset=utf-8
+      Date:
+      - Tue, 07 Jul 2015 11:15:33 GMT
+      Etag:
+      - d8687a98
+      Server:
+      - ''
+      Set-Cookie:
+      - AGS_ROLES="419jqfa+uOZgYod4xPOQ8Q=="; Version=1; Max-Age=60; Expires=Tue,
+        07-Jul-2015 11:16:33 GMT; Path=/arcgis/rest; HttpOnly
+      Content-Length:
+      - '278'
+      Connection:
+      - keep-alive
+    body:
+      encoding: UTF-8
+      string: |-
+        {
+         "address": {
+          "Address": "3505 Monroe St",
+          "Neighborhood": null,
+          "City": "Hollywood",
+          "Subregion": null,
+          "Region": "Florida",
+          "Postal": "33021",
+          "PostalExt": null,
+          "CountryCode": "USA",
+          "Match_addr": "3505 Monroe St, Hollywood, Florida, 33021",
+          "Loc_name": "USA.PointAddress"
+         },
+         "location": {
+          "x": -80.179071326397548,
+          "y": 26.007117577961136,
+          "spatialReference": {
+           "wkid": 4326,
+           "latestWkid": 4326
+          }
+         }
+        }
+    http_version: 
+  recorded_at: Tue, 07 Jul 2015 11:15:33 GMT
+- request:
+    method: get
+    uri: http://geocode-maps.yandex.ru/1.x/?format=json&geocode=-80.17822265625,26.007230758667&plng=en
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 301
+      message: Moved Permanently
+    headers:
+      Server:
+      - nginx/1.6.3
+      Date:
+      - Tue, 07 Jul 2015 11:19:58 GMT
+      Content-Type:
+      - text/html
+      Content-Length:
+      - '184'
+      Connection:
+      - keep-alive
+      Location:
+      - https://geocode-maps.yandex.ru/1.x/?format=json&geocode=-80.17822265625%2C26.007230758667&plng=en
+    body:
+      encoding: UTF-8
+      string: "<html>\r\n<head><title>301 Moved Permanently</title></head>\r\n<body
+        bgcolor=\"white\">\r\n<center><h1>301 Moved Permanently</h1></center>\r\n<hr><center>nginx/1.6.3</center>\r\n</body>\r\n</html>\r\n"
+    http_version: 
+  recorded_at: Tue, 07 Jul 2015 11:19:58 GMT
+- request:
+    method: get
+    uri: http://dev.virtualearth.net/REST/v1/Locations/26.007230758667,-80.17822265625?key=AreNey4-B-i5NhpxcZJg3hPEl_Gta4qp2vTlShk5Bc4qt2FXq9vGlgosts-Dzq1l
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Cache-Control:
+      - no-cache
+      Transfer-Encoding:
+      - chunked
+      Content-Type:
+      - application/json; charset=utf-8
+      Vary:
+      - Accept-Encoding
+      Server:
+      - Microsoft-IIS/8.0
+      X-Bm-Traceid:
+      - 86eb285d7e764b0db27717b77ac2b434
+      X-Bm-Srv:
+      - DB40170149, BN2SCH020131320, BN2SCH020190257
+      X-Ms-Bm-Ws-Info:
+      - '1'
+      X-Aspnet-Version:
+      - 4.0.30319
+      X-Powered-By:
+      - ASP.NET
+      Date:
+      - Tue, 07 Jul 2015 11:20:09 GMT
+    body:
+      encoding: ASCII-8BIT
+      string: !binary |-
+        eyJhdXRoZW50aWNhdGlvblJlc3VsdENvZGUiOiJWYWxpZENyZWRlbnRpYWxz
+        IiwiYnJhbmRMb2dvVXJpIjoiaHR0cDpcL1wvZGV2LnZpcnR1YWxlYXJ0aC5u
+        ZXRcL0JyYW5kaW5nXC9sb2dvX3Bvd2VyZWRfYnkucG5nIiwiY29weXJpZ2h0
+        IjoiQ29weXJpZ2h0IMKpIDIwMTUgTWljcm9zb2Z0IGFuZCBpdHMgc3VwcGxp
+        ZXJzLiBBbGwgcmlnaHRzIHJlc2VydmVkLiBUaGlzIEFQSSBjYW5ub3QgYmUg
+        YWNjZXNzZWQgYW5kIHRoZSBjb250ZW50IGFuZCBhbnkgcmVzdWx0cyBtYXkg
+        bm90IGJlIHVzZWQsIHJlcHJvZHVjZWQgb3IgdHJhbnNtaXR0ZWQgaW4gYW55
+        IG1hbm5lciB3aXRob3V0IGV4cHJlc3Mgd3JpdHRlbiBwZXJtaXNzaW9uIGZy
+        b20gTWljcm9zb2Z0IENvcnBvcmF0aW9uLiIsInJlc291cmNlU2V0cyI6W3si
+        ZXN0aW1hdGVkVG90YWwiOjAsInJlc291cmNlcyI6W119XSwic3RhdHVzQ29k
+        ZSI6MjAwLCJzdGF0dXNEZXNjcmlwdGlvbiI6Ik9LIiwidHJhY2VJZCI6Ijg2
+        ZWIyODVkN2U3NjRiMGRiMjc3MTdiNzdhYzJiNDM0fERCNDAxNzAxNDl8MDIu
+        MDAuMTc0LjIzMDB8Qk4yU0NIMDIwMTMxMzIwLCBCTjJTQ0gwMjAxOTAyNTci
+        fQ==
+    http_version: 
+  recorded_at: Tue, 07 Jul 2015 11:20:09 GMT
+- request:
+    method: get
+    uri: http://maps.googleapis.com/maps/api/geocode/json?language=en&latlng=26.007230758667,-80.17822265625&sensor=false
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json; charset=UTF-8
+      Date:
+      - Tue, 07 Jul 2015 11:20:09 GMT
+      Expires:
+      - Wed, 08 Jul 2015 11:20:09 GMT
+      Cache-Control:
+      - public, max-age=86400
+      Access-Control-Allow-Origin:
+      - "*"
+      Server:
+      - mafe
+      X-Xss-Protection:
+      - 1; mode=block
+      X-Frame-Options:
+      - SAMEORIGIN
+      Alternate-Protocol:
+      - 80:quic,p=0
+      Accept-Ranges:
+      - none
+      Vary:
+      - Accept-Encoding
+      Transfer-Encoding:
+      - chunked
+    body:
+      encoding: UTF-8
+      string: |
+        {
+           "results" : [
+              {
+                 "address_components" : [
+                    {
+                       "long_name" : "401-499",
+                       "short_name" : "401-499",
+                       "types" : [ "street_number" ]
+                    },
+                    {
+                       "long_name" : "South 35th Avenue",
+                       "short_name" : "S 35th Ave",
+                       "types" : [ "route" ]
+                    },
+                    {
+                       "long_name" : "Hollywood Hills",
+                       "short_name" : "Hollywood Hills",
+                       "types" : [ "neighborhood", "political" ]
+                    },
+                    {
+                       "long_name" : "Hollywood",
+                       "short_name" : "Hollywood",
+                       "types" : [ "locality", "political" ]
+                    },
+                    {
+                       "long_name" : "Broward County",
+                       "short_name" : "Broward County",
+                       "types" : [ "administrative_area_level_2", "political" ]
+                    },
+                    {
+                       "long_name" : "Florida",
+                       "short_name" : "FL",
+                       "types" : [ "administrative_area_level_1", "political" ]
+                    },
+                    {
+                       "long_name" : "United States",
+                       "short_name" : "US",
+                       "types" : [ "country", "political" ]
+                    },
+                    {
+                       "long_name" : "33021",
+                       "short_name" : "33021",
+                       "types" : [ "postal_code" ]
+                    }
+                 ],
+                 "formatted_address" : "401-499 South 35th Avenue, Hollywood, FL 33021, USA",
+                 "geometry" : {
+                    "bounds" : {
+                       "northeast" : {
+                          "lat" : 26.0079719,
+                          "lng" : -80.17850609999999
+                       },
+                       "southwest" : {
+                          "lat" : 26.0071014,
+                          "lng" : -80.17854749999999
+                       }
+                    },
+                    "location" : {
+                       "lat" : 26.0072204,
+                       "lng" : -80.1784933
+                    },
+                    "location_type" : "RANGE_INTERPOLATED",
+                    "viewport" : {
+                       "northeast" : {
+                          "lat" : 26.0088856302915,
+                          "lng" : -80.17717781970849
+                       },
+                       "southwest" : {
+                          "lat" : 26.0061876697085,
+                          "lng" : -80.1798757802915
+                       }
+                    }
+                 },
+                 "place_id" : "EjM0MDEtNDk5IFNvdXRoIDM1dGggQXZlbnVlLCBIb2xseXdvb2QsIEZMIDMzMDIxLCBVU0E",
+                 "types" : [ "street_address" ]
+              },
+              {
+                 "address_components" : [
+                    {
+                       "long_name" : "Hollywood Hills",
+                       "short_name" : "Hollywood Hills",
+                       "types" : [ "neighborhood", "political" ]
+                    },
+                    {
+                       "long_name" : "Hollywood",
+                       "short_name" : "Hollywood",
+                       "types" : [ "locality", "political" ]
+                    },
+                    {
+                       "long_name" : "Broward County",
+                       "short_name" : "Broward County",
+                       "types" : [ "administrative_area_level_2", "political" ]
+                    },
+                    {
+                       "long_name" : "Florida",
+                       "short_name" : "FL",
+                       "types" : [ "administrative_area_level_1", "political" ]
+                    },
+                    {
+                       "long_name" : "United States",
+                       "short_name" : "US",
+                       "types" : [ "country", "political" ]
+                    }
+                 ],
+                 "formatted_address" : "Hollywood Hills, Hollywood, FL, USA",
+                 "geometry" : {
+                    "bounds" : {
+                       "northeast" : {
+                          "lat" : 26.033167,
+                          "lng" : -80.17529619999999
+                       },
+                       "southwest" : {
+                          "lat" : 26.0025679,
+                          "lng" : -80.20046909999999
+                       }
+                    },
+                    "location" : {
+                       "lat" : 26.0204621,
+                       "lng" : -80.1930859
+                    },
+                    "location_type" : "APPROXIMATE",
+                    "viewport" : {
+                       "northeast" : {
+                          "lat" : 26.033167,
+                          "lng" : -80.17529619999999
+                       },
+                       "southwest" : {
+                          "lat" : 26.0025679,
+                          "lng" : -80.20046909999999
+                       }
+                    }
+                 },
+                 "place_id" : "ChIJ6d-x0GGp2YgRzKphrYpBB7Y",
+                 "types" : [ "neighborhood", "political" ]
+              },
+              {
+                 "address_components" : [
+                    {
+                       "long_name" : "Hollywood",
+                       "short_name" : "Hollywood",
+                       "types" : [ "locality", "political" ]
+                    },
+                    {
+                       "long_name" : "Broward County",
+                       "short_name" : "Broward County",
+                       "types" : [ "administrative_area_level_2", "political" ]
+                    },
+                    {
+                       "long_name" : "Florida",
+                       "short_name" : "FL",
+                       "types" : [ "administrative_area_level_1", "political" ]
+                    },
+                    {
+                       "long_name" : "United States",
+                       "short_name" : "US",
+                       "types" : [ "country", "political" ]
+                    }
+                 ],
+                 "formatted_address" : "Hollywood, FL, USA",
+                 "geometry" : {
+                    "bounds" : {
+                       "northeast" : {
+                          "lat" : 26.0930639,
+                          "lng" : -80.1020659
+                       },
+                       "southwest" : {
+                          "lat" : 25.9861679,
+                          "lng" : -80.24869009999999
+                       }
+                    },
+                    "location" : {
+                       "lat" : 26.0112014,
+                       "lng" : -80.14949009999999
+                    },
+                    "location_type" : "APPROXIMATE",
+                    "viewport" : {
+                       "northeast" : {
+                          "lat" : 26.0930639,
+                          "lng" : -80.1020659
+                       },
+                       "southwest" : {
+                          "lat" : 25.9861679,
+                          "lng" : -80.24869009999999
+                       }
+                    }
+                 },
+                 "place_id" : "ChIJpzH_x2-p2YgRaLi3db561wc",
+                 "types" : [ "locality", "political" ]
+              },
+              {
+                 "address_components" : [
+                    {
+                       "long_name" : "33021",
+                       "short_name" : "33021",
+                       "types" : [ "postal_code" ]
+                    },
+                    {
+                       "long_name" : "Hollywood",
+                       "short_name" : "Hollywood",
+                       "types" : [ "locality", "political" ]
+                    },
+                    {
+                       "long_name" : "Broward County",
+                       "short_name" : "Broward County",
+                       "types" : [ "administrative_area_level_2", "political" ]
+                    },
+                    {
+                       "long_name" : "Florida",
+                       "short_name" : "FL",
+                       "types" : [ "administrative_area_level_1", "political" ]
+                    },
+                    {
+                       "long_name" : "United States",
+                       "short_name" : "US",
+                       "types" : [ "country", "political" ]
+                    }
+                 ],
+                 "formatted_address" : "Hollywood, FL 33021, USA",
+                 "geometry" : {
+                    "bounds" : {
+                       "northeast" : {
+                          "lat" : 26.0481548,
+                          "lng" : -80.164186
+                       },
+                       "southwest" : {
+                          "lat" : 25.9943559,
+                          "lng" : -80.24469599999999
+                       }
+                    },
+                    "location" : {
+                       "lat" : 26.0197012,
+                       "lng" : -80.1819268
+                    },
+                    "location_type" : "APPROXIMATE",
+                    "viewport" : {
+                       "northeast" : {
+                          "lat" : 26.0481548,
+                          "lng" : -80.164186
+                       },
+                       "southwest" : {
+                          "lat" : 25.9943559,
+                          "lng" : -80.2142509
+                       }
+                    }
+                 },
+                 "place_id" : "ChIJ1-14gWKp2YgR5V84iDbIlZ8",
+                 "postcode_localities" : [ "Hollywood", "Pembroke Park" ],
+                 "types" : [ "postal_code" ]
+              },
+              {
+                 "address_components" : [
+                    {
+                       "long_name" : "Broward County",
+                       "short_name" : "Broward County",
+                       "types" : [ "administrative_area_level_2", "political" ]
+                    },
+                    {
+                       "long_name" : "Florida",
+                       "short_name" : "FL",
+                       "types" : [ "administrative_area_level_1", "political" ]
+                    },
+                    {
+                       "long_name" : "United States",
+                       "short_name" : "US",
+                       "types" : [ "country", "political" ]
+                    }
+                 ],
+                 "formatted_address" : "Broward County, FL, USA",
+                 "geometry" : {
+                    "bounds" : {
+                       "northeast" : {
+                          "lat" : 26.3346979,
+                          "lng" : -80.07472949999999
+                       },
+                       "southwest" : {
+                          "lat" : 25.9567499,
+                          "lng" : -80.88123299999999
+                       }
+                    },
+                    "location" : {
+                       "lat" : 26.190096,
+                       "lng" : -80.365865
+                    },
+                    "location_type" : "APPROXIMATE",
+                    "viewport" : {
+                       "northeast" : {
+                          "lat" : 26.3346979,
+                          "lng" : -80.07472949999999
+                       },
+                       "southwest" : {
+                          "lat" : 25.9567499,
+                          "lng" : -80.88123299999999
+                       }
+                    }
+                 },
+                 "place_id" : "ChIJFUaCG35_2YgRFNYLv44fMaA",
+                 "types" : [ "administrative_area_level_2", "political" ]
+              },
+              {
+                 "address_components" : [
+                    {
+                       "long_name" : "Florida",
+                       "short_name" : "FL",
+                       "types" : [ "administrative_area_level_1", "political" ]
+                    },
+                    {
+                       "long_name" : "United States",
+                       "short_name" : "US",
+                       "types" : [ "country", "political" ]
+                    }
+                 ],
+                 "formatted_address" : "Florida, USA",
+                 "geometry" : {
+                    "bounds" : {
+                       "northeast" : {
+                          "lat" : 31.000968,
+                          "lng" : -80.0311371
+                       },
+                       "southwest" : {
+                          "lat" : 24.5210795,
+                          "lng" : -87.634896
+                       }
+                    },
+                    "location" : {
+                       "lat" : 27.6648274,
+                       "lng" : -81.5157535
+                    },
+                    "location_type" : "APPROXIMATE",
+                    "viewport" : {
+                       "northeast" : {
+                          "lat" : 32.546153,
+                          "lng" : -76.227424
+                       },
+                       "southwest" : {
+                          "lat" : 20.508621,
+                          "lng" : -91.751105
+                       }
+                    }
+                 },
+                 "place_id" : "ChIJvypWkWV2wYgR0E7HW9MTLvc",
+                 "types" : [ "administrative_area_level_1", "political" ]
+              },
+              {
+                 "address_components" : [
+                    {
+                       "long_name" : "United States",
+                       "short_name" : "US",
+                       "types" : [ "country", "political" ]
+                    }
+                 ],
+                 "formatted_address" : "United States",
+                 "geometry" : {
+                    "bounds" : {
+                       "northeast" : {
+                          "lat" : 71.53879999999999,
+                          "lng" : -66.885417
+                       },
+                       "southwest" : {
+                          "lat" : 18.9110642,
+                          "lng" : 172.4458955
+                       }
+                    },
+                    "location" : {
+                       "lat" : 37.09024,
+                       "lng" : -95.712891
+                    },
+                    "location_type" : "APPROXIMATE",
+                    "viewport" : {
+                       "northeast" : {
+                          "lat" : 49.38,
+                          "lng" : -66.94
+                       },
+                       "southwest" : {
+                          "lat" : 25.82,
+                          "lng" : -124.39
+                       }
+                    }
+                 },
+                 "place_id" : "ChIJCzYy5IS16lQRQrfeQ5K5Oxw",
+                 "types" : [ "country", "political" ]
+              }
+           ],
+           "status" : "OK"
+        }
+    http_version: 
+  recorded_at: Tue, 07 Jul 2015 11:20:09 GMT
+- request:
+    method: get
+    uri: http://reverse.geocoder.api.here.com/6.2/reversegeocode.json?app_code=ZrESX_vdjfU-LmMli8zopg&app_id=XaB0y63AcGfc5ZtIrbde&gen=4&mode=retrieveAddresses&prox=26.007230758667,-80.17822265625
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 403
+      message: Forbidden
+    headers:
+      Access-Control-Allow-Origin:
+      - "*"
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 07 Jul 2015 11:34:38 GMT
+      Server:
+      - Apache-Coyote/1.1
+      X-Nlp-Irt:
+      - '730'
+      X-Nlp-Tid:
+      - c0864d60-36e1-4c95-a199-0b7bd2da717f
+      X-Served-By:
+      - i-bcaf7645.eu-west-1b
+      Content-Length:
+      - '134'
+      Connection:
+      - keep-alive
+    body:
+      encoding: UTF-8
+      string: '{"details":"invalid credentials for XaB0y63AcGfc5ZtIrbde","additionalData":[],"type":"PermissionError","subtype":"InvalidCredentials"}'
+    http_version: 
+  recorded_at: Tue, 07 Jul 2015 11:34:38 GMT
 recorded_with: VCR 2.9.3

@@ -1,11 +1,4 @@
-class TagMediaCounter
-
-  include Mongoid::Document
-  field :tag_id, type: String
-  field :media_count, type: Integer, default: 0
-  include Mongoid::Timestamps::Updated
-
-  index({ tag_id: 1 }, { drop_dups: true })
+class TagMediaCounter < ActiveRecord::Base
 
   def self.get tag_id
     self.find_or_initialize_by(tag_id: tag_id)

@@ -20,7 +20,7 @@ class ImportFollowersWorker
 
     users = []
     insta_ids.in_groups_of(10_000, false) do |group|
-      users.concat User.in(insta_id: group).pluck(:id, :insta_id)
+      users.concat User.where(insta_id: group).pluck(:id, :insta_id)
     end
 
     not_exists = insta_ids - users.map(&:last)

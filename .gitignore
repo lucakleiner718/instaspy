@@ -11,7 +11,6 @@
 /log/*.log
 /tmp
 /config/database.yml
-/config/mongoid.yml
 /.env
 /vendor/emerald
 /public/assets

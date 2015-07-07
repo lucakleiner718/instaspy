@@ -88,20 +88,20 @@ class Reporter
         # catching all users, which did post media with specified tag
         media_users_ids = []
         MediaTag.where(tag_id: tag.id).pluck(:media_id).uniq.in_groups_of(10_000, false) do |group|
-          media_users_ids += Media.in(id: group).gt(created_at: starts).lte(created_at: ends).pluck(:user_id).uniq
+          media_users_ids += Media.where(id: group).where("created_at > ?", starts).where("created_at <= ?", ends).pluck(:user_id).uniq
         end
-        users_ids = User.in(id: media_users_ids).nin(website: [nil, '']).gte(created_at: starts).lte(created_at: ends).pluck(:id)
+        users_ids = User.where(id: media_users_ids).nin(website: [nil, '']).where("created_at >= ?", starts).where("created_at <= ?", ends).pluck(:id)
         users_size = users_ids.size
         processed = 0
 
         Rails.logger.debug "#{"[Media Report]".cyan} Total users for tag #{tag.name.red}: #{users_size} / Initial request: #{(Time.now - start_time).to_f.round(2)}s"
 
         users_ids.in_groups_of(1000, false) do |users_group_ids|
-          users = User.in(id: users_group_ids)
+          users = User.where(id: users_group_ids)
           ts = Time.now
 
           # select latest media item with current tag for each user from group
-          media_items = Media.in(user_id: users_group_ids).where(tag_names: tag.name).order(created_time: :desc).uniq{|m| m.user_id}
+          media_items = Media.where(user_id: users_group_ids).where(tag_names: tag.name).order(created_time: :desc).uniq{|m| m.user_id}
 
           Rails.logger.debug "#{"[Media Report]".cyan} Media Item request took #{(Time.now - ts).to_f.round(2)}s"
 
@@ -523,13 +523,13 @@ class Reporter
     amount = 0
 
     if options[:usernames]
-      users = User.in(username: options[:usernames])
+      users = User.where(username: options[:usernames])
       not_found = options[:usernames] - users.pluck(:username)
       amount = options[:usernames].size
     elsif options[:ids]
-      users = User.in(id: options[:ids])
+      users = User.where(id: options[:ids])
       if options[:additional_columns].include? :feedly
-        feedly_data_ar = Feedly.in(website: User.in(id: options[:ids]).pluck(:website)).pluck(:website, :subscribers_amount)
+        feedly_data_ar = Feedly.where(website: User.where(id: options[:ids]).pluck(:website)).pluck(:website, :subscribers_amount)
         feedly_data = {}
         feedly_data_ar.each do |fd|
           feedly_data[fd[0]] = fd[1]
@@ -537,7 +537,7 @@ class Reporter
       end
       amount = options[:ids].size
     elsif options[:insta_ids]
-      users = User.in(insta_id: options[:insta_ids])
+      users = User.where(insta_id: options[:insta_ids])
       amount = options[:insta_ids].size
     end
 

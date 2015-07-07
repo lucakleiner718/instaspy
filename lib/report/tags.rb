@@ -3,7 +3,7 @@ class Report::Tags < Report::Base
   def reports_new
     processed_input = @report.original_csv.map(&:first).map(&:downcase)
 
-    tags = Tag.in(name: processed_input).pluck(:name, :id)
+    tags = Tag.where(name: processed_input).pluck(:name, :id)
 
     (processed_input - tags.map(&:first)).each do |tag|
       t = Tag.get(tag)
@@ -45,9 +45,9 @@ class Report::Tags < Report::Base
       step_index = @report.steps.index{|r| r[0] == tag_id}
 
       tag_media_ids = MediaTag.where(tag_id: tag_id).pluck(:media_id)
-      media = Media.in(id: tag_media_ids)
-      media = media.gte(created_time: @report.date_from) if @report.date_from
-      media = media.lte(created_time: @report.date_to) if @report.date_to
+      media = Media.where(id: tag_media_ids)
+      media = media.where("created_time >= ?", @report.date_from) if @report.date_from
+      media = media.where("created_time <= ?", @report.date_to) if @report.date_to
 
       media_ids = media.pluck_to_hash(:id, :user_id)#.uniq{ |r| r[:user_id] }
       publishers_ids = media_ids.map{ |m| m[:user_id] }
@@ -62,8 +62,8 @@ class Report::Tags < Report::Base
       unless @report.steps[step_index][1].include?('media_actual')
         media_for_update = []
         media_ids.map{ |m| m[:id] }.in_groups_of(10_000, false) do |ids|
-          media_ids = Media.in(id: ids).where(image: nil).pluck(:id, :user_id)
-          users = User.in(id: media_ids.map{|m| m[1]}).where(private: false).pluck(:id)
+          media_ids = Media.where(id: ids).where(image: nil).pluck(:id, :user_id)
+          users = User.where(id: media_ids.map{|m| m[1]}).where(private: false).pluck(:id)
           media_for_update.concat media_ids.select{|r| r[1].in?(users)}.map(&:first)
         end
 
@@ -78,7 +78,7 @@ class Report::Tags < Report::Base
         unless @report.steps[step_index][1].include?('publishers_info')
           users = []
           publishers_ids.in_groups_of(5_000, false) do |ids|
-            users.concat User.in(id: ids).outdated.pluck(:id)
+            users.concat User.where(id: ids).outdated.pluck(:id)
           end
           if users.size == 0
             @report.steps[step_index][1] << 'publishers_info'
@@ -89,7 +89,7 @@ class Report::Tags < Report::Base
 
         if @report.steps[step_index][1].include?('publishers_info')
           if @report.output_data.include?('likes') && !@report.steps[step_index][1].include?('likes')
-            get_likes = User.in(id: publishers_ids).without_likes.with_media.not_private.pluck(:id)
+            get_likes = User.where(id: publishers_ids).without_likes.with_media.not_private.pluck(:id)
             if get_likes.size == 0
               @report.steps[step_index][1] << 'likes'
             else
@@ -98,7 +98,7 @@ class Report::Tags < Report::Base
           end
 
           if @report.output_data.include?('location') && !@report.steps[step_index][1].include?('location')
-            get_location = User.in(id: publishers_ids).without_location.with_media.not_private.pluck(:id)
+            get_location = User.where(id: publishers_ids).without_location.with_media.not_private.pluck(:id)
             if get_location.size == 0
               @report.steps[step_index][1] << 'location'
             else
@@ -110,9 +110,9 @@ class Report::Tags < Report::Base
             with_website = []
             feedly_exists = []
             @report.processed_ids.in_groups_of(5_000, false) do |ids|
-              for_process = User.in(id: ids).with_url.pluck(:id)
+              for_process = User.where(id: ids).with_url.pluck(:id)
               with_website.concat for_process
-              feedly_exists.concat Feedly.in(user_id: for_process).pluck(:user_id)
+              feedly_exists.concat Feedly.where(user_id: for_process).pluck(:user_id)
             end
 
             no_feedly = with_website - feedly_exists
@@ -155,7 +155,7 @@ class Report::Tags < Report::Base
 
       media_list = {}
       @publishers_media[tag_id].values.flatten.in_groups_of(10_000, false) do |rows|
-        Media.in(id: rows).pluck_to_hash(:user_id, :likes_amount, :comments_amount, :link, :image, :created_time).each do |media_row|
+        Media.where(id: rows).pluck_to_hash(:user_id, :likes_amount, :comments_amount, :link, :image, :created_time).each do |media_row|
           media_list[media_row[:user_id]] ||= []
           media_list[media_row[:user_id]] << media_row
         end
@@ -164,7 +164,7 @@ class Report::Tags < Report::Base
       csv_string = CSV.generate do |csv|
         csv << header
         @tags_publishers[tag_id].in_groups_of(1000, false) do |ids|
-          User.in(id: ids).each do |u|
+          User.where(id: ids).each do |u|
             users_media = media_list[u.id]
             next unless users_media
             unless @report.output_data.include? 'all_media'

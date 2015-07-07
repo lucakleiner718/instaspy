@@ -41,7 +41,7 @@ RSpec.describe User, type: :model do
     VCR.use_cassette('user_shopbop') do
       user.update_info!
     end
-    expect(user.insta_id).to eq 10526532
+    expect(user.insta_id).to eq '10526532'
     expect(user.grabbed_at).to_not be_nil
     expect(user.followed_by).to_not be_nil
     expect(user.follows).to_not be_nil
@@ -74,7 +74,7 @@ RSpec.describe User, type: :model do
   end
 
   it 'should update info even for private user' do
-    user = User.create(insta_id: 143930449, username: 'ylenialabate')
+    user = User.create(insta_id: '143930449', username: 'ylenialabate')
     VCR.use_cassette('user_143930449') do
       user.update_info!
     end
@@ -87,13 +87,13 @@ RSpec.describe User, type: :model do
   end
 
   it 'should add by insta_id' do
-    user = User.create(insta_id: 1446641248)
+    user = User.create(insta_id: '1446641248')
     expect(user.username).to be_nil
     VCR.use_cassette('user_1446641248') do
       user.update_info!
     end
     expect(user.username).to_not be_nil
-    expect(user.insta_id).to eq 1446641248
+    expect(user.insta_id).to eq '1446641248'
     expect(user.grabbed_at).to_not be_nil
     expect(user.followed_by).to_not be_nil
     expect(user.follows).to_not be_nil
@@ -104,7 +104,7 @@ RSpec.describe User, type: :model do
   end
 
   it 'should update followers' do
-    user = User.create(insta_id: 1446641248)
+    user = User.create(insta_id: '1446641248')
     expect(user.followers.size).to eq 0
     VCR.use_cassette('user_1446641248_followers') do
       user.update_followers
@@ -131,12 +131,12 @@ RSpec.describe User, type: :model do
   end
 
   it 'should have lower username' do
-    u = User.create username: 'TEST', insta_id: 1
+    u = User.create username: 'TEST', insta_id: '1'
     expect(u.username).to eq 'test'
   end
 
   it 'should have lower website' do
-    u = User.create username: 'TEST', insta_id: 1, website: 'http://AWESOME.coM'
+    u = User.create username: 'TEST', insta_id: '1', website: 'http://AWESOME.coM'
     expect(u.website).to eq 'http://awesome.com'
   end
 

@@ -6,8 +6,8 @@ class ProcessFollowersWorker
   def perform origin_id, resp
     origin = User.find(origin_id)
 
-    users = User.in(insta_id: resp['data'].map{|el| el['id']})
-    fols = Follower.where(user_id: origin.id).in(follower_id: users.map{|el| el.id})
+    users = User.where(insta_id: resp['data'].map{|el| el['id']})
+    fols = Follower.where(user_id: origin.id).where(follower_id: users.map{|el| el.id})
 
     resp['data'].each do |user_data|
       new_record = false

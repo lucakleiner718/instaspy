@@ -10,7 +10,7 @@ class Report::Followees < Report::Base
 
     if @report.steps.include?('user_info')
       unless @report.steps.include?('followees')
-        users = User.in(id: @report.processed_ids).not_private.or({followees_updated_at: nil}, {:followees_updated_at.lt => 3.days.ago}).map{ |u| [u.id, u.follows, u.followees_size] }
+        users = User.where(id: @report.processed_ids).not_private.where("followees_updated_at is null OR followees_updated_at < ?", 3.days.ago}).map{ |u| [u.id, u.follows, u.followees_size] }
         for_update = users.select{|r| r[2]/r[1].to_f < 0.95 || r[2]/r[1].to_f > 1.2 }
 
         if for_update.size == 0
@@ -25,9 +25,9 @@ class Report::Followees < Report::Base
 
         if @report.data['followees_file'].blank?
           # ids of ALL followees of provided users
-          followees_ids = Follower.in(follower_id: @report.processed_ids)
-          followees_ids = followees_ids.gte(followed_at => @report.date_from) if @report.date_from
-          followees_ids = followees_ids.gte(followed_at => @report.date_to) if @report.date_to
+          followees_ids = Follower.where(follower_id: @report.processed_ids)
+          followees_ids = followees_ids.where("followed_at => ?", @report.date_from) if @report.date_from
+          followees_ids = followees_ids.where("followed_at <= ?", @report.date_to) if @report.date_to
           followees_ids = followees_ids.pluck(:user_id).uniq
 
           filepath = "reports/reports_data/report-#{@report.id}-followees-ids"
@@ -41,7 +41,7 @@ class Report::Followees < Report::Base
         unless @report.steps.include?('followees_info')
           not_updated = []
           followees_ids.in_groups_of(10_000, false) do |ids|
-            users = User.in(id: ids).outdated(7.days).pluck(:id, :grabbed_at)
+            users = User.where(id: ids).outdated(7.days).pluck(:id, :grabbed_at)
             not_updated.concat users.select{|r| r[1].blank? || r[1] < 8.days.ago}.map(&:first)
           end
           if not_updated.size == 0
@@ -82,13 +82,13 @@ class Report::Followees < Report::Base
     header += ['Feedly Subscribers'] if @report.output_data.include? 'feedly'
     header.slice! 4,1 if @report.output_data.include?('slim') || @report.output_data.include?('slim_followers')
 
-    User.in(id: @report.processed_ids).each do |user|
+    User.where(id: @report.processed_ids).each do |user|
       csv_string = CSV.generate do |csv|
         csv << header
         followees_ids = Follower.where(follower_id: user.id).pluck(:user_id)
-        followees = User.in(id: followees_ids)
-        followees = followees.ne(email: nil).gte(followed_by: 1_000) if @report.output_data.include? 'slim'
-        followees = followees.gte(followed_by: 1_000) if @report.output_data.include? 'slim_followers'
+        followees = User.where(id: followees_ids)
+        followees = followees.where("email is not null").where("followed_by >= ?", 1_000) if @report.output_data.include? 'slim'
+        followees = followees.where("followed_by >= ?", 1_000) if @report.output_data.include? 'slim_followers'
         followees.each do |u|
           row = [u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email]
           row.slice! 4,1 if @report.output_data.include? 'slim' || @report.output_data.include?('slim_followers')

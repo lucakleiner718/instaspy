@@ -1,17 +1,11 @@
-class Tag
-
-  include Mongoid::Document
-  field :name, type: String
-
-  index({ name: 1 }, { drop_dups: true, background: true })
+class Tag < ActiveRecord::Base
 
   # has_many :media_tags#, class_name: 'Media'#, after_add: :increment_some_tag, after_remove: :decrement_some_tag
-
-  scope :observed, -> { all.in(id: ObservedTag.all.pluck(:tag_id)) }
-  scope :chartable, -> { all.in(id: ObservedTag.where(for_chart: true).pluck(:tag_id)) }
-  scope :exportable, -> { all.in(id: ObservedTag.where(export_csv: true).pluck(:tag_id)) }
-
   has_one :observed_tag, dependent: :destroy
+
+  scope :observed, -> { where(id: ObservedTag.all.pluck(:tag_id)) }
+  scope :chartable, -> { where(id: ObservedTag.where(for_chart: true).pluck(:tag_id)) }
+  scope :exportable, -> { where(id: ObservedTag.where(export_csv: true).pluck(:tag_id)) }
 
   validates :name, format: { with: /\A[^\.\-\/\(\)\*\^\%\$\#\@\!,\?\}\]\{\[\;\:\"\'\>\<]+\z/ }
 
@@ -48,9 +42,9 @@ class Tag
 
     if options[:offset].present?
       options[:offset] = DateTime.parse(options[:offset]) if options[:offset].class.name == 'String'
-      m = Media.gte(created_time: options[:offset]).lte(created_time: (options[:offset] + 10.minutes)).order(created_time: :asc).first
+      m = Media.where("created_time >= ?", options[:offset]).where("created_time <= ?", (options[:offset] + 10.minutes)).order(created_time: :asc).first
       unless m
-        m = Media.gte(created_time: options[:offset]).lte(created_time: (options[:offset] + 60.minutes)).order(created_time: :asc).first
+        m = Media.where("created_time >= ?", options[:offset]).where("created_time <= ?", (options[:offset] + 60.minutes)).order(created_time: :asc).first
       end
       if m
         max_tag_id = m.insta_id.match(/^(\d+)_/)[1]
@@ -92,9 +86,9 @@ class Tag
 
       data = media_list.data
 
-      media_found = Media.in(insta_id: data.map{|el| el['id']}).to_a
-      tags_found.concat(Tag.in(name: data.map{|el| el['tags']}.flatten.uniq.map(&:downcase)).to_a).uniq!
-      users_found = User.in(insta_id: data.map{|el| el['user']['id']}.uniq).to_a
+      media_found = Media.where(insta_id: data.map{|el| el['id']}).to_a
+      tags_found.concat(Tag.where(name: data.map{|el| el['tags']}.flatten.uniq.map(&:downcase)).to_a).uniq!
+      users_found = User.where(insta_id: data.map{|el| el['user']['id']}.uniq).to_a
 
       data.each do |media_item|
         logger.debug "#{">>".green} Start process #{media_item['id']}"
@@ -182,7 +176,7 @@ class Tag
       media_ids = MediaTag.where(tag_id: self.id).pluck(:media_id)
       puts media_ids.size
       media_ids.in_groups_of(10_000, false) do |group|
-        media_size += Media.in(id: group).gte(created_time: day.beginning_of_day).lte(created_time: day.end_of_day).size
+        media_size += Media.where(id: group).where("created_time >= ?", day.beginning_of_day).where("created_time <= ?", day.end_of_day).size
       end
       data[day.strftime('%m/%d')] = media_size
     end
@@ -234,7 +228,7 @@ class Tag
   end
 
   def publishers
-    User.in(id: self.media.pluck(:user_id).uniq)
+    User.where(id: self.media.pluck(:user_id).uniq)
   end
 
   def count_media
@@ -274,7 +268,7 @@ class Tag
   end
 
   def media
-    Media.in(id: MediaTag.where(tag_id: self.id).pluck(:media_id))
+    Media.where(id: MediaTag.where(tag_id: self.id).pluck(:media_id))
   end
 
 end

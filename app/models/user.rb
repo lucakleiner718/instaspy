@@ -1,45 +1,4 @@
-class User
-
-  include Mongoid::Document
-  field :insta_id, type: Integer
-  field :username, type: String
-  field :full_name, type: String
-  field :bio, type: String
-  field :website, type: String
-  field :follows, type: Integer
-  field :followed_by, type: Integer
-  field :media_amount, type: Integer
-  field :private, type: Boolean, default: false
-  field :grabbed_at, type: DateTime
-  field :email, type: String
-  field :location_country, type: String
-  field :location_state, type: String
-  field :location_city, type: String
-  field :location_updated_at, type: DateTime
-  field :avg_likes, type: Integer
-  field :avg_likes_updated_at, type: DateTime
-  field :avg_comments, type: Integer
-  field :avg_comments_updated_at, type: DateTime
-  field :followers_updated_at, type: DateTime
-  field :followees_updated_at, type: DateTime
-  include Mongoid::Timestamps # created_at need to know when user added to database and filter only new added users
-
-  index({ insta_id: 1 }, { drop_dups: true, background: true })
-  index({ username: 1 }, { drop_dups: true, background: true })
-  index comments: 1
-  index avg_comments_updated_at: 1
-  index avg_likes: 1
-  index avg_likes_updated_at: 1
-  index created_at: 1
-  index email: 1
-  index followed_by: 1
-  index grabbed_at: 1
-  index location_city: 1
-  index location_country: 1
-  index location_state: 1
-  index media_amount: 1
-  index updated_at: 1
-  index website: 1
+class User < ActiveRecord::Base
 
   has_many :media, class_name: 'Media', dependent: :destroy
   has_many :feedly
@@ -50,11 +9,11 @@ class User
   scope :not_grabbed, -> { where grabbed_at: nil }
   scope :not_private, -> { where private: false }
   scope :privates, -> { where private: true }
-  scope :outdated, -> (date=7.days) { scoped.or(grabbed_at: nil).or(:grabbed_at.lt => date.ago).or(bio: nil, website: nil, follows: nil, followed_by: nil, media_amount: nil) }
-  scope :with_url, -> { where(:website.ne => nil).and(:website.ne => '') }
-  scope :without_likes, -> { scoped.or(avg_likes: nil, avg_likes_updated_at: nil).or(:avg_likes_updated_at.lt => 1.month.ago) }
-  scope :without_location, -> { scoped.or(location_updated_at: nil).or(:location_updated_at.lt => 3.months.ago) }
-  scope :with_media, -> { where(:media_amount.gt => 0) }
+  scope :outdated, -> (date=7.days) { where("grabbed_at is null OR grabbed_at < ? OR bio is null OR website is null OR follows is null OR followed_by is null OR media_amount is null", date.ago) }
+  scope :with_url, -> { where("website is not null AND website != ''") }
+  scope :without_likes, -> { where("avg_likes is null OR avg_likes_updated_at is null OR avg_likes_updated_at < ?", 1.month.ago) }
+  scope :without_location, -> { where("location_updated_at is null OR location_updated_at < ?", 3.months.ago) }
+  scope :with_media, -> { where("media_amount > ?", 0) }
 
   before_save do
     # Catch email from bio
@@ -273,7 +232,7 @@ class User
   # @return [Float] how often new user following current user, in seconds what avg time between followers
   #
   def follow_speed
-    dates = self.user_followers.ne(followed_at: nil).order_by(followed_at: :asc).pluck(:followed_at)
+    dates = self.user_followers.where("followed_at is not null").order(followed_at: :asc).pluck(:followed_at)
     ((dates.last - dates.first) / dates.size.to_f).round(2)
   end
 
@@ -286,7 +245,7 @@ class User
     end
 
     speed = nil
-    if self.user_followers.ne(followed_at: nil).size > 2
+    if self.user_followers.where("followed_at is not null").size > 2
       speed = self.follow_speed
     end
 
@@ -342,7 +301,7 @@ class User
     logger.debug ">> [#{self.username.green}] followed by: #{self.followed_by}"
 
     if options[:continue]
-      last_follow_time = Follower.where(user_id: self.id).ne(followed_at: nil).order(followed_at: :asc).only(:followed_at).first
+      last_follow_time = Follower.where(user_id: self.id).where("followed_at is not null").order(followed_at: :asc).select(:followed_at).first
       if last_follow_time
         cursor = last_follow_time.followed_at.to_i * 1_000
       end
@@ -393,8 +352,8 @@ class User
 
       end_ig = Time.now
 
-      users = User.in(insta_id: resp.data.map{|el| el['id']}).to_a
-      fols = Follower.where(user_id: self.id).in(follower_id: users.map(&:id)).to_a
+      users = User.where(insta_id: resp.data.map{|el| el['id']}).to_a
+      fols = Follower.where(user_id: self.id).where(follower_id: users.map(&:id)).to_a
 
       resp.data.each do |user_data|
         logger.debug "Row #{user_data['username']} start"
@@ -402,14 +361,14 @@ class User
 
         new_record = false
 
-        user = users.select{|el| el.insta_id == user_data['id'].to_i}.first
+        user = users.select{|el| el.insta_id == user_data['id']}.first
         unless user
           user = User.new insta_id: user_data['id']
           new_record = true
         end
 
         # some unexpected behavior
-        if user.insta_id.present? && user_data['id'].present? && user.insta_id != user_data['id'].to_i
+        if user.insta_id.present? && user_data['id'].present? && user.insta_id != user_data['id']
           raise Exception
         end
 
@@ -476,7 +435,7 @@ class User
 
       if exists > 5
         if options[:skip_exists] && !skipped
-          last_follow_time = Follower.where(user_id: self.id).ne(followed_at: nil).order(followed_at: :asc).first
+          last_follow_time = Follower.where(user_id: self.id).where("followed_at is not null").order(followed_at: :asc).first
           if last_follow_time
             cursor = last_follow_time.followed_at.to_i * 1_000
             skipped = true
@@ -494,7 +453,7 @@ class User
           current_followers = Follower.where(user_id: self.id).pluck(:follower_id)
           unfollowed = current_followers - followers_ids
           if unfollowed.size > 0
-            Follower.where(user_id: self.id).in(follower_id: unfollowed).delete_all
+            Follower.where(user_id: self.id).where(follower_id: unfollowed).delete_all
           end
         end
         self.delete_duplicated_followers!
@@ -524,7 +483,7 @@ class User
   end
 
   def followers
-    User.in(id: self.user_followers.pluck(:follower_id))
+    User.where(id: self.user_followers.pluck(:follower_id))
   end
 
   def followers_size
@@ -623,8 +582,8 @@ class User
 
       end_ig = Time.now
 
-      users = User.in(insta_id: resp.data.map{|el| el['id']}).to_a
-      fols = Follower.where(follower_id: self.id).in(user_id: users.map(&:id)).to_a
+      users = User.where(insta_id: resp.data.map{|el| el['id']}).to_a
+      fols = Follower.where(follower_id: self.id).where(user_id: users.map(&:id)).to_a
 
       resp.data.each do |user_data|
         logger.debug "Row #{user_data['username']} start"
@@ -632,14 +591,14 @@ class User
 
         new_record = false
 
-        user = users.select{|el| el.insta_id == user_data['id'].to_i}.first
+        user = users.select{|el| el.insta_id == user_data['id']}.first
         unless user
           user = User.new insta_id: user_data['id']
           new_record = true
         end
 
         # some unexpected behavior
-        if user.insta_id.present? && user_data['id'].present? && user.insta_id != user_data['id'].to_i
+        if user.insta_id.present? && user_data['id'].present? && user.insta_id != user_data['id']
           raise Exception
         end
 
@@ -711,7 +670,7 @@ class User
           current_followees = Follower.where(follower_id: self.id).pluck(:user_id)
           left = current_followees - followees_ids
           if left.size > 0
-            Follower.where(follower_id: self.id).in(user_id: left).delete_all
+            Follower.where(follower_id: self.id).where(user_id: left).delete_all
           end
         end
         self.update_attribute :followees_updated_at, Time.now
@@ -734,7 +693,7 @@ class User
   end
 
   def followees
-    User.in(id: self.user_followees.pluck(:user_id))
+    User.where(id: self.user_followees.pluck(:user_id))
   end
 
   def followees_size
@@ -812,8 +771,8 @@ class User
   def self.get username
     return false if username.blank? || username.size > 30
 
-    if username.numeric? && username.to_i > 0
-      User.where(insta_id: username).first_or_create
+    if (username.class.name == 'Fixnum' || username.numeric?) && username.to_i > 0
+      User.where(insta_id: username.to_s).first_or_create
     else
       username = username.to_s.strip.downcase
       User.add_by_username(username)
@@ -943,7 +902,7 @@ class User
   end
 
   def self.fix_exists_username username, exists_insta_id
-    user = self.where(username: username).ne(insta_id: exists_insta_id).first
+    user = self.where(username: username).where("insta_id != ?", exists_insta_id).first
     user.update_info! force: true if user.present?
   end
 
@@ -1087,12 +1046,12 @@ class User
 
     self.update_info! force: true
 
-    media = self.media.order(created_time: :desc).lt(created_time: 1.day.ago).limit(media_limit)
+    media = self.media.order(created_time: :desc).where("created_time < ?", 1.day.ago).limit(media_limit)
 
     if media.size < options[:total_limit]
       Rails.logger.info "[#{"Update AVG Data".green}] [#{self.username.cyan}] Grabbing more media, current: #{media.size}"
       self.recent_media ignore_exists: true, total_limit: options[:total_limit]
-      media = self.media.order(created_time: :desc).lt(created_time: 1.day.ago).limit(media_limit)
+      media = self.media.order(created_time: :desc).where("created_time < ?", 1.day.ago).limit(media_limit)
       Rails.logger.info "[#{"Update AVG Data".green}] [#{self.username.cyan}] Grabbed more media, current: #{media.size}"
     end
 
@@ -1204,7 +1163,7 @@ class User
   # end
 
   def self.from_usernames usernames
-    users = User.in(username: usernames).to_a
+    users = User.where(username: usernames).to_a
 
     not_processed = []
     not_found = usernames - users.map{|u| u.username}
@@ -1223,7 +1182,7 @@ class User
   end
 
   def self.from_usernames_ids usernames
-    users = User.in(username: usernames).pluck(:id, :username)
+    users = User.where(username: usernames).pluck(:id, :username)
 
     not_processed = []
     not_found = usernames - users.map{|u| u[1]}

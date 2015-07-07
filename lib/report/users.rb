@@ -38,13 +38,13 @@ class Report::Users < Report::Base
     if @report.output_data.include? 'last_media_date'
       media_list = {}
       @report.processed_ids.in_groups_of(1_000, false) do |uids|
-        media_list = media_list.merge Media.in(user_id: uids).group_by {|m| m.user_id }.inject({}){|o, (k,v)| o[k.to_s] = v.sort{|m1, m2| m1.created_time <=> m2.created_time }.last; o}
+        media_list = media_list.merge Media.where(user_id: uids).group_by {|m| m.user_id }.inject({}){|o, (k,v)| o[k.to_s] = v.sort{|m1, m2| m1.created_time <=> m2.created_time }.last; o}
       end
     end
 
     csv_string = CSV.generate do |csv|
       csv << header
-      User.in(id: @report.processed_ids).each do |u|
+      User.where(id: @report.processed_ids).each do |u|
         row = [u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email]
         row.concat [u.location_country, u.location_state, u.location_city] if @report.output_data.include? 'location'
         row.concat [u.avg_likes] if @report.output_data.include? 'likes'

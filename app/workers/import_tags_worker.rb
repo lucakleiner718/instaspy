@@ -16,7 +16,7 @@ class ImportTagsWorker
     data = CSV.parse(file.read).map{|row| row[0].force_encoding('UTF-8').mb_chars.downcase.to_s}
     data.shift # header
 
-    tags = Tag.in(name: data).pluck(:name)
+    tags = Tag.where(name: data).pluck(:name)
 
     not_exists = data - tags
 

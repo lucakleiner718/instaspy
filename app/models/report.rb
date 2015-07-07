@@ -1,27 +1,5 @@
-class Report
-
-  include Mongoid::Document
-  field :format, type: String
-  field :original_input, type: String
-  field :processed_input, type: String
-  field :status, type: String                   # current status of job
-  field :progress, type: Integer, default: 0    # progress in percentage
-  field :jobs, type: Hash, default: {}
-  field :started_at, type: DateTime
-  field :finished_at, type: DateTime
-  field :result_data, type: String
-  field :notify_email, type: String
-  field :output_data, type: Array, default: []
-  field :not_processed, type: Array, default: []
-  field :steps, type: Array, default: []
-  field :date_from, type: DateTime
-  field :date_to, type: DateTime
-  field :data, type: Hash, default: {}
-  field :tmp_list1, type: Array, default: []
-  field :note, type: String
-  field :amounts, type: Hash, default: {}
-  include Mongoid::Timestamps
-
+class Report < ActiveRecord::Base
+  
   scope :active, -> { where(:status.in => ['new', 'in_process']) }
 
   after_destroy :delete_data_files

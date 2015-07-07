@@ -11,8 +11,7 @@ class ReportsController < ApplicationController
       when 'new', 'in_process', 'finished'
         @reports = @reports.where(status: params[:format])
       else
-        # @reports = @reports.where(status: ['new', 'in_process'])
-        @reports = @reports.in(status: ['new', 'in_process'])
+        @reports = @reports.where(status: ['new', 'in_process'])
     end
 
     if params[:sort]

@@ -38,7 +38,7 @@ class FollowersReport
   end
 
   def self.send_weekly_report
-    FollowersReportMailer.weekly(User.in(id: TrackUser.where(followers: true).pluck(:user_id)).to_a).deliver
+    FollowersReportMailer.weekly(User.where(id: TrackUser.where(followers: true).pluck(:user_id)).to_a).deliver
   end
 
 end

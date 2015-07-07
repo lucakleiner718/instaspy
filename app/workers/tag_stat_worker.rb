@@ -12,7 +12,7 @@ class TagStatWorker
 
     return false if TagStat.where(tag: tag, date: start).size > 0
 
-    media = tag.media.gte(created_time: start).lte(created_time: finish)
+    media = tag.media.where("created_time >= ?", start).where("created_time <= ?", finish)
     TagStat.create tag: tag, amount: media.size, date: start
   end
 

@@ -1,37 +1,11 @@
-class Media
-
-  include Mongoid::Document
-  field :insta_id, type: String
-  field :created_time, type: DateTime
-  field :likes_amount, type: Integer
-  field :comments_amount, type: Integer
-  field :link, type: String
-  field :location_lat, type: BigDecimal
-  field :location_lng, type: BigDecimal
-  field :location_name, type: String
-  field :location_city, type: String
-  field :location_state, type: String
-  field :location_country, type: String
-  field :location_present, type: Boolean, default: nil
-  field :tag_names, type: Array, default: []
-  field :image, type: String
-  include Mongoid::Timestamps
-
-  index created_at: 1
-  index created_time: 1
-  index location_city: 1  
-  index location_country: 1
-  index location_state: 1
-  index updated_at: 1
-  index user_id: 1
-  index({ insta_id: 1 }, { drop_dups: true, background: true })
+class Media < ActiveRecord::Base
 
   has_many :media_tags
   belongs_to :user
 
-  scope :with_coordinates, -> { where(:location_lat.ne => nil).and(:location_lat.ne => '') }
-  scope :with_country, -> { where(:location_country.ne => nil).and(:location_country.ne => '') }
-  scope :without_location, -> { scoped.or(location_lat: nil).or(:location_lat.ne => '').where(location_present: nil) }
+  scope :with_coordinates, -> { where("location_lat is not null AND location_lat is not null") }
+  scope :with_country, -> { where("location_country is not null AND location_country != ''") }
+  scope :without_location, -> { where("location_lat is null OR location_lat = ''").where(location_present: nil) }
 
   def location
     loc = []
@@ -116,7 +90,7 @@ class Media
 
   def set_tags tags_names, tags_found=[]
     unless tags_found
-      tags_found = Tag.in(id: self.media_tags.pluck(:tag_id))
+      tags_found = Tag.where(id: self.media_tags.pluck(:tag_id))
     end
 
     tags_names.map!(&:downcase)
@@ -127,7 +101,7 @@ class Media
     end
 
     if find_more.size > 0
-      tags_found.concat Tag.in(name: find_more).to_a
+      tags_found.concat Tag.where(name: find_more).to_a
     end
 
     tags_list = []
@@ -135,21 +109,18 @@ class Media
       tag = nil
       tag = tags_found.select{|el| el.name.downcase == tag_name.downcase}.first if tags_found.size > 0
       tag = Tag.where(name: tag_name).first_or_create unless tag
-      tags_list << tag if tag && tag.valid?
+      tags_list << tag if tag
     end
 
+    tags_list.uniq!{|el| el.id}
+
     self.tag_names = tags_names
-    self.tags = tags_list.uniq{|el| el.id}
+    MediaTag.where(media_id: self.id).destroy_all
+    MediaTag.connection.execute("INSERT INTO media_tags (media_id, tag_id) VALUES #{tags_list.map{|tag| "(#{[self.id, tag.id].join(',')})"}.join(', ')}")
   end
 
   def set_location *args
     options = args.extract_options!
-
-    # proxy = Proxy.get_some
-    # if proxy
-    #   Geocoder::Configuration.http_proxy = proxy.to_s
-    #   logger.debug "using proxy #{proxy.to_s}"
-    # end
 
     return false if self.location_lat.blank? || self.location_lng.blank?
 
@@ -393,12 +364,12 @@ class Media
   end
 
   def tag_names
-    Tag.in(id: self.media_tags.pluck(:tag_id)).pluck(:name)
+    Tag.where(id: self.media_tags.pluck(:tag_id)).pluck(:name)
   end
 
   # List of tags for media
   def tags
-    Tag.in(id: self.media_tags.pluck(:tag_id)).to_a
+    Tag.where(id: self.media_tags.pluck(:tag_id)).to_a
   end
 
   # Update media's tag list
