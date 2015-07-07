@@ -17,7 +17,7 @@ class Report::Followers < Report::Base
           @report.push steps: 'followers'
         else
           for_update.each do |row|
-            if row[1] < 20_000 || (r[2]/r[1].to_f > 1.2)
+            if row[1] < 20_000 || (row[2]/row[1].to_f > 1.2)
               UserFollowersWorker.perform_async row[0], ignore_exists: true
             else
               row[3].update_followers_batch
