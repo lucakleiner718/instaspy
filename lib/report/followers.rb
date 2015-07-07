@@ -11,13 +11,13 @@ class Report::Followers < Report::Base
     if @report.steps.include?('user_info')
       unless @report.steps.include?('followers')
         users = User.in(id: @report.processed_ids).not_private.or({followers_updated_at: nil}, {:followers_updated_at.lt => 3.days.ago}).map{|u| [u.id, u.followed_by, u.followers_size, u]}
-        for_update = users.select{ |r| r[2]/r[1].to_f < 0.95 || r[2]/r[1].to_f > 1.1 }
+        for_update = users.select{ |r| r[2]/r[1].to_f < 0.95 || r[2]/r[1].to_f > 1.2 }
 
         if for_update.size == 0
           @report.push steps: 'followers'
         else
           for_update.each do |row|
-            if row[1] < 20_000
+            if row[1] < 20_000 || (r[2]/r[1].to_f > 1.2)
               UserFollowersWorker.perform_async row[0], ignore_exists: true
             else
               row[3].update_followers_batch
