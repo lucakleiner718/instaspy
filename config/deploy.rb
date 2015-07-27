@@ -9,6 +9,10 @@ set :scm, :git
 set :format, :pretty
 set :pty, true
 
+set :ssh_options, {
+  forward_agent: true,
+}
+
 set :log_level, :info #:debug
 
 set :linked_files, %w{config/database.yml .env config/procs.god config/sidekiq.yml config/sidekiq2.yml}
@@ -38,13 +42,15 @@ set :bundle_binstubs, nil
 
 after 'deploy:restart', 'puma:restart'
 
+set :god_pid, "#{shared_path}/tmp/pids/god.pid"
+
 namespace :god do
 
   task :restart do
     on roles(:app), in: :parallel do
       within release_path do
         with rails_env: fetch(:rails_env) do
-          execute :bundle, :exec, 'god terminate' if test(*("[ -f /home/app/instaspy/shared/tmp/pids/god.pid ]").split(' '))
+          execute :bundle, :exec, 'god terminate' if test(*("[ -f #{fetch :god_pid} ]").split(' '))
           execute :bundle, :exec, 'god -c config/procs.god --pid tmp/pids/god.pid' unless test(*("[ -f /home/app/instaspy/shared/tmp/pids/god.pid ]").split(' '))
         end
       end
