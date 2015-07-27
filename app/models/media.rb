@@ -116,7 +116,9 @@ class Media < ActiveRecord::Base
 
     self.tag_names = tags_names
     MediaTag.where(media_id: self.id).destroy_all
-    MediaTag.connection.execute("INSERT INTO media_tags (media_id, tag_id) VALUES #{tags_list.map{|tag| "(#{[self.id, tag.id].join(',')})"}.join(', ')}")
+    if tags_list.size > 0
+      MediaTag.connection.execute("INSERT INTO media_tags (media_id, tag_id) VALUES #{tags_list.map{|tag| "(#{[self.id, tag.id].join(',')})"}.join(', ')}")
+    end
   end
 
   def set_location *args
