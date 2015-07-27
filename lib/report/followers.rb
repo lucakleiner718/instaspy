@@ -10,7 +10,7 @@ class Report::Followers < Report::Base
 
     if @report.steps.include?('user_info')
       unless @report.steps.include?('followers')
-        users = User.where(id: @report.processed_ids).not_private.where("followers_updated_at is null OR followers_updated_at < ?", 3.days.ago}).map{|u| [u.id, u.followed_by, u.followers_size, u]}
+        users = User.where(id: @report.processed_ids).not_private.where("followers_updated_at is null OR followers_updated_at < ?", 3.days.ago).map{|u| [u.id, u.followed_by, u.followers_size, u]}
         for_update = users.select{ |r| r[2]/r[1].to_f < 0.95 || r[2]/r[1].to_f > 1.2 }
 
         if for_update.size == 0
@@ -111,7 +111,7 @@ class Report::Followers < Report::Base
           csv << header
           followers_ids = Follower.where(user_id: user.id).pluck(:follower_id).uniq
           followers = User.where(id: followers_ids)
-          followers = followers.where("email is not null").where("followed_by >= ?" 1_000) if @report.output_data.include? 'slim'
+          followers = followers.where("email is not null").where("followed_by >= ?", 1_000) if @report.output_data.include? 'slim'
           followers = followers.where("followed_by >= ?", 1_000) if @report.output_data.include? 'slim_followers'
           followers.each do |u|
             row = [u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email]
