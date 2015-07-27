@@ -109,17 +109,18 @@ class Media < ActiveRecord::Base
     tags_names.each do |tag_name|
       tag = nil
       tag = tags_found.select{|el| el.name.downcase == tag_name.downcase}.first if tags_found.size > 0
-      tag = Tag.where(name: tag_name).first_or_create unless tag
+      begin
+        tag = Tag.create(name: tag_name) unless tag
+      rescue ActiveRecord::RecordNotUnique
+        tag = Tag.where(name: tag_name).first
+      end
       tags_list << tag if tag
     end
 
     tags_list.uniq!{|el| el.id}
 
     self.tag_names = tags_names
-    MediaTag.where(media_id: self.id).destroy_all
-    if tags_list.size > 0
-      MediaTag.connection.execute("INSERT INTO media_tags (media_id, tag_id) VALUES #{tags_list.map{|tag| "(#{[self.id, tag.id].join(',')})"}.join(', ')}")
-    end
+    self.tags = tags_list
   end
 
   def set_location *args
