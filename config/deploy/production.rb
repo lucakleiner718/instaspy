@@ -5,10 +5,13 @@ set :stage, :production
 # is considered to be the first unless any hosts have the primary
 # property set.  Don't declare `role :all`, it's a meta role.
 
-role :app, %w{54.148.163.62}
-role :web, %w{54.148.163.62}
+# role :app, %w{54.148.195.177}
+# role :web, %w{54.148.163.62}
+# role :db, %w{54.148.163.62}
 
-set :filter, :roles => %w{app web}
+server '54.148.195.177', user: 'app', roles: %w{web app db}
+
+set :filter, :roles => %w{app web db}
 
 # Extended Server Syntax
 # ======================

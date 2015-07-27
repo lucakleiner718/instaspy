@@ -36,8 +36,6 @@ set :rvm_type, :user
 set :rvm_ruby_version, '2.1.1@instaspy'
 set :rvm_roles, %w{app web}
 
-# set :log_level, :debug
-
 set :bundle_binstubs, nil
 
 after 'deploy:restart', 'puma:restart'
@@ -50,8 +48,9 @@ namespace :god do
     on roles(:app), in: :parallel do
       within release_path do
         with rails_env: fetch(:rails_env) do
-          execute :bundle, :exec, 'god terminate' if test(*("[ -f #{fetch :god_pid} ]").split(' '))
-          execute :bundle, :exec, 'god -c config/procs.god --pid tmp/pids/god.pid' unless test(*("[ -f /home/app/instaspy/shared/tmp/pids/god.pid ]").split(' '))
+          pid = capture(:cat, fetch(:god_pid))
+          execute :kill, pid if test(*("[ -d #{pid} ]").split(' '))
+          execute :bundle, :exec, "god -c config/procs.god --pid #{fetch :god_pid}"
         end
       end
     end
@@ -61,7 +60,7 @@ namespace :god do
     on roles(:app), in: :parallel do
       within release_path do
         with rails_env: fetch(:rails_env) do
-          execute :bundle, :exec, 'god -c config/procs.god --pid tmp/pids/god.pid' unless test(*("[ -f /home/app/instaspy/shared/tmp/pids/god.pid ]").split(' '))
+          execute :bundle, :exec, "god -c config/procs.god --pid #{fetch :god_pid}"
         end
       end
     end
@@ -71,7 +70,9 @@ namespace :god do
     on roles(:app), in: :parallel do
       within release_path do
         with rails_env: fetch(:rails_env) do
-          execute :bundle, :exec, 'god terminate' if test(*("[ -f /home/app/instaspy/shared/tmp/pids/god.pid ]").split(' '))
+          pid = capture(:cat, fetch(:god_pid))
+          execute :kill, pid if test(*("[ -d #{pid} ]").split(' '))
+          # execute :bundle, :exec, 'god terminate' if test(*("[ -f /home/app/instaspy/shared/tmp/pids/god.pid ]").split(' '))
         end
       end
     end

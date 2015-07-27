@@ -12,9 +12,11 @@
 /tmp
 /config/database.yml
 /.env
+/.cap_tasks~
 /vendor/emerald
 /public/assets
 /public/reports
 
 /config/procs.god
 /config/sidekiq.yml
+
