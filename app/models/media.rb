@@ -1,9 +1,10 @@
 class Media < ActiveRecord::Base
 
-  has_many :media_tags
+  has_many :media_tags, dependent: :destroy
+  has_many :tags, through: :media_tags
   belongs_to :user
 
-  scope :with_coordinates, -> { where("location_lat is not null AND location_lat is not null") }
+  scope :with_coordinates, -> { where("location_lat is not null AND location_lng is not null") }
   scope :with_country, -> { where("location_country is not null AND location_country != ''") }
   scope :without_location, -> { where("location_lat is null OR location_lat = ''").where(location_present: nil) }
 

@@ -3,6 +3,9 @@ class Tag < ActiveRecord::Base
   # has_many :media_tags#, class_name: 'Media'#, after_add: :increment_some_tag, after_remove: :decrement_some_tag
   has_one :observed_tag, dependent: :destroy
 
+  has_many :media_tags, dependent: :destroy
+  has_many :media, through: :media_tags
+
   scope :observed, -> { where(id: ObservedTag.all.pluck(:tag_id)) }
   scope :chartable, -> { where(id: ObservedTag.where(for_chart: true).pluck(:tag_id)) }
   scope :exportable, -> { where(id: ObservedTag.where(export_csv: true).pluck(:tag_id)) }
@@ -42,12 +45,12 @@ class Tag < ActiveRecord::Base
 
     if options[:offset].present?
       options[:offset] = DateTime.parse(options[:offset]) if options[:offset].class.name == 'String'
-      m = Media.where("created_time >= ?", options[:offset]).where("created_time <= ?", (options[:offset] + 10.minutes)).order(created_time: :asc).first
-      unless m
-        m = Media.where("created_time >= ?", options[:offset]).where("created_time <= ?", (options[:offset] + 60.minutes)).order(created_time: :asc).first
+      media_item = Media.where("created_time >= :start AND created_time <= :finish", start: options[:offset], finish: (options[:offset] + 10.minutes)).order(:created_time).first
+      unless media_item
+        media_item = Media.where("created_time >= :start AND created_time <= :finish", start: options[:offset], finish: (options[:offset] + 60.minutes)).order(:created_time).first
       end
-      if m
-        max_tag_id = m.insta_id.match(/^(\d+)_/)[1]
+      if media_item
+        max_tag_id = media_item.insta_id.match(/^(\d+)_/)[1]
       end
     end
 
@@ -174,9 +177,8 @@ class Tag < ActiveRecord::Base
       day = (amount_of_days-i).days.ago.utc
       media_size = 0
       media_ids = MediaTag.where(tag_id: self.id).pluck(:media_id)
-      puts media_ids.size
       media_ids.in_groups_of(10_000, false) do |group|
-        media_size += Media.where(id: group).where("created_time >= ?", day.beginning_of_day).where("created_time <= ?", day.end_of_day).size
+        media_size += Media.where(id: group).where("created_time >= :begining AND created_time <= :end", beginning: day.beginning_of_day, end: day.end_of_day).size
       end
       data[day.strftime('%m/%d')] = media_size
     end
