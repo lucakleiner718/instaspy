@@ -5,8 +5,8 @@ set :stage, :production
 # is considered to be the first unless any hosts have the primary
 # property set.  Don't declare `role :all`, it's a meta role.
 
-role :app, %w{app@app3.socialrootdata.com app@app4.socialrootdata.com}
-role :web, %w{app@socialrootdata.com}
+role :app, %w{54.148.163.62}
+role :web, %w{54.148.163.62}
 
 set :filter, :roles => %w{app web}
 
