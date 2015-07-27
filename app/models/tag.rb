@@ -269,8 +269,4 @@ class Tag < ActiveRecord::Base
     tmc.save
   end
 
-  def media
-    Media.where(id: MediaTag.where(tag_id: self.id).pluck(:media_id))
-  end
-
 end

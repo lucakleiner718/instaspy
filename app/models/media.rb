@@ -367,32 +367,6 @@ class Media < ActiveRecord::Base
     false
   end
 
-  def tag_names
-    Tag.where(id: self.media_tags.pluck(:tag_id)).pluck(:name)
-  end
-
-  # List of tags for media
-  def tags
-    Tag.where(id: self.media_tags.pluck(:tag_id)).to_a
-  end
-
-  # Update media's tag list
-  # Params:
-  #   tags [Array] Array of Tag model instances
-  # @return [Array] Array of MediaTag model instances
-  def tags=(tags)
-    tags_list = []
-    MediaTag.where(media_id: self.id).destroy_all
-    tags.each do |t|
-      tags_list << MediaTag.create(tag_id: t.id, media_id: self.id)
-    end
-    tags_list
-  end
-
-  def media_tags
-    MediaTag.where(media_id: self.id)
-  end
-
   private
 
   def self.delete_old amount=100_000
