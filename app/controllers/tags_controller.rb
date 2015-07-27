@@ -44,6 +44,6 @@ class TagsController < ApplicationController
   end
 
   def sort_column
-    (Tag.fields.keys - ['_id'] + ['media_count']).include?(params[:sort]) ? params[:sort] : "name"
+    (Tag.new.attributes.keys - ['id'] + ['media_count']).include?(params[:sort]) ? params[:sort] : "name"
   end
 end

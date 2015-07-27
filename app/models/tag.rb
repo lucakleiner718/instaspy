@@ -108,7 +108,7 @@ class Tag < ActiveRecord::Base
         media.tag_names = media_item['tags']
 
         # we need to have media_id before tag saving
-        media.save #unless media.id
+        media.save
 
         media.set_tags media_item['tags'], tags_found
 
