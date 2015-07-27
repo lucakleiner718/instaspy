@@ -209,7 +209,7 @@ GEM
       fog-core
       nokogiri (~> 1.5, >= 1.5.11)
     formatador (0.2.5)
-    geocoder (1.2.7)
+    geocoder (1.2.9)
     god (0.13.4)
     guard (2.12.5)
       formatador (>= 0.2.4)

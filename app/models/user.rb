@@ -213,6 +213,10 @@ class User < ActiveRecord::Base
     return false unless shared_data_element
     content = shared_data_element.text.sub('window._sharedData = ', '').sub(/;$/, '')
     json = JSON.parse content
+    if json['entry_data'].blank? || json['entry_data']['ProfilePage'].blank?
+      self.destroy
+      return false
+    end
     data = json['entry_data']['ProfilePage'].first['user']
 
     data['bio'] = data['biography'] || ''
