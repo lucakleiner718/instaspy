@@ -12,7 +12,7 @@ class UserWorker
 
     begin
       user = User.find(user_id)
-    rescue Mongoid::Errors::DocumentNotFound => e
+    rescue ActiveRecord::RecordNotFound => e
       return
     end
 
