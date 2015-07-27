@@ -4,18 +4,15 @@ class Report < ActiveRecord::Base
 
   after_destroy :delete_data_files
 
+  validates :format, presence: true
+
   def delete_data_files
-    self.data[name].each do |name, filepath|
+    self.data.each do |name, filepath|
       begin
         FileManager.delete_file filepath
       rescue => e
       end
     end
-  end
-
-  # probably not best way
-  def id
-    self.read_attribute(:id).to_s
   end
 
   def input
@@ -58,7 +55,7 @@ class Report < ActiveRecord::Base
   end
 
   def self.process_input data
-    rows = data.split("\r\n").map{|el| el.split("\r")}.flatten.map{|el| el.split("\n")}.flatten
+    rows = data.split(/\r\n|\r|\n/)
     csv_string = CSV.generate do |csv|
       rows.each do |row|
         csv << [row.strip.gsub(/\//, '')]

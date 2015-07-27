@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150707111809) do
+ActiveRecord::Schema.define(version: 20150727150028) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -129,9 +129,6 @@ ActiveRecord::Schema.define(version: 20150707111809) do
     t.datetime "finished_at"
     t.string   "result_data"
     t.string   "notify_email"
-    t.text     "output_data",                               array: true
-    t.text     "not_processed",                             array: true
-    t.text     "steps",                                     array: true
     t.datetime "date_from"
     t.datetime "date_to"
     t.json     "data",            default: {}
@@ -140,6 +137,9 @@ ActiveRecord::Schema.define(version: 20150707111809) do
     t.json     "amounts",         default: {}
     t.datetime "created_at",                   null: false
     t.datetime "updated_at",                   null: false
+    t.text     "output_data",     default: [],              array: true
+    t.text     "not_processed",   default: [],              array: true
+    t.text     "steps",           default: [],              array: true
   end
 
   create_table "stats", force: true do |t|

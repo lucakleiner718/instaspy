@@ -31,7 +31,7 @@
     <tr>
       <td>
         <%= report.format == 'tags' ? 'Publishers' : report.format.titleize %> for <%= report.input_amount %> <%= report.format != 'tags' ? 'usernames' : 'tags' %>
-        <span class="glyphicon glyphicon-question-sign report-info" aria-hidden="true" data-container="body" data-toggle="popover" data-placement="right" data-html="true" data-content="Output data: <%= report.output_data.size > 0 ? report.output_data.join(', ') : 'No extra fields' %><br>Amounts: <%= report.amounts.inject([]){|ar, (k,v)| ar << "#{k.titleize}=#{v}"; ar}.join(' ') %>" data-trigger="hover"></span>
+        <span class="glyphicon glyphicon-question-sign report-info" aria-hidden="true" data-container="body" data-toggle="popover" data-placement="right" data-html="true" data-content="Output data: <%= report.output_data.size > 0 ? report.output_data.join(', ') : 'No extra fields' %><br>Amounts: <%= report.amounts.inject([]){|ar, (k,v)| ar << "#{k.to_s.titleize}=#{v}"; ar}.join(' ') %>" data-trigger="hover"></span>
         <% if report.notify_email.present? %>
           <br>Notification to: <%= report.notify_email %>
         <% end %>

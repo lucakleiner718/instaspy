@@ -14,7 +14,7 @@ class Report::Followers < Report::Base
         for_update = users.select{ |r| r[2]/r[1].to_f < 0.95 || r[2]/r[1].to_f > 1.2 }
 
         if for_update.size == 0
-          @report.push steps: 'followers'
+          @report.steps.push 'followers'
         else
           for_update.each do |row|
             if row[1] < 20_000 || (row[2]/row[1].to_f > 1.2)
@@ -65,7 +65,7 @@ class Report::Followers < Report::Base
 
           if not_updated.size == 0
             self.delete_cached('followers_to_update')
-            @report.push steps: 'followers_info'
+            @report.steps.push 'followers_info'
           else
             self.save_cached('followers_to_update', not_updated)
             @progress += (followers_ids.size - not_updated.size) / followers_ids.size.to_f / @parts_amount

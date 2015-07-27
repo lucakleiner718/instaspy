@@ -6,7 +6,7 @@ class UserWorker
 
   def perform user_id, *args
     options = args.extract_options!
-    if args.size == 1 && args.first.is_a?(Boolean)
+    if args.size == 1 && args.first.is_a?(TrueClass)
       options[:force] = args.first
     end
 

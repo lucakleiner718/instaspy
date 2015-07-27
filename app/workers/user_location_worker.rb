@@ -1,3 +1,4 @@
+
 class UserLocationWorker
   include Sidekiq::Worker
 

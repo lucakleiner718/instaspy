@@ -186,7 +186,7 @@ class User < ActiveRecord::Base
   def update_via_http!
     retries = 0
     begin
-      resp = Faraday.new(:url => 'http://instagram.com') do |f|
+      resp = Faraday.new(url: 'http://instagram.com') do |f|
         f.use FaradayMiddleware::FollowRedirects
         f.adapter :net_http
       end.get("/#{self.username}/") do |req|
@@ -1018,8 +1018,7 @@ class User < ActiveRecord::Base
       processed += 1
       # if user obviously have lots of media in one place, leave other media, check each 10th media
       if index % 10 == 0
-
-        data = Media.where(user_id: self.id).where(:location_lat.ne => nil, :location_tag.ne => '').group_by{ |m| m.location_country }
+        data = Media.where(user_id: self.id).where("location_lat IS NOT NULL").inject({}){|obj, m| obj[m.location_country] ||= []; obj[m.location_country] << m; obj}
         amounts = []
         data.each{ |k, v| amounts << [k, v.size] }
         amounts = amounts.sort{ |a, b| a[1] <=> b[1] }.reverse

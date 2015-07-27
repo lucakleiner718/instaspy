@@ -27,16 +27,13 @@ class Report::Base
     insta_ids = processed_input.select{|r| r.numeric?}
     usernames = processed_input - insta_ids
 
-    # convert all insta_ids to integer
-    insta_ids.map!(&:to_i)
-
     processed_data = []
 
     if insta_ids.size > 0
       found_insta_ids = User.where(insta_id: insta_ids).pluck(:insta_id, :id)
       (insta_ids - found_insta_ids.map(&:first)).each do |insta_id|
-        u = User.get(insta_id: insta_id)
-        found_insta_ids << [u.insta_id, u.id] if u && u.valid?
+        user = User.get(insta_id)
+        found_insta_ids << [user.insta_id, user.id] if user && user.valid?
       end
       processed_data.concat found_insta_ids
     end
@@ -68,7 +65,7 @@ class Report::Base
       not_updated = users.select{|r| r[1].blank? || r[1] < 36.hours.ago}.map(&:first)
 
       if not_updated.size == 0
-        @report.push steps: 'user_info'
+        @report.steps.push 'user_info'
       else
         not_updated.map { |uid| UserWorker.perform_async uid, true }
         @progress += (ids.size - not_updated.size) / ids.size.to_f / @parts_amount
@@ -88,7 +85,7 @@ class Report::Base
       end
       if get_likes.size == 0
         self.delete_cached('get_likes')
-        @report.push steps: 'likes'
+        @report.steps.push 'likes'
       else
         self.save_cached('get_likes', get_likes)
         @progress += (ids.size - get_likes.size) / ids.size.to_f / @parts_amount
@@ -108,7 +105,7 @@ class Report::Base
       end
       if get_location.size == 0
         self.delete_cached('get_location')
-        @report.push steps: 'location'
+        @report.steps.push 'location'
       else
         self.save_cached('get_location', get_location)
         @progress += (ids.size - get_location.size) / ids.size.to_f / @parts_amount
@@ -130,7 +127,7 @@ class Report::Base
       no_feedly = with_website - feedly_exists
 
       if no_feedly.size == 0
-        @report.push steps: 'feedly'
+        @report.steps.push 'feedly'
       else
         no_feedly.each { |uid| UserFeedlyWorker.perform_async uid }
         @progress += feedly_exists.size / with_website.size.to_f / @parts_amount

@@ -6,7 +6,7 @@ class Media < ActiveRecord::Base
 
   scope :with_coordinates, -> { where("location_lat is not null AND location_lng is not null") }
   scope :with_country, -> { where("location_country is not null AND location_country != ''") }
-  scope :without_location, -> { where("location_lat is null OR location_lat = ''").where(location_present: nil) }
+  scope :without_location, -> { where("location_lat is null").where(location_present: nil) }
 
   def location
     loc = []
@@ -138,19 +138,23 @@ class Media < ActiveRecord::Base
         lookup = options[:lookup] ? options[:lookup] : lookup_list.sample
 
         time_start = Time.now
-        resp = Geocoder.search("#{self.location_lat},#{self.location_lng}", lookup: lookup)
         logger.info "Geocoder search for coords with lookup: #{lookup.to_s.cyan}. default: #{default_lookup.to_s.black.on_white}. Media id: #{self.id}. Time: #{(Time.now - time_start).to_f.round(2)}s"
-      rescue TimeoutError, SocketError, Geocoder::ResponseParseError,
+        resp = Geocoder.search("#{self.location_lat},#{self.location_lng}", lookup: lookup)
+      rescue TimeoutError, SocketError,
              Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Zlib::BufError, Zlib::DataError => e
         logger.info "Geocoder exception #{e.class.name}::#{e.message}".light_red
         sleep 10
         retries += 1
         retry if retries <= 5
         return false
+      rescue Geocoder::ResponseParseError => e
+        logger.info "Geocoder exception #{e.class.name}::#{e.message} / #{e.try :response}".light_red
+        lookup_list = lookup_list - [lookup]
+        retry
       rescue Geocoder::InvalidRequest => e
         return false
-      rescue Geocoder::OverQueryLimitError => e
-        Rails.logger.debug e.class.name
+      rescue Geocoder::OverQueryLimitError, Geocoder::ServiceUnavailable => e
+        logger.info "Geocoder exception #{e.class.name}::#{e.message}".light_red
         lookup_list = lookup_list - [lookup]
         retry
       end
