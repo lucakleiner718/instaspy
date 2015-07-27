@@ -7,6 +7,9 @@ Geocoder.configure(
   here: {
     api_key: ['XaB0y63AcGfc5ZtIrbde', 'ZrESX_vdjfU-LmMli8zopg'],
   },
+  opencagedata: {
+    api_key: 'f1fa119e5e9651ccfb690481681f143c'
+  },
   #
   # Geocoder::Configuration.api_key = 'd5dd99546055d0d5d6be0de04446595dd5bb365'
   language:     :en,

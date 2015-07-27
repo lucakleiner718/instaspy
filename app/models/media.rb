@@ -128,11 +128,13 @@ class Media < ActiveRecord::Base
 
     return false if self.location_lat.blank? || self.location_lng.blank?
 
-    lookup_list = options[:lookup_list] || [:bing, :google, :yandex, :esri, :here]
+    lookup_list = options[:lookup_list] || [:bing, :google, :yandex, :esri, :here, :nominatim, :opencagedata]
 
     while true
       retries = 0
       begin
+        puts lookup_list
+        puts retries
         default_lookup = Geocoder::Configuration.lookup
 
         lookup = options[:lookup] ? options[:lookup] : lookup_list.sample
@@ -170,6 +172,8 @@ class Media < ActiveRecord::Base
 
     country = state = city = country_lookup = nil
 
+    binding.pry
+
     row = resp.first
     case row.class.name
       when 'Geocoder::Result::Here'
@@ -194,47 +198,26 @@ class Media < ActiveRecord::Base
       when 'Geocoder::Result::Yandex'
         address = row.data['GeoObject']['metaDataProperty']['GeocoderMetaData']['AddressDetails']
 
-        begin
-          country = Country.find_country_by_name(address['Country']['CountryName']).alpha2
-        rescue
-        end
+        country = Country.find_country_by_name(address['Country']['CountryName']).alpha2 rescue nil
 
         if country.blank?
-          begin
-            country = Country.find_country_by_name(address['Country']['Locality']['Premise']['PremiseName']).alpha2
-          rescue => e
-          end
+          country = Country.find_country_by_name(address['Country']['Locality']['Premise']['PremiseName']).alpha2 rescue nil
         end
 
-        begin
-          state = address['Country']['AdministrativeArea']['AdministrativeAreaName']
-        rescue => e
-        end
+        state = address['Country']['AdministrativeArea']['AdministrativeAreaName'] rescue nil
 
         if state.blank?
-          begin
-            state = address['Country']['Thoroughfare']['ThoroughfareName']
-          rescue => e
-          end
+          state = address['Country']['Thoroughfare']['ThoroughfareName'] rescue nil
         end
 
-        begin
-          city = address['Country']['AdministrativeArea']['Locality']['DependentLocality']['DependentLocalityName']
-        rescue => e
+        city = address['Country']['AdministrativeArea']['Locality']['DependentLocality']['DependentLocalityName'] rescue nil
+
+        if city.blank?
+          city = address['Country']['Locality']['LocalityName'] rescue nil
         end
 
         if city.blank?
-          begin
-            city = address['Country']['Locality']['LocalityName']
-          rescue => e
-          end
-        end
-
-        if city.blank?
-          begin
-            city = address['Country']['AdministrativeArea']['SubAdministrativeArea']['SubAdministrativeAreaName']
-          rescue => e
-          end
+          city = address['Country']['AdministrativeArea']['SubAdministrativeArea']['SubAdministrativeAreaName'] rescue nil
         end
 
       when 'Geocoder::Result::Esri'
@@ -255,6 +238,18 @@ class Media < ActiveRecord::Base
         country = country_lookup ? country_lookup.alpha2 : country
         state = address['adminDistrict']
         city = address['locality'] || address['adminDistrict2']
+
+      when 'Geocoder::Result::Nominatim'
+        address = row.data['address']
+        country = address['country']
+        state = address['state']
+        city = address['city']
+
+      when 'Geocoder::Result::Opencagedata'
+        address = row.data['components']
+        country = address['country']
+        state = address['state']
+        city = address['city']
     end
 
     if country
