@@ -108,7 +108,11 @@ class Tag < ActiveRecord::Base
         media.tag_names = media_item['tags']
 
         # we need to have media_id before tag saving
-        media.save
+        begin
+          media.save
+        rescue ActiveRecord::RecordNotUnique
+          media = Media.find_by_insta_id(media.insta_id)
+        end
 
         media.set_tags media_item['tags'], tags_found
 
