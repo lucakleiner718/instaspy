@@ -49,7 +49,7 @@ namespace :god do
       within release_path do
         with rails_env: fetch(:rails_env) do
           pid = capture(:cat, fetch(:god_pid))
-          execute :kill, pid if test(*("[ -d #{pid} ]").split(' '))
+          execute :kill, pid, '> /dev/null' if pid
           execute :bundle, :exec, "god -c config/procs.god --pid #{fetch :god_pid}"
         end
       end
@@ -71,8 +71,7 @@ namespace :god do
       within release_path do
         with rails_env: fetch(:rails_env) do
           pid = capture(:cat, fetch(:god_pid))
-          execute :kill, pid if test(*("[ -d #{pid} ]").split(' '))
-          # execute :bundle, :exec, 'god terminate' if test(*("[ -f /home/app/instaspy/shared/tmp/pids/god.pid ]").split(' '))
+          execute :kill, pid, '> /dev/null' if pid
         end
       end
     end
