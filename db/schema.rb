@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150727150028) do
+ActiveRecord::Schema.define(version: 20150728123733) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -129,8 +129,8 @@ ActiveRecord::Schema.define(version: 20150727150028) do
     t.datetime "finished_at"
     t.string   "result_data"
     t.string   "notify_email"
-    t.datetime "date_from"
-    t.datetime "date_to"
+    t.date     "date_from"
+    t.date     "date_to"
     t.json     "data",            default: {}
     t.text     "tmp_list1",       default: [],              array: true
     t.string   "note"
