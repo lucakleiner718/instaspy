@@ -33,6 +33,7 @@ class Report::Users < Report::Base
     header = ['ID', 'Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followers', 'Email']
     header += ['Country', 'State', 'City'] if @report.output_data.include? 'location'
     header += ['AVG Likes'] if @report.output_data.include? 'likes'
+    header += ['AVG Comments'] if @report.output_data.include? 'comments'
     header += ['Feedly Subscribers'] if @report.output_data.include? 'feedly'
     header += ['Last media date'] if @report.output_data.include? 'last_media_date'
 
@@ -49,6 +50,7 @@ class Report::Users < Report::Base
         row = [u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email]
         row.concat [u.location_country, u.location_state, u.location_city] if @report.output_data.include? 'location'
         row.concat [u.avg_likes] if @report.output_data.include? 'likes'
+        row.concat [u.avg_comments] if @report.output_data.include? 'comments'
         if @report.output_data.include? 'feedly'
           feedly = u.feedly.first
           row.concat [feedly ? feedly.subscribers_amount : '']
