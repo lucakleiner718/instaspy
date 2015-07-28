@@ -26,7 +26,7 @@ class Report::Followees < Report::Base
         if @report.data['followees_file'].blank?
           # ids of ALL followees of provided users
           followees_ids = Follower.where(follower_id: @report.processed_ids)
-          followees_ids = followees_ids.where("followed_at => ?", @report.date_from) if @report.date_from.present?
+          followees_ids = followees_ids.where("followed_at >= ?", @report.date_from) if @report.date_from.present?
           followees_ids = followees_ids.where("followed_at <= ?", @report.date_to) if @report.date_to.present?
           followees_ids = followees_ids.pluck(:user_id).uniq
 
