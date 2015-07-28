@@ -49,17 +49,6 @@ module Clockwork
     ReportProcessProgressWorker.spawn
   }
 
-  # every(30.minutes, 'media.ny.location.1') {
-  #   Media.get_by_location 40.74226964, -74.007271584 if Time.now < Time.at('2015/02/21 00:00:00 UTC')
-  # }
-  # every(30.minutes, 'media.ny.location.2') {
-  #   Media.get_by_location 40.772154986, -73.984437991 if Time.now < Time.at('2015/02/21 00:00:00 UTC')
-  # }
-
-  # every(30.minutes, 'tag.user.location') {
-  #   TagUserLocationWorker.spawn
-  # }
-
   # Weekly Reports
 
   # Send weekly report about followers for specified users
