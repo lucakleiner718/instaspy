@@ -87,7 +87,7 @@ namespace :god do
 
   # Must be executed within SSHKit context
   def start_god
-    execute :bundle, "exec god -c #{fetch :config_file}"
+    execute :bundle, "exec god -c #{fetch :god_config}"
   end
 
   desc "Start god and his processes"
@@ -118,7 +118,7 @@ namespace :god do
       within release_path do
         with RAILS_ENV: fetch(:rails_env) do
           if god_is_running
-            execute :bundle, "exec god load #{fetch :config_file}"
+            execute :bundle, "exec god load #{fetch :god_config}"
             execute :bundle, "exec god restart"
           else
             start_god
