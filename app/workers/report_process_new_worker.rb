@@ -6,7 +6,7 @@ class ReportProcessNewWorker
   def perform report_id
     report = Report.where(status: :new, id: report_id).first
 
-    return if !report || Report.where(status: :in_process).size > 0
+    return if !report || Report.where(status: :in_process).size > ENV['ACTIVE_REPORTS_AMOUNT']-1
 
     case report.format
       when 'followers'
