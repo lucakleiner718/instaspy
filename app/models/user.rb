@@ -416,12 +416,12 @@ class User < ActiveRecord::Base
               fol = fol.first_or_initialize
               if fol.new_record?
                 fol.followed_at = followed_at
-                fol.save
+                fol.save rescue ActiveRecord::RecordNotUnique false
                 added += 1
               else
                 if fol.followed_at.blank? || fol.followed_at > followed_at
                   fol.followed_at = followed_at
-                  fol.save
+                  fol.save rescue ActiveRecord::RecordNotUnique false
                 end
                 exists += 1
               end
