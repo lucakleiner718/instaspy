@@ -10,13 +10,13 @@
 # Ignore all logfiles and tempfiles.
 /log/*.log
 /tmp
-/config/database.yml
 /.env
 /.cap_tasks~
 /vendor/emerald
 /public/assets
 /public/reports
 
-/config/procs.god
+/config/database.yml
+/config/god.rb
 /config/sidekiq.yml
 
