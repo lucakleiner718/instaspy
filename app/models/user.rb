@@ -1249,18 +1249,38 @@ class User < ActiveRecord::Base
   end
 
   def must_save
-    self.save
-
-    unless self.valid?
-      if self.errors.messages[:insta_id]
+    begin
+      self.save
+    rescue ActiveRecord::RecordNotUnique => e
+      if e.message =~ /index_users_on_insta_id/
         return User.where(username: self.username).first
-      elsif self.errors.messages[:username]
+      elsif e.message =~ /index_users_on_username/
         exists_user = User.where(username: self.username).first
 
         if exists_user.insta_id == self.insta_id
           return exists_user
         else
-          exists_user.update_info!
+          exists_user.update_info! force: true
+          if exists_user.private? || exists_user.username == self.username
+            exists_user.destroy
+            self.save
+          end
+        end
+      else
+        raise Exception.new "Invalid user #{self.insta_id} / #{self.username}"
+      end
+    end
+
+    unless self.valid?
+      if self.errors[:insta_id]
+        return User.where(username: self.username).first
+      elsif self.errors[:username]
+        exists_user = User.where(username: self.username).first
+
+        if exists_user.insta_id == self.insta_id
+          return exists_user
+        else
+          exists_user.update_info! force: true
           if exists_user.private? || exists_user.username == self.username
             exists_user.destroy
             self.save
