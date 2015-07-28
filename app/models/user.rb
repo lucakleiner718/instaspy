@@ -12,6 +12,7 @@ class User < ActiveRecord::Base
   scope :outdated, -> (date=7.days) { where("grabbed_at is null OR grabbed_at < ? OR bio is null OR website is null OR follows is null OR followed_by is null OR media_amount is null", date.ago) }
   scope :with_url, -> { where("website is not null AND website != ''") }
   scope :without_likes, -> { where("avg_likes is null OR avg_likes_updated_at is null OR avg_likes_updated_at < ?", 1.month.ago) }
+  scope :without_comments, -> { where("avg_comments is null OR avg_comments_updated_at is null OR avg_comments_updated_at < ?", 1.month.ago) }
   scope :without_location, -> { where("location_updated_at is null OR location_updated_at < ?", 3.months.ago) }
   scope :with_media, -> { where("media_amount > ?", 0) }
 

@@ -93,7 +93,7 @@ class Report::Tags < Report::Base
             if get_likes.size == 0
               @report.steps[step_index][1] << 'likes'
             else
-              get_likes.each { |uid| UserAvgLikesWorker.perform_async uid }
+              get_likes.each { |uid| UserAvgDataWorker.perform_async uid }
             end
           end
 

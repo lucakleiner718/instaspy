@@ -80,7 +80,7 @@ class Report::Base
       get_likes = []
       ids.in_groups_of(5_000, false) do |ids|
         users = User.where(id: ids).without_likes.with_media.not_private.pluck(:id)
-        users.each { |uid| UserAvgLikesWorker.perform_async uid }
+        users.each { |uid| UserAvgDataWorker.perform_async uid }
         get_likes.concat users
       end
       if get_likes.size == 0
@@ -89,6 +89,26 @@ class Report::Base
       else
         self.save_cached('get_likes', get_likes)
         @progress += (ids.size - get_likes.size) / ids.size.to_f / @parts_amount
+      end
+    end
+  end
+
+  def process_comments ids
+    # if we need avg likes data and it is not yet grabbed
+    if @report.output_data.include?('comments') && !@report.steps.include?('comments')
+      ids = self.get_cached('get_comments', ids)
+      get_comments = []
+      ids.in_groups_of(5_000, false) do |ids|
+        users = User.where(id: ids).without_comments.with_media.not_private.pluck(:id)
+        users.each { |uid| UserAvgDataWorker.perform_async uid }
+        get_comments.concat users
+      end
+      if get_comments.size == 0
+        self.delete_cached('get_comments')
+        @report.steps.push 'comments'
+      else
+        self.save_cached('get_comments', get_comments)
+        @progress += (ids.size - get_comments.size) / ids.size.to_f / @parts_amount
       end
     end
   end

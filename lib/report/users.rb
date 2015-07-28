@@ -2,7 +2,7 @@ class Report::Users < Report::Base
 
   def reports_in_process
     @parts_amount = 1
-    ['likes', 'location', 'feedly'].each do |info|
+    ['likes', 'comments', 'location', 'feedly'].each do |info|
       @parts_amount += 1 if @report.output_data.include?(info)
     end
 
@@ -10,6 +10,7 @@ class Report::Users < Report::Base
 
     if @report.steps.include?('user_info')
       self.process_likes @report.processed_ids
+      self.process_comments @report.processed_ids
       self.process_location @report.processed_ids
       self.process_feedly @report.processed_ids
     end

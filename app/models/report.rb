@@ -6,6 +6,12 @@ class Report < ActiveRecord::Base
 
   validates :format, presence: true
 
+  OUTPUT_DATA = [
+    ['AVG Likes', 'likes'], ['AVG Comments', 'comments'], ['Location', 'location'], ['Feedly subscribers amount', 'feedly'],
+    ['Last media date', 'last_media_date'], ['Slim (1k+ followers, with email)', 'slim'],
+    ['Slim (1k+ followers)', 'slim_followers'], ['Media Image URL', 'media_url'], ['Include All Media', 'all_media']
+  ]
+
   def delete_data_files
     self.data.each do |name, filepath|
       begin
