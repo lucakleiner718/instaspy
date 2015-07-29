@@ -12,15 +12,6 @@ class Report < ActiveRecord::Base
     ['Slim (1k+ followers)', 'slim_followers'], ['Media Image URL', 'media_url'], ['Include All Media', 'all_media']
   ]
 
-  def delete_data_files
-    self.data.each do |name, filepath|
-      begin
-        FileManager.delete_file filepath
-      rescue => e
-      end
-    end
-  end
-
   def input
     @input
   end
@@ -85,6 +76,17 @@ class Report < ActiveRecord::Base
       self.save
     end
     self.amounts[:input]
+  end
+
+  private
+
+  def delete_data_files
+    self.data.each do |name, filepath|
+      begin
+        FileManager.delete_file filepath
+      rescue => e
+      end
+    end
   end
 
 end

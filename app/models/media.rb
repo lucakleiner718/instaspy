@@ -142,9 +142,8 @@ class Media < ActiveRecord::Base
         time_start = Time.now
         logger.info "Geocoder search for coords with lookup: #{lookup.to_s.cyan}. default: #{default_lookup.to_s.black.on_white}. Media id: #{self.id}. Time: #{(Time.now - time_start).to_f.round(2)}s"
         resp = Geocoder.search("#{self.location_lat},#{self.location_lng}", lookup: lookup)
-      rescue TimeoutError, SocketError,
-             Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Zlib::BufError, Zlib::DataError => e
-        logger.info "Geocoder exception #{e.class.name}::#{e.message}".light_red
+      rescue TimeoutError, SocketError, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Zlib::BufError, Zlib::DataError => e
+        logger.info "Geocoder exception #{e.class.name} #{e.message}".light_red
         sleep 10
         retries += 1
         retry if retries <= 5

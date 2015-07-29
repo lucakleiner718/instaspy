@@ -3,7 +3,7 @@ source 'https://rubygems.org'
 ruby '2.1.1'
 #ruby-gemset=instaspy
 
-gem 'rails', '4.1.6'                      # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
+gem 'rails', '4.2.3'                      # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 
 gem 'sass-rails', '~> 4.0.3'              # Use SCSS for stylesheets
 gem 'uglifier', '>= 1.3.0'                # Use Uglifier as compressor for JavaScript assets
@@ -26,6 +26,7 @@ group :development do
   gem "capistrano-sidekiq", require: false
 
   gem 'thin'
+  gem 'web-console', '~> 2.0'
 end
 
 group :development, :test do
