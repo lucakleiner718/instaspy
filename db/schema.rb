@@ -11,20 +11,20 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150728123733) do
+ActiveRecord::Schema.define(version: 20150729085447) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
   create_table "feedly", force: :cascade do |t|
-    t.string   "website",            limit: 255
-    t.string   "feed_id",            limit: 255
-    t.string   "feedly_url",         limit: 255
+    t.string   "website"
+    t.string   "feed_id"
+    t.string   "feedly_url"
     t.integer  "subscribers_amount"
     t.datetime "grabbed_at"
     t.integer  "user_id"
-    t.datetime "created_at",                     null: false
-    t.datetime "updated_at",                     null: false
+    t.datetime "created_at",         null: false
+    t.datetime "updated_at",         null: false
   end
 
   add_index "feedly", ["feed_id"], name: "index_feedly_on_feed_id", unique: true, using: :btree
@@ -43,43 +43,43 @@ ActiveRecord::Schema.define(version: 20150728123733) do
   add_index "followers", ["user_id"], name: "index_followers_on_user_id", using: :btree
 
   create_table "instagram_accounts", force: :cascade do |t|
-    t.string   "client_id",     limit: 255
-    t.string   "client_secret", limit: 255
-    t.string   "redirect_uri",  limit: 255
-    t.datetime "created_at",                null: false
-    t.datetime "updated_at",                null: false
+    t.string   "client_id"
+    t.string   "client_secret"
+    t.string   "redirect_uri"
+    t.datetime "created_at",    null: false
+    t.datetime "updated_at",    null: false
   end
 
   add_index "instagram_accounts", ["client_id"], name: "index_instagram_accounts_on_client_id", unique: true, using: :btree
 
   create_table "instagram_logins", force: :cascade do |t|
     t.integer  "ig_id"
-    t.string   "access_token", limit: 255
+    t.string   "access_token"
     t.integer  "account_id"
-    t.datetime "created_at",               null: false
-    t.datetime "updated_at",               null: false
+    t.datetime "created_at",   null: false
+    t.datetime "updated_at",   null: false
   end
 
   add_index "instagram_logins", ["account_id"], name: "index_instagram_logins_on_account_id", using: :btree
 
   create_table "media", force: :cascade do |t|
-    t.string   "insta_id",         limit: 255
+    t.string   "insta_id"
     t.datetime "created_time"
     t.integer  "likes_amount"
     t.integer  "comments_amount"
-    t.string   "link",             limit: 255
-    t.decimal  "location_lat",                 precision: 10, scale: 6
-    t.decimal  "location_lng",                 precision: 10, scale: 6
-    t.string   "location_name",    limit: 255
-    t.string   "location_city",    limit: 255
-    t.string   "location_state",   limit: 255
-    t.string   "location_country", limit: 255
+    t.string   "link"
+    t.decimal  "location_lat",     precision: 10, scale: 6
+    t.decimal  "location_lng",     precision: 10, scale: 6
+    t.string   "location_name"
+    t.string   "location_city"
+    t.string   "location_state"
+    t.string   "location_country"
     t.boolean  "location_present"
-    t.text     "tag_names",                                             default: [],              array: true
-    t.string   "image",            limit: 255
+    t.text     "tag_names",                                 default: [],              array: true
+    t.string   "image"
     t.integer  "user_id"
-    t.datetime "created_at",                                                         null: false
-    t.datetime "updated_at",                                                         null: false
+    t.datetime "created_at",                                             null: false
+    t.datetime "updated_at",                                             null: false
   end
 
   add_index "media", ["created_at"], name: "index_media_on_created_at", using: :btree
@@ -94,7 +94,7 @@ ActiveRecord::Schema.define(version: 20150728123733) do
   create_table "media_amount_stats", force: :cascade do |t|
     t.date     "date"
     t.integer  "amount"
-    t.string   "action",     limit: 255
+    t.string   "action"
     t.datetime "updated_at"
   end
 
@@ -119,34 +119,34 @@ ActiveRecord::Schema.define(version: 20150728123733) do
   add_index "observed_tags", ["tag_id"], name: "index_observed_tags_on_tag_id", unique: true, using: :btree
 
   create_table "reports", force: :cascade do |t|
-    t.string   "format",          limit: 255
-    t.string   "original_input",  limit: 255
-    t.string   "processed_input", limit: 255
-    t.string   "status",          limit: 255
-    t.integer  "progress",                    default: 0
-    t.json     "jobs",                        default: {}
+    t.string   "format"
+    t.string   "original_input"
+    t.string   "processed_input"
+    t.string   "status"
+    t.integer  "progress",        default: 0
+    t.json     "jobs",            default: {}
     t.datetime "started_at"
     t.datetime "finished_at"
-    t.string   "result_data",     limit: 255
-    t.string   "notify_email",    limit: 255
+    t.string   "result_data"
+    t.string   "notify_email"
     t.date     "date_from"
     t.date     "date_to"
-    t.json     "data",                        default: {}
-    t.text     "tmp_list1",                   default: [],              array: true
-    t.string   "note",            limit: 255
-    t.datetime "created_at",                               null: false
-    t.datetime "updated_at",                               null: false
-    t.text     "output_data",                 default: [],              array: true
-    t.text     "not_processed",               default: [],              array: true
-    t.text     "steps",                       default: [],              array: true
-    t.json     "amounts"
+    t.json     "data",            default: {}
+    t.text     "tmp_list1",       default: [],              array: true
+    t.string   "note"
+    t.json     "amounts",         default: {}
+    t.datetime "created_at",                   null: false
+    t.datetime "updated_at",                   null: false
+    t.text     "output_data",     default: [],              array: true
+    t.text     "not_processed",   default: [],              array: true
+    t.json     "steps",           default: []
   end
 
   create_table "stats", force: :cascade do |t|
-    t.string   "key",        limit: 255
-    t.string   "value",      limit: 255
-    t.datetime "created_at",             null: false
-    t.datetime "updated_at",             null: false
+    t.string   "key"
+    t.string   "value"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   add_index "stats", ["key"], name: "index_stats_on_key", using: :btree
@@ -168,7 +168,7 @@ ActiveRecord::Schema.define(version: 20150728123733) do
   add_index "tag_stats", ["tag_id"], name: "index_tag_stats_on_tag_id", using: :btree
 
   create_table "tags", force: :cascade do |t|
-    t.string "name", limit: 255
+    t.string "name"
   end
 
   add_index "tags", ["name"], name: "index_tags_on_name", unique: true, using: :btree
@@ -183,19 +183,19 @@ ActiveRecord::Schema.define(version: 20150728123733) do
 
   create_table "users", force: :cascade do |t|
     t.string   "insta_id",                limit: 20
-    t.string   "username",                limit: 255
-    t.string   "full_name",               limit: 255
-    t.string   "bio",                     limit: 255
-    t.string   "website",                 limit: 255
+    t.string   "username"
+    t.string   "full_name"
+    t.string   "bio"
+    t.string   "website"
     t.integer  "follows"
     t.integer  "followed_by"
     t.integer  "media_amount"
-    t.boolean  "private",                             default: false
+    t.boolean  "private",                            default: false
     t.datetime "grabbed_at"
-    t.string   "email",                   limit: 255
-    t.string   "location_country",        limit: 255
-    t.string   "location_state",          limit: 255
-    t.string   "location_city",           limit: 255
+    t.string   "email"
+    t.string   "location_country"
+    t.string   "location_state"
+    t.string   "location_city"
     t.datetime "location_updated_at"
     t.integer  "avg_likes"
     t.datetime "avg_likes_updated_at"
@@ -203,8 +203,8 @@ ActiveRecord::Schema.define(version: 20150728123733) do
     t.datetime "avg_comments_updated_at"
     t.datetime "followers_updated_at"
     t.datetime "followees_updated_at"
-    t.datetime "created_at",                                          null: false
-    t.datetime "updated_at",                                          null: false
+    t.datetime "created_at",                                         null: false
+    t.datetime "updated_at",                                         null: false
   end
 
   add_index "users", ["avg_comments"], name: "index_users_on_avg_comments", using: :btree

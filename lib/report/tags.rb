@@ -3,8 +3,10 @@ class Report::Tags < Report::Base
   def reports_new
     processed_input = @report.original_csv.map(&:first).map(&:downcase)
 
+    # catch all exists tags
     tags = Tag.where(name: processed_input).pluck(:name, :id)
 
+    # check if input contains tags we don't have in database
     (processed_input - tags.map(&:first)).each do |tag|
       t = Tag.get(tag)
       tags << [t.name, t.id] if t
