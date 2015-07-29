@@ -9,7 +9,7 @@ set :stage, :production
 # role :web, %w{54.148.163.62}
 # role :db, %w{54.148.163.62}
 
-server '52.7.75.240', user: 'app', roles: %w{web app db}
+server 'socialrootdata.com', user: 'app', roles: %w{web app db}
 
 set :filter, :roles => %w{app web db}
 
