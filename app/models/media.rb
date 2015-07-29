@@ -172,8 +172,6 @@ class Media < ActiveRecord::Base
 
     country = state = city = country_lookup = nil
 
-    binding.pry
-
     row = resp.first
     case row.class.name
       when 'Geocoder::Result::Here'
