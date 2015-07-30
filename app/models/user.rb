@@ -3,8 +3,8 @@ class User < ActiveRecord::Base
   has_many :media, class_name: 'Media', dependent: :destroy
   has_many :feedly
 
-  validates :insta_id, uniqueness: true, if: 'insta_id.present?'
-  validates :username, uniqueness: true, if: 'username.present?'
+  # validates :insta_id, uniqueness: true, if: 'insta_id.present?'
+  # validates :username, length: { maximum: 30 }#uniqueness: true, if: 'username.present?'
 
   scope :not_grabbed, -> { where grabbed_at: nil }
   scope :not_private, -> { where private: false }
@@ -851,7 +851,11 @@ class User < ActiveRecord::Base
         media.set_data media_item
         media.tag_names = media_item['tags']
 
-        media.save if media.changed?
+        begin
+          media.save if media.changed?
+        rescue ActiveRecord::RecordNotUnique => e
+          media = Media.find_by_insta_id(media.insta_id)
+        end
 
         media.set_tags media_item['tags'], tags_found
         tags_found.concat(media.tags.to_a).uniq!
