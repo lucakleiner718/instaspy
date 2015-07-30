@@ -1,6 +1,7 @@
 Rails.application.routes.draw do
 
   get 'users' => 'users#index', as: :users
+  post 'users/duplicates' => 'users#duplicates', as: :users_duplicates
   get 'users/:id' => 'users#show', as: :user
 
   root to: 'pages#home'

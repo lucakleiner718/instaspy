@@ -21,4 +21,22 @@ class UsersController < ApplicationController
     @data = data.sort
   end
 
+  def duplicates
+    content = params[:file].read.split(/\r\n|\r|\n/).map(&:to_i)
+    output = {}
+    content.each do |id|
+      output[id] = 0 if output[id].nil?
+      output[id] += 1
+    end
+
+    output = output.inject([]){|ar, (k,v)| ar << [k,v]; ar}.sort{|a,b| a[0] <=> b[0]}
+
+    csv_string = CSV.generate do |csv|
+      output.each do |k, v|
+        csv << [k,v]
+      end
+    end
+
+    send_data csv_string, :type => 'text/csv; charset=utf-8; header=present', disposition: :attachment, filename: "processed-file-#{Time.now.to_i}.csv"
+  end
 end
