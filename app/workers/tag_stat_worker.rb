@@ -7,7 +7,7 @@ class TagStatWorker
 
   def perform tag_id, beginning=1.day
     tag = Tag.find(tag_id)
-    start = beginning.ago.utc.beginning_of_day
+    start = beginning.to_i.ago.utc.beginning_of_day
     finish = start.utc.end_of_day
 
     return false if TagStat.where(tag: tag, date: start).size > 0
@@ -19,7 +19,6 @@ class TagStatWorker
   def self.spawn beginning=1.day
     Tag.chartable.each do |tag|
       self.perform_async(tag.id, beginning)
-      # self.new.perform(tag.id, beginning)
     end
   end
 
