@@ -53,14 +53,14 @@ class UsersController < ApplicationController
     end
 
     if location[:state].present?
-      users = users.where('LOWER(location_state) = LOWER(?)', location[:state])
+      users = users.where('LOWER(location_state) ILIKE LOWER(?)', location[:state])
     end
 
     if location[:city].present?
-      users = users.where('LOWER(location_city) = LOWER(?)', location[:city])
+      users = users.where('LOWER(location_city) ILIKE LOWER(?)', location[:city])
     end
 
-    csv_string = Reporter.users_export ids: users.pluck(:id), return_csv: true
+    csv_string = Reporter.users_export ids: users.pluck(:id), return_csv: true, additional_columns: [:location]
 
     send_data csv_string, :type => 'text/csv; charset=utf-8; header=present', disposition: :attachment, filename: "users-export-#{users.size}-#{Time.now.to_i}.csv"
   end
