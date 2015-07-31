@@ -49,6 +49,10 @@ module Clockwork
     ReportProcessProgressWorker.spawn
   }
 
+  every(5.minutes, 'ImportUsersWorker') {
+    ImportUsersWorker.spawn
+  }
+
   # Weekly Reports
 
   # Send weekly report about followers for specified users
