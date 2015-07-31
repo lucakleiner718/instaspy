@@ -4,7 +4,7 @@ class TagChartWorker
   sidekiq_options unique: true, unique_args: -> (args) { [ args.first ] }, unique_job_expiration: 3*60*60, retry: false
 
   def perform tag_id, amount_of_days=Tag::CHART_DAYS
-    tag = Tag.where("name = :id OR id = :id", id: tag_id).first
+    tag = Tag.where("name = ? OR id = ?", tag_id.to_s, tag_id).first
     values = tag.chart_data amount_of_days
     Rails.cache.write("chart-#{tag.name}", values, expires_in: 6.hours)
 
