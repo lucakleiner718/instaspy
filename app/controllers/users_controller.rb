@@ -53,11 +53,11 @@ class UsersController < ApplicationController
     end
 
     if location[:state].present?
-      users = users.where('LOWER(location_state) ILIKE LOWER(?)', location[:state])
+      users = users.where('LOWER(location_state) ILIKE LOWER(?)', "%#{location[:state]}")
     end
 
     if location[:city].present?
-      users = users.where('LOWER(location_city) ILIKE LOWER(?)', location[:city])
+      users = users.where('LOWER(location_city) ILIKE LOWER(?)', "%#{location[:city]}")
     end
 
     csv_string = Reporter.users_export ids: users.pluck(:id), return_csv: true, additional_columns: [:location]

@@ -119,11 +119,8 @@ namespace :god do
         with RAILS_ENV: fetch(:rails_env) do
           if god_is_running
             execute :bundle, "exec god terminate"
-            # execute :bundle, "exec god load #{fetch :god_config}"
-            # execute :bundle, "exec god restart"
-          else
-            start_god
           end
+          start_god
         end
       end
     end
