@@ -5,15 +5,17 @@ class TagStatWorker
   sidekiq_options unqiue: true,
                   unique_args: -> (args) { [ args.first ] }
 
-  def perform tag_id, beginning=1.day
+  def perform tag_id, beginning=1.day, force=false
     tag = Tag.find(tag_id)
-    start = beginning.to_i.minutes.ago.utc.beginning_of_day
+    start = beginning.to_i.seconds.ago.utc.beginning_of_day
     finish = start.utc.end_of_day
 
-    return false if TagStat.where(tag: tag, date: start).size > 0
+    return false if TagStat.where(tag: tag, date: start).size > 0 && !force
 
-    media = tag.media.where("created_time >= ?", start).where("created_time <= ?", finish)
-    TagStat.create tag: tag, amount: media.size, date: start
+    media_size = tag.media.where("created_time >= ?", start).where("created_time <= ?", finish).size
+    ts = TagStat.where(tag: tag, date: start).first_or_initialize
+    ts.amount = media_size
+    ts.save
   end
 
   def self.spawn beginning=1.day
