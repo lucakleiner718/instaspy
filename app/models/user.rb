@@ -6,6 +6,8 @@ class User < ActiveRecord::Base
   # validates :insta_id, uniqueness: true, if: 'insta_id.present?'
   # validates :username, length: { maximum: 30 }#uniqueness: true, if: 'username.present?'
 
+  validates :insta_id_or_username
+
   scope :not_grabbed, -> { where grabbed_at: nil }
   scope :not_private, -> { where private: false }
   scope :privates, -> { where private: true }
@@ -1299,6 +1301,14 @@ class User < ActiveRecord::Base
     end
 
     self
+  end
+
+  private
+
+  def insta_id_or_username
+    if [self.username, self.insta_id].reject(&:blank?).size == 0
+      errors[:base] << ("Please provide insta_id or username")
+    end
   end
 
 end

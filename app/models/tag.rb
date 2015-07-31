@@ -248,14 +248,6 @@ class Tag < ActiveRecord::Base
     tmc.save
   end
 
-  def self.increment_counter tag_id
-    TagMediaCounter.want(tag_id).inc(media_count: 1)
-  end
-
-  def self.decrement_counter tag_id
-    TagMediaCounter.want(tag_id).inc(media_count: -1)
-  end
-
   def media_count
     tmc = TagMediaCounter.get(self.id)
     tmc.update_media_count!

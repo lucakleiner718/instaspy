@@ -118,8 +118,9 @@ namespace :god do
       within release_path do
         with RAILS_ENV: fetch(:rails_env) do
           if god_is_running
-            execute :bundle, "exec god load #{fetch :god_config}"
-            execute :bundle, "exec god restart"
+            execute :bundle, "exec god terminate"
+            # execute :bundle, "exec god load #{fetch :god_config}"
+            # execute :bundle, "exec god restart"
           else
             start_god
           end
