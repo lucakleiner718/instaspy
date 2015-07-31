@@ -133,8 +133,6 @@ class Media < ActiveRecord::Base
     while true
       retries = 0
       begin
-        puts lookup_list
-        puts retries
         default_lookup = Geocoder::Configuration.lookup
 
         lookup = options[:lookup] ? options[:lookup] : lookup_list.sample

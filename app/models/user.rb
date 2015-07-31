@@ -990,9 +990,9 @@ class User < ActiveRecord::Base
 
     return false if self.destroyed?
 
-    self.location_country = country && country[0]
-    self.location_state = state && state[0].join(', ')
-    self.location_city = city && city[0].join(', ')
+    self.location_country = (city && city[0] && city[0][0]) || (country && country[0])
+    self.location_state = (city && city[0] && city[0][1]) || (state && state[0].last)
+    self.location_city = city && city[0] && city[0][2]
     self.location_updated_at = Time.now
     self.save
 
@@ -1030,7 +1030,7 @@ class User < ActiveRecord::Base
         data.each{ |k, v| amounts << [k, v.size] }
         amounts = amounts.sort{ |a, b| a[1] <=> b[1] }.reverse
 
-        unless amounts[0][0].nil? && with_location_amount > 20
+        if !amounts[0][0].nil? && with_location_amount > 20
           logger.debug ">> update_media_location: #{self.username.green}. stopped because most of the media has same country"
           break
         end
