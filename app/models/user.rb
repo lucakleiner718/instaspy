@@ -76,7 +76,7 @@ class User < ActiveRecord::Base
         # looking for username via search
         resp = client.user_search(self.username)
       rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::BadRequest, Instagram::InternalServerError, Instagram::GatewayTimeout,
-        JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
+        JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE, Errno::ETIMEDOUT => e
         logger.info "#{">> issue".red} #{e.class.name} :: #{e.message}"
         retries += 1
         sleep 10*retries
@@ -159,8 +159,10 @@ class User < ActiveRecord::Base
         self.destroy
       end
       return false
-    rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::InternalServerError, Instagram::GatewayTimeout,
-      JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Faraday::ParsingError, Zlib::BufError, Errno::EPIPE => e
+    rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway,
+      Instagram::InternalServerError, Instagram::GatewayTimeout,
+      JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Faraday::ParsingError, Zlib::BufError,
+      Errno::EPIPE, Errno::ETIMEDOUT => e
       retries += 1
       sleep 10*retries
       retry if retries <= 5
@@ -193,7 +195,7 @@ class User < ActiveRecord::Base
       end.get("/#{self.username}/") do |req|
         req.headers["User-Agent"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.93 Safari/537.36"
       end
-    rescue Faraday::ConnectionFailed, Errno::ETIMEDOUT => e
+    rescue Faraday::ConnectionFailed, Errno::EPIPE, Errno::ETIMEDOUT => e
       retries += 1
       sleep 10*retries
       retry if retries <= 5
@@ -335,7 +337,7 @@ class User < ActiveRecord::Base
         resp = client.client.user_followed_by self.insta_id, cursor: cursor, count: options[:count]
       rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::InternalServerError,
              Instagram::GatewayTimeout, JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError,
-             Errno::EPIPE => e
+             Errno::EPIPE, Errno::ETIMEDOUT => e
         Rails.logger.info e.message
         sleep 10*retries
         retries += 1
@@ -569,7 +571,7 @@ class User < ActiveRecord::Base
         resp = client.user_follows self.insta_id, cursor: cursor, count: options[:count]
       rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::InternalServerError,
         Instagram::GatewayTimeout, JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError,
-        Errno::EPIPE => e
+        Errno::EPIPE, Errno::ETIMEDOUT => e
         Rails.logger.info e.message
         sleep 10*retries
         retries += 1
@@ -733,7 +735,7 @@ class User < ActiveRecord::Base
       client = InstaClient.new.client
       resp = client.user_search username
     rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::BadRequest, Instagram::InternalServerError, Instagram::GatewayTimeout,
-      JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
+      JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE, Errno::ETIMEDOUT => e
       sleep 10
       retries += 1
       retry if retries <= 5
@@ -807,8 +809,8 @@ class User < ActiveRecord::Base
         client = InstaClient.new
         media_list = client.client.user_recent_media self.insta_id, count: 100, max_id: max_id
       rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::InternalServerError,
-             Instagram::GatewayTimeout, JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError,
-             Errno::EPIPE => e
+        Instagram::GatewayTimeout, JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError,
+        Errno::EPIPE, Errno::ETIMEDOUT => e
         retries += 1
         sleep 10*retries
         retry if retries <= 5
