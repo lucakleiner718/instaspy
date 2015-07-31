@@ -579,9 +579,13 @@ class Reporter
       end
     end
 
-    filepath = "reports/users-report-#{Time.now.to_i}.csv"
-    FileManager.save_file filepath, content: csv_string
-    "#{ENV['FILES_DIR']}/#{filepath}"
+    if options[:return_csv]
+      csv_string
+    else
+      filepath = "reports/users-report-#{Time.now.to_i}.csv"
+      FileManager.save_file filepath, content: csv_string
+      "#{ENV['FILES_DIR']}/#{filepath}"
+    end
   end
 
   def self.media_export media_list, *args

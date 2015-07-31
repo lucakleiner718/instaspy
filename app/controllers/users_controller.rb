@@ -39,4 +39,29 @@ class UsersController < ApplicationController
 
     send_data csv_string, :type => 'text/csv; charset=utf-8; header=present', disposition: :attachment, filename: "processed-file-#{Time.now.to_i}.csv"
   end
+
+  def export
+
+  end
+
+  def export_process
+    location = params[:location]
+    users = User.all
+
+    if location[:country].present?
+      users = users.where('LOWER(location_country) = LOWER(?)', location[:country])
+    end
+
+    if location[:state].present?
+      users = users.where('LOWER(location_state) = LOWER(?)', location[:state])
+    end
+
+    if location[:city].present?
+      users = users.where('LOWER(location_city) = LOWER(?)', location[:city])
+    end
+
+    csv_string = Reporter.users_export ids: users.pluck(:id), return_csv: true
+
+    send_data csv_string, :type => 'text/csv; charset=utf-8; header=present', disposition: :attachment, filename: "users-export-#{users.size}-#{Time.now.to_i}.csv"
+  end
 end

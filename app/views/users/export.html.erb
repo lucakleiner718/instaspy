@@ -1,0 +1,20 @@
+<div class="row">
+  <div class="col-sm-5">
+    <h1>Export users by location</h1>
+    <%= form_tag users_export_process_path do %>
+      <div class="form-group">
+        <label for="userCountry">Country</label>
+        <input type="text" class="form-control" id="userCountry" placeholder="Country" name="location[country]">
+      </div>
+      <div class="form-group">
+        <label for="userState">State</label>
+        <input type="text" class="form-control" id="userState" placeholder="State" name="location[state]">
+      </div>
+      <div class="form-group">
+        <label for="userCity">City</label>
+        <input type="text" class="form-control" id="userCity" placeholder="City" name="location[city]">
+      </div>
+      <button type="submit" class="btn btn-default">Export</button>
+    <% end %>
+  </div>
+</div>

@@ -2,6 +2,8 @@ Rails.application.routes.draw do
 
   get 'users' => 'users#index', as: :users
   post 'users/duplicates' => 'users#duplicates', as: :users_duplicates
+  get 'users/export' => 'users#export', as: :users_export
+  post 'users/export/process' => 'users#export_process', as: :users_export_process
   get 'users/:id' => 'users#show', as: :user
 
   root to: 'pages#home'
