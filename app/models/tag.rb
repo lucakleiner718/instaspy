@@ -182,7 +182,7 @@ class Tag < ActiveRecord::Base
       media_size = 0
       media_ids = MediaTag.where(tag_id: self.id).pluck(:media_id)
       media_ids.in_groups_of(10_000, false) do |group|
-        media_size += Media.where(id: group).where("created_time >= :begining AND created_time <= :end", beginning: day.beginning_of_day, end: day.end_of_day).size
+        media_size += Media.where(id: group).where("created_time >= :beginning AND created_time <= :end", beginning: day.beginning_of_day, end: day.end_of_day).size
       end
       data[day.strftime('%m/%d')] = media_size
     end
