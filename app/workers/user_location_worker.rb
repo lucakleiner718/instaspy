@@ -1,12 +1,14 @@
-
 class UserLocationWorker
   include Sidekiq::Worker
 
   sidekiq_options queue: :low, retry: 3, unique: true, unique_args: -> (args) { [ args.first ] }
 
   def perform user_id
-    user = User.find(user_id) rescue ActiveRecord::RecordNotFound nil
-    user.update_location! if user
+    begin
+      user = User.find(user_id)
+      user.update_location!
+    rescue ActiveRecord::RecordNotFound
+    end
   end
 
   def self.spawn
