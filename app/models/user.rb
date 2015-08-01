@@ -363,7 +363,7 @@ class User < ActiveRecord::Base
       fols = Follower.where(user_id: self.id).where(follower_id: users.map(&:id)).to_a
 
       resp.data.each do |user_data|
-        logger.debug "Row #{user_data['username']} start"
+        # logger.debug "Row #{user_data['username']} start"
         row_start = Time.now
 
         new_record = false
@@ -431,7 +431,7 @@ class User < ActiveRecord::Base
           end
         end
 
-        logger.debug "Row #{user_data['username']} end / time: #{(Time.now - row_start).round(2)}s"
+        # logger.debug "Row #{user_data['username']} end / time: #{(Time.now - row_start).round(2)}s"
       end
 
       total_exists += exists
@@ -798,7 +798,7 @@ class User < ActiveRecord::Base
     options[:total_limit] ||= 2_000
     tags_found = []
 
-    self.update_info! unless self.insta_id
+    self.update_info! force: true unless self.insta_id
     raise Exception unless self.insta_id || self.destroyed?
     return false if self.private?
 
@@ -841,8 +841,8 @@ class User < ActiveRecord::Base
       tags_found.concat(Tag.where(name: data.map{|el| el['tags']}.flatten.uniq).to_a).uniq!
 
       data.each do |media_item|
-        logger.debug "#{">>".green} Start process #{media_item['id']}"
-        ts = Time.now
+        # logger.debug "#{">>".green} Start process #{media_item['id']}"
+        # ts = Time.now
 
         media = media_found.select{|el| el.insta_id == media_item['id']}.first
         unless media
@@ -864,7 +864,7 @@ class User < ActiveRecord::Base
 
         avg_created_time += media['created_time'].to_i
 
-        logger.debug "#{">>".green} End process #{media_item['id']}. T:#{(Time.now - ts).to_f.round(2)}s"
+        # logger.debug "#{">>".green} End process #{media_item['id']}. T:#{(Time.now - ts).to_f.round(2)}s"
       end
 
       break if media_list.data.size == 0
