@@ -10,8 +10,6 @@ class Tag < ActiveRecord::Base
   scope :chartable, -> { where(id: ObservedTag.where(for_chart: true).pluck(:tag_id)) }
   scope :exportable, -> { where(id: ObservedTag.where(export_csv: true).pluck(:tag_id)) }
 
-  # validates :name, format: { with: /\A[^\.\-\/\(\)\*\^\%\$\#\@\!,\?\}\]\{\[\;\:\"\'\>\<]+\z/ }
-
   CHART_DAYS = 14
 
   def name=(value)
