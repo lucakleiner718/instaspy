@@ -18,8 +18,8 @@
         <td><%= user.full_name %></td>
         <td><%= user.bio %></td>
         <td><%= user.website %></td>
-        <td><%= user.follows || 'N/A' %> (<%= user.followees.size %>)</td>
-        <td><%= user.followed_by || 'N/A' %> (<%= user.followers.size %>)</td>
+        <td><%= user.follows || 'N/A' %> (<%= @followees[user.id] || 0 %>)</td>
+        <td><%= user.followed_by || 'N/A' %> (<%= @followers[user.id] || 0 %>)</td>
         <td><%= user.email %></td>
       </tr>
     <% end %>
