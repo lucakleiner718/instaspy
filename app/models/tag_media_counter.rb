@@ -1,5 +1,7 @@
 class TagMediaCounter < ActiveRecord::Base
 
+  belongs_to :tag
+
   def self.get tag_id
     self.find_or_initialize_by(tag_id: tag_id)
   end

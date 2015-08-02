@@ -11,8 +11,7 @@
   <thead>
   <tr>
     <th><%= sortable :name, 'Tag name' %></th>
-    <!--<th><%#= sortable :media_count, 'Media amount in db' %></th>-->
-    <th>Media amount in db</th>
+    <th><%= sortable 'tag_media_counters.media_count', 'Media amount in db' %></th>
     <th></th>
   </tr>
   </thead>
@@ -20,7 +19,7 @@
   <% @tags.each do |tag| %>
     <tr>
       <td><%= tag.name %></td>
-      <td><%= number_with_delimiter tag.media_count %></td>
+      <td><span title="<%= tag.tag_media_counter ? "Counted: #{tag.tag_media_counter.updated_at.strftime('%m/%d/%Y')}" : '' %>"><%= number_with_delimiter tag.media_count %></span></td>
       <td><%= link_to 'Report', new_report_path(params: {format: 'tags', input: tag.name }), target: :_blank %></td>
     </tr>
   <% end %>

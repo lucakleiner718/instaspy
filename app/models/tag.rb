@@ -1,8 +1,7 @@
 class Tag < ActiveRecord::Base
 
-  # has_many :media_tags#, class_name: 'Media'#, after_add: :increment_some_tag, after_remove: :decrement_some_tag
   has_one :observed_tag, dependent: :destroy
-
+  has_one :tag_media_counter
   has_many :media_tags, dependent: :destroy
   has_many :media, through: :media_tags
 
@@ -241,26 +240,15 @@ class Tag < ActiveRecord::Base
 
   def update_media_count!
     amount = self.count_media
-    tmc = TagMediaCounter.get(self.id)
+    tmc = self.tag_media_counter
     tmc.media_count = amount
     tmc.save
   end
 
   def media_count
-    tmc = TagMediaCounter.get(self.id)
+    tmc = self.tag_media_counter
     tmc.update_media_count!
     tmc.media_count
-  end
-
-  def self.count_media tag_id
-    MediaTag.where(tag_id: tag_id).size
-  end
-
-  def self.update_media_count! tag_id
-    amount = self.count_media tag_id
-    tmc = TagMediaCounter.get(tag_id)
-    tmc.media_count = amount
-    tmc.save
   end
 
 end

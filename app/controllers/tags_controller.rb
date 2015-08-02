@@ -3,7 +3,7 @@ class TagsController < ApplicationController
   helper_method :sort_column, :sort_direction
 
   def index
-    @tags = Tag.all
+    @tags = Tag.all.joins(:tag_media_counter)
 
     case params[:filter]
       when 'observed'
@@ -44,6 +44,6 @@ class TagsController < ApplicationController
   end
 
   def sort_column
-    (Tag.new.attributes.keys - ['id'] + ['media_count']).include?(params[:sort]) ? params[:sort] : "name"
+    (Tag.new.attributes.keys - ['id'] + ['tag_media_counters.media_count']).include?(params[:sort]) ? params[:sort] : "name"
   end
 end
