@@ -116,9 +116,9 @@ class FolloweesReportMailer < ActionMailer::Base
     end
 
     if ENV['insta_debug'] || Rails.env.development?
-      mail to: 'me@antonzaytsev.com', subject: "InstaSpy followees weekly #{@start.strftime('%m/%d/%y')} - #{@finish.strftime('%m/%d/%y')} report #{origin.username}", from: 'dev@antonzaytsev.com'
+      mail to: 'me@antonzaytsev.com', subject: "InstaSpy followees weekly #{@start.to_s(:date)} - #{@finish.to_s(:date)} report #{origin.username}", from: 'dev@antonzaytsev.com'
     else
-      mail to: "rob@ladylux.com", bcc: 'me@antonzaytsev.com', subject: "InstaSpy followees weekly #{@start.strftime('%m/%d/%y')} - #{@finish.strftime('%m/%d/%y')} report #{origin.username}"
+      mail to: "rob@ladylux.com", bcc: 'me@antonzaytsev.com', subject: "InstaSpy followees weekly #{@start.to_s(:date)} - #{@finish.to_s(:date)} report #{origin.username}"
     end
   end
 

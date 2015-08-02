@@ -22,7 +22,7 @@ class PagesController < ApplicationController
 
     @amount_of_days.times do |i|
       d = @amount_of_days-i-1
-      cat = d.days.ago.utc.strftime('%m/%d')
+      cat = d.days.ago.utc.to_s(:month_year)
       blank[cat] = 0
     end
 
@@ -67,7 +67,7 @@ class PagesController < ApplicationController
 
     @amount_of_days.times do |i|
       d = @amount_of_days-i-1
-      cat = d.days.ago.utc.strftime('%m/%d')
+      cat = d.days.ago.utc.to_s(:month_year)
       blank[cat] = 0
     end
 
@@ -77,8 +77,8 @@ class PagesController < ApplicationController
   end
 
   def media_chart
-    @published = MediaAmountStat.where("date > ?", (params[:days] || 14).days.ago.utc.beginning_of_day).where(action: :published).order(date: :asc).map{|el| [el.date.strftime('%m/%d'), el.amount]}
-    @added = MediaAmountStat.where("date > ?", (params[:days] || 14).days.ago.utc.beginning_of_day).where(action: :added).order(date: :asc).map{|el| [el.date.strftime('%m/%d'), el.amount]}
+    @published = MediaAmountStat.where("date > ?", (params[:days] || 14).days.ago.utc.beginning_of_day).where(action: :published).order(date: :asc).map{|el| [el.date.to_s(:month_day), el.amount]}
+    @added = MediaAmountStat.where("date > ?", (params[:days] || 14).days.ago.utc.beginning_of_day).where(action: :added).order(date: :asc).map{|el| [el.date.to_s(:month_day), el.amount]}
   end
 
   private

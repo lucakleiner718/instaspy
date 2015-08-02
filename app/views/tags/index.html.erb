@@ -19,7 +19,7 @@
   <% @tags.each do |tag| %>
     <tr>
       <td><%= tag.name %></td>
-      <td><span title="<%= tag.tag_media_counter ? "Counted: #{tag.tag_media_counter.updated_at.strftime('%m/%d/%Y')}" : '' %>"><%= number_with_delimiter tag.media_count %></span></td>
+      <td><span title="<%= tag.tag_media_counter ? "Counted: #{tag.tag_media_counter.updated_at.to_s(:date)}" : '' %>"><%= number_with_delimiter tag.media_count %></span></td>
       <td><%= link_to 'Report', new_report_path(params: {format: 'tags', input: tag.name }), target: :_blank %></td>
     </tr>
   <% end %>

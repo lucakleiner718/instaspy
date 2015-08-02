@@ -134,7 +134,7 @@ class Tag < ActiveRecord::Base
       median_created_time = created_time_list.size % 2 == 0 ? (created_time_list[(created_time_list.size/2-1)..(created_time_list.size/2+1)].sum / 3) : (created_time_list[(created_time_list.size/2)..(created_time_list.size/2+1)].sum / 2)
 
       time_end = Time.now
-      logger.debug "#{">>".green} [#{self.name.green}] / #{media_list.data.size}/#{total_processed} #{added.to_s.cyan}/#{total_added.to_s.cyan} / MT: #{((Time.at median_created_time).strftime('%d/%m/%y %H:%M:%S')).to_s.yellow} / IG: #{(ig_time_end-time_start).to_f.round(2)}s / T: #{(time_end - time_start).to_f.round(2)}s"
+      logger.debug "#{">>".green} [#{self.name.green}] / #{media_list.data.size}/#{total_processed} #{added.to_s.cyan}/#{total_added.to_s.cyan} / MT: #{((Time.at median_created_time).to_s(:datetime)).to_s.yellow} / IG: #{(ig_time_end-time_start).to_f.round(2)}s / T: #{(time_end - time_start).to_f.round(2)}s"
 
       move_next = false
 
@@ -173,7 +173,7 @@ class Tag < ActiveRecord::Base
     amount_of_days = amount_of_days.to_i
 
     amount_of_days.times do |i|
-      blank[(amount_of_days-i).days.ago.utc.strftime('%m/%d')] = 0
+      blank[(amount_of_days-i).days.ago.utc.to_s(:month_day)] = 0
     end
 
     data = blank.dup
@@ -185,7 +185,7 @@ class Tag < ActiveRecord::Base
       media_ids.in_groups_of(10_000, false) do |group|
         media_size += Media.where(id: group).where("created_time >= :beginning AND created_time <= :end", beginning: day.beginning_of_day, end: day.end_of_day).size
       end
-      data[day.strftime('%m/%d')] = media_size
+      data[day.to_s(:month_day)] = media_size
     end
 
     data.reject{|k| !k.in?(blank) }.values

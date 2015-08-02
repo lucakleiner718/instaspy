@@ -17,8 +17,8 @@
   </thead>
   <tbody>
   <tr>
-    <td><%= @report.date_from.strftime('%m/%d/%Y') if @report.date_from %></td>
-    <td><%= @report.date_to.strftime('%m/%d/%Y') if @report.date_to %></td>
+    <td><%= @report.date_from.to_s(:date) if @report.date_from %></td>
+    <td><%= @report.date_to.to_s(:date) if @report.date_to %></td>
     <td><%= @report.processed_csv.size %></td>
   </tr>
   </tbody>

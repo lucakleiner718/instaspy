@@ -146,7 +146,7 @@ class Reporter
             next unless media
             csv << [
               user.insta_id, user.username, user.full_name, user.website, user.bio, user.follows, user.followed_by,
-              user.media_amount, user.created_at.strftime('%m/%d/%Y'), media.link, media.likes_amount,
+              user.media_amount, user.created_at.to_s(:date), media.link, media.likes_amount,
               media.comments_amount
             ]
 
@@ -239,8 +239,8 @@ class Reporter
         csv << [
           user.insta_id,
           user.username, user.full_name, user.website, user.bio, user.follows, user.followed_by, user.media_amount,
-          user.email, user.created_at.strftime('%m/%d/%Y'), media.link, media.likes_amount, media.comments_amount,
-          media.created_time.strftime('%m/%d/%Y %H:%M:%S')
+          user.email, user.created_at.to_s(:date), media.link, media.likes_amount, media.comments_amount,
+          media.created_time.to_s(:datetime)
         ]
       end
 
@@ -440,7 +440,7 @@ class Reporter
 
         user.media.order(created_time: :desc).limit(amount).each do |m|
           m.update_info!
-          csv << [user.username, m.likes_amount, m.comments_amount, m.created_time.strftime('%m/%d/%Y'), m.link, m.tags.map(&:name).join(', ')]
+          csv << [user.username, m.likes_amount, m.comments_amount, m.created_time.to_s(:date), m.link, m.tags.map(&:name).join(', ')]
         end
       end
     end
