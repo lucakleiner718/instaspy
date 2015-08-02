@@ -91,7 +91,7 @@ class Tag < ActiveRecord::Base
       media_to_process_amount = 0
       data.each do |media_item|
         media = media_found.select{|el| el.insta_id == media_item['id']}.first
-        next if media && media.updated_at < 3.days.ago
+        next if media && media.updated_at > 3.days.ago
         media_to_process_amount += 1
       end
 
@@ -108,7 +108,7 @@ class Tag < ActiveRecord::Base
         created_time_list << Time.at(media_item['created_time'].to_i)
 
         # don't need to update media if it was recently updated
-        next if media && media.updated_at < 3.days.ago
+        next if media && media.updated_at > 3.days.ago
 
         unless media
           media = Media.new(insta_id: media_item['id'])
