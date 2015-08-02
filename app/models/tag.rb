@@ -91,9 +91,13 @@ class Tag < ActiveRecord::Base
       users_found = User.where(insta_id: data.map{|el| el['user']['id']}.uniq).to_a
 
       data.each do |media_item|
-        logger.debug "#{">>".green} Start process #{media_item['id']}"
-        st_time = Time.now
+        # logger.debug "#{">>".green} Start process #{media_item['id']}"
+        # st_time = Time.now
         media = media_found.select{|el| el.insta_id == media_item['id']}.first
+
+        # don't need to update media if it was recently updated
+        next if media && media.updated_at < 3.days.ago
+
         unless media
           media = Media.new(insta_id: media_item['id'])
           added += 1
@@ -116,7 +120,7 @@ class Tag < ActiveRecord::Base
         tags_found.concat(media.tags).uniq!
 
         created_time_list << media['created_time'].to_i
-        logger.debug "#{">>".green} End process #{media_item['id']}. Time: #{(Time.now - st_time).to_f.round(2)}s"
+        # logger.debug "#{">>".green} End process #{media_item['id']}. Time: #{(Time.now - st_time).to_f.round(2)}s"
       end
 
       tags_found = []
