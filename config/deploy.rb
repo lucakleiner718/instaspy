@@ -4,7 +4,7 @@ lock '3.2.1'
 set :application, 'instaspy'
 set :repo_url, 'git@github.com:luxagency/instaspy.git'
 
-set :branch, 'pg'
+set :branch, 'master'
 set :scm, :git
 set :format, :pretty
 set :pty, true
