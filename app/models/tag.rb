@@ -87,13 +87,25 @@ class Tag < ActiveRecord::Base
       data = media_list.data
 
       media_found = Media.where(insta_id: data.map{|el| el['id']}).to_a
-      tags_found.concat(Tag.where(name: data.map{|el| el['tags']}.flatten.uniq.map(&:downcase)).to_a).uniq!
-      users_found = User.where(insta_id: data.map{|el| el['user']['id']}.uniq).to_a
+
+      media_to_process_amount = 0
+      data.each do |media_item|
+        media = media_found.select{|el| el.insta_id == media_item['id']}.first
+        next if media && media.updated_at < 3.days.ago
+        media_to_process_amount += 1
+      end
+
+      if media_to_process_amount > 0
+        tags_found.concat(Tag.where(name: data.map{|el| el['tags']}.flatten.uniq.map(&:downcase)).to_a).uniq!
+        users_found = User.where(insta_id: data.map{|el| el['user']['id']}.uniq).to_a
+      end
 
       data.each do |media_item|
         # logger.debug "#{">>".green} Start process #{media_item['id']}"
         # st_time = Time.now
         media = media_found.select{|el| el.insta_id == media_item['id']}.first
+
+        created_time_list << Time.at(media_item['created_time'].to_i)
 
         # don't need to update media if it was recently updated
         next if media && media.updated_at < 3.days.ago
@@ -119,19 +131,22 @@ class Tag < ActiveRecord::Base
 
         tags_found.concat(media.tags).uniq!
 
-        created_time_list << media['created_time'].to_i
+        # created_time_list << media['created_time'].to_i
         # logger.debug "#{">>".green} End process #{media_item['id']}. Time: #{(Time.now - st_time).to_f.round(2)}s"
       end
-
-      tags_found = []
 
       total_added += added
       total_processed += media_list.data.size
 
       break if media_list.data.size == 0
 
-      created_time_list = created_time_list.sort
-      median_created_time = created_time_list.size % 2 == 0 ? (created_time_list[(created_time_list.size/2-1)..(created_time_list.size/2+1)].sum / 3) : (created_time_list[(created_time_list.size/2)..(created_time_list.size/2+1)].sum / 2)
+      if created_time_list.size > 0
+        created_time_list = created_time_list.sort
+        median_created_time = created_time_list.size % 2 == 0 ? (created_time_list[(created_time_list.size/2-1)..(created_time_list.size/2+1)].map(&:to_i).sum / 3) : (created_time_list[(created_time_list.size/2)..(created_time_list.size/2+1)].map(&:to_i).sum / 2)
+        median_created_time = Time.at median_created_time
+      else
+        median_created_time = 'N/A'
+      end
 
       time_end = Time.now
       logger.debug "#{">>".green} [#{self.name.green}] / #{media_list.data.size}/#{total_processed} #{added.to_s.cyan}/#{total_added.to_s.cyan} / MT: #{((Time.at median_created_time).to_s(:datetime)).to_s.yellow} / IG: #{(ig_time_end-time_start).to_f.round(2)}s / T: #{(time_end - time_start).to_f.round(2)}s"
