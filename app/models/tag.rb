@@ -91,6 +91,8 @@ class Tag < ActiveRecord::Base
       media_to_process_amount = 0
       data.each do |media_item|
         media = media_found.select{|el| el.insta_id == media_item['id']}.first
+        created_time_list << Time.at(media_item['created_time'].to_i)
+
         next if media && media.updated_at > 3.days.ago
         media_to_process_amount += 1
       end
@@ -98,41 +100,40 @@ class Tag < ActiveRecord::Base
       if media_to_process_amount > 0
         tags_found.concat(Tag.where(name: data.map{|el| el['tags']}.flatten.uniq.map(&:downcase)).to_a).uniq!
         users_found = User.where(insta_id: data.map{|el| el['user']['id']}.uniq).to_a
-      end
 
-      data.each do |media_item|
-        # logger.debug "#{">>".green} Start process #{media_item['id']}"
-        # st_time = Time.now
-        media = media_found.select{|el| el.insta_id == media_item['id']}.first
+        data.each do |media_item|
+          logger.debug "#{">>".green} Start process #{media_item['id']}"
+          st_time = Time.now
+          media = media_found.select{|el| el.insta_id == media_item['id']}.first
 
-        created_time_list << Time.at(media_item['created_time'].to_i)
+          # don't need to update media if it was recently updated
+          next if media && media.updated_at > 3.days.ago
 
-        # don't need to update media if it was recently updated
-        next if media && media.updated_at > 3.days.ago
+          is_new = false
+          unless media
+            media = Media.new(insta_id: media_item['id'])
+            added += 1
+            is_new = true
+          end
 
-        unless media
-          media = Media.new(insta_id: media_item['id'])
-          added += 1
+          media.set_user media_item['user'], users_found
+          media.set_data media_item
+
+          media.tag_names = media_item['tags']
+
+          # we need to have media_id before tag saving
+          begin
+            media.save
+          rescue ActiveRecord::RecordNotUnique
+            media = Media.find_by_insta_id(media.insta_id)
+          end
+
+          media.set_tags media_item['tags'], tags_found, is_new
+
+          tags_found.concat(media.tags).uniq!
+
+          logger.debug "#{">>".green} End process #{media_item['id']}. Time: #{(Time.now - st_time).to_f.round(2)}s"
         end
-
-        media.set_user media_item['user'], users_found
-        media.set_data media_item
-
-        media.tag_names = media_item['tags']
-
-        # we need to have media_id before tag saving
-        begin
-          media.save
-        rescue ActiveRecord::RecordNotUnique
-          media = Media.find_by_insta_id(media.insta_id)
-        end
-
-        media.set_tags media_item['tags'], tags_found
-
-        tags_found.concat(media.tags).uniq!
-
-        # created_time_list << media['created_time'].to_i
-        # logger.debug "#{">>".green} End process #{media_item['id']}. Time: #{(Time.now - st_time).to_f.round(2)}s"
       end
 
       total_added += added

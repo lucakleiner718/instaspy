@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150729085447) do
+ActiveRecord::Schema.define(version: 20150802212629) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -105,7 +105,7 @@ ActiveRecord::Schema.define(version: 20150729085447) do
     t.integer "media_id"
   end
 
-  add_index "media_tags", ["media_id", "tag_id"], name: "index_media_tags_on_media_id_and_tag_id", using: :btree
+  add_index "media_tags", ["media_id", "tag_id"], name: "index_media_tags_on_media_id_and_tag_id", unique: true, using: :btree
   add_index "media_tags", ["media_id"], name: "index_media_tags_on_media_id", using: :btree
   add_index "media_tags", ["tag_id"], name: "index_media_tags_on_tag_id", using: :btree
 

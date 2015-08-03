@@ -79,7 +79,7 @@ class Media < ActiveRecord::Base
 
   def set_user media_item_user, users_found=[]
     user = nil
-    user = users_found.select{|el| el.insta_id == media_item_user['id'].to_i}.first if users_found.size > 0
+    user = users_found.select{|el| el.insta_id.to_s == media_item_user['id'].to_s}.first if users_found.size > 0
     user = User.where(insta_id: media_item_user['id']).first_or_initialize unless user
 
     user.username = media_item_user['username']
@@ -89,7 +89,7 @@ class Media < ActiveRecord::Base
     self.user_id = user.id
   end
 
-  def set_tags tags_names, tags_found=[]
+  def set_tags tags_names, tags_found=[], is_new=false
     unless tags_found
       tags_found = Tag.where(id: self.media_tags.pluck(:tag_id))
     end
@@ -102,25 +102,48 @@ class Media < ActiveRecord::Base
     end
 
     if find_more.size > 0
-      tags_found.concat Tag.where(name: find_more).to_a
-    end
-
-    tags_list = []
-    tags_names.each do |tag_name|
-      tag = nil
-      tag = tags_found.select{|el| el.name.downcase == tag_name.downcase}.first if tags_found.size > 0
-      begin
-        tag = Tag.create(name: tag_name) unless tag
-      rescue ActiveRecord::RecordNotUnique
-        tag = Tag.where(name: tag_name).first
+      found = Tag.where(name: find_more).to_a
+      if found.size > 0
+        tags_found.concat found
       end
-      tags_list << tag if tag
+      if found.size < find_more.size
+        names = find_more - found.map(&:name)
+        names.each do |tag_name|
+          begin
+            tags_found << Tag.create(name: tag_name)
+          rescue ActiveRecord::RecordNotUnique
+            tags_found << Tag.find_by_name(tag_name)
+          end
+        end
+      end
     end
 
-    tags_list.uniq!{|el| el.id}
+    tags = []
+    if tags_found.size > 0
+      tags = tags_names.map do |tag_name|
+        tags_found.select{|el| el.name.downcase == tag_name.downcase}.first
+      end
+    end
+
+    media_tags_connections = []
+    unless is_new
+      media_tags_connections = MediaTag.where(media_id: self.id).pluck(:tag_id)
+      if tags.size > 0
+        deleted_tags = media_tags_connections - tags.map(&:id)
+        if deleted_tags.size > 0
+          MediaTag.where(media_id: self.id, tag_id: deleted_tags).destroy_all
+        end
+      end
+    end
+
+    media_tag_insert = tags.map(&:id) - media_tags_connections
+    begin
+      MediaTag.connection.execute("INSERT INTO media_tags (media_id, tag_id) VALUES #{media_tag_insert.map{|tag_id| "(#{self.id}, #{tag_id})"}.join(', ')}")
+    rescue ActiveRecord::RecordNotUnique => e
+      self.tags = tags.map(&:id)
+    end
 
     self.tag_names = tags_names
-    self.tags = tags_list
   end
 
   def set_location *args
