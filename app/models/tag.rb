@@ -88,6 +88,8 @@ class Tag < ActiveRecord::Base
 
       media_found = Media.where(insta_id: data.map{|el| el['id']}).to_a
 
+      media_found_end = Time.now
+
       media_to_process_amount = 0
       data.each do |media_item|
         media = media_found.select{|el| el.insta_id == media_item['id']}.first
@@ -102,8 +104,8 @@ class Tag < ActiveRecord::Base
         users_found = User.where(insta_id: data.map{|el| el['user']['id']}.uniq).to_a
 
         data.each do |media_item|
-          logger.debug "#{">>".green} Start process #{media_item['id']}"
-          st_time = Time.now
+          # logger.debug "#{">>".green} Start process #{media_item['id']}"
+          # st_time = Time.now
           media = media_found.select{|el| el.insta_id == media_item['id']}.first
 
           # don't need to update media if it was recently updated
@@ -132,7 +134,7 @@ class Tag < ActiveRecord::Base
 
           tags_found.concat(media.tags).uniq!
 
-          logger.debug "#{">>".green} End process #{media_item['id']}. Time: #{(Time.now - st_time).to_f.round(2)}s"
+          # logger.debug "#{">>".green} End process #{media_item['id']}. Time: #{(Time.now - st_time).to_f.round(2)}s"
         end
       end
 
@@ -150,7 +152,8 @@ class Tag < ActiveRecord::Base
       end
 
       time_end = Time.now
-      logger.debug "#{">>".green} [#{self.name.green}] / #{media_list.data.size}/#{total_processed} #{added.to_s.cyan}/#{total_added.to_s.cyan} / MT: #{((Time.at median_created_time).to_s(:datetime)).to_s.yellow} / IG: #{(ig_time_end-time_start).to_f.round(2)}s / T: #{(time_end-ig_time_end).to_f.round(2)}s"
+      logger.debug "#{">>".green} [#{self.name.green}] / #{media_list.data.size}/#{total_processed} #{added.to_s.cyan}/#{total_added.to_s.cyan} / MT: #{((Time.at median_created_time).to_s(:datetime)).to_s.yellow} / IG: #{(ig_time_end-time_start).to_f.round(2)}s / T: #{(time_end-ig_time_end).to_f.round(2)}s / TMedia: #{(media_found_end-ig_time_end).to_f.round(2)}s"
+      sleep 2
 
       move_next = false
 
