@@ -16,6 +16,8 @@ class UserWorker
       return
     end
 
+    options.symbolize_keys!
+
     user.update_info! options if user
   end
 
