@@ -125,7 +125,7 @@ class Tag < ActiveRecord::Base
 
           # we need to have media_id before tag saving
           begin
-            media.save
+            media.save!
           rescue ActiveRecord::RecordNotUnique
             media = Media.find_by_insta_id(media.insta_id)
           end
@@ -214,7 +214,7 @@ class Tag < ActiveRecord::Base
   def self.observe tag_name
     t = Tag.get(tag_name)
     ot = t.observed_tag.present? ? t.observed_tag : t.build_observed_tag
-    ot.save
+    ot.save!
     t.update_media_count!
   end
 
@@ -222,7 +222,7 @@ class Tag < ActiveRecord::Base
     t = Tag.get(tag_name)
     ot = t.observed_tag.present? ? t.observed_tag : t.build_observed_tag
     ot.export_csv = true
-    ot.save
+    ot.save!
     t.update_media_count!
   end
 
@@ -237,7 +237,7 @@ class Tag < ActiveRecord::Base
     t = Tag.get(tag_name)
     ot = t.observed_tag.present? ? t.observed_tag : t.build_observed_tag
     ot.for_chart = true
-    ot.save
+    ot.save!
   end
 
   def self.remove_from_chart tag_name
@@ -265,7 +265,7 @@ class Tag < ActiveRecord::Base
     amount = self.count_media
     tmc = self.tag_media_counter || self.build_tag_media_counter
     tmc.media_count = amount
-    tmc.save
+    tmc.save!
   end
 
   def media_count

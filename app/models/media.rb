@@ -53,7 +53,7 @@ class Media < ActiveRecord::Base
     self.set_data response.data
     self.set_tags response.data['tags']
 
-    save_result = self.save
+    save_result = self.save!
 
     Rails.logger.debug "#{">>".green} Update took #{(Time.now - start_time).to_f.round(2)}s"
 
@@ -297,7 +297,7 @@ class Media < ActiveRecord::Base
 
   def update_location! *args
     self.set_location *args
-    self.save
+    self.save!
   end
 
   def self.get_by_location lat, lng, *args
@@ -338,10 +338,7 @@ class Media < ActiveRecord::Base
           added_media << media
         end
 
-        # begin
-          media.save unless media.new_record? && Media.where(insta_id: media_item['id']).size == 1
-        # rescue ActiveRecord::RecordNotUnique => e
-        # end
+        media.save! unless media.new_record? && Media.where(insta_id: media_item['id']).size == 1
 
         media.set_tags media_item['tags']
 

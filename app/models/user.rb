@@ -3,7 +3,7 @@ class User < ActiveRecord::Base
   has_many :media, class_name: 'Media', dependent: :destroy
   has_many :feedly
 
-  # validates :insta_id, uniqueness: true, if: 'insta_id.present?'
+  validates :insta_id, format: { with: /\A\d+\z/ }
   # validates :username, length: { maximum: 30 }#uniqueness: true, if: 'username.present?'
 
   scope :not_grabbed, -> { where grabbed_at: nil }
@@ -129,7 +129,7 @@ class User < ActiveRecord::Base
         if exists_username
           # set random username for it, later we will start update_info to get actual username
           exists_username.username = "#{exists_username.username}#{Time.now.to_i}"
-          exists_username.save
+          exists_username.save!
         end
       end
     rescue Instagram::BadRequest => e
@@ -152,7 +152,7 @@ class User < ActiveRecord::Base
         if self.destroyed?
           return false
         else
-          self.save
+          self.save!
           return true
         end
       elsif e.message =~ /this user does not exist/
@@ -163,6 +163,7 @@ class User < ActiveRecord::Base
       Instagram::InternalServerError, Instagram::GatewayTimeout,
       JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Faraday::ParsingError, Zlib::BufError,
       Errno::EPIPE, Errno::ETIMEDOUT => e
+      Rails.logger.debug "Exception catched #{e.class} - #{e.message}"
       retries += 1
       sleep 10*retries
       retry if retries <= 5
@@ -172,7 +173,7 @@ class User < ActiveRecord::Base
     self.set_data data
     self.grabbed_at = Time.now
     self.private = false if self.private?
-    self.save
+    self.save!
 
     if exists_username
       exists_username.update_info!
@@ -231,7 +232,7 @@ class User < ActiveRecord::Base
     }
 
     self.set_data data
-    self.save
+    self.save!
   end
 
   # What the avg interval between followers
@@ -402,7 +403,7 @@ class User < ActiveRecord::Base
             fol.first_or_initialize
             if fol.followed_at.blank? || fol.followed_at > followed_at
               fol.followed_at = followed_at
-              fol.save
+              fol.save!
             end
             added += 1
           else
@@ -411,19 +412,19 @@ class User < ActiveRecord::Base
             if fol_exists
               if fol_exists.followed_at.blank? || fol_exists.followed_at > followed_at
                 fol_exists.followed_at = followed_at
-                fol_exists.save
+                fol_exists.save!
               end
               exists += 1
             else
               fol = fol.first_or_initialize
               if fol.new_record?
                 fol.followed_at = followed_at
-                fol.save rescue ActiveRecord::RecordNotUnique false
+                fol.save! rescue ActiveRecord::RecordNotUnique false
                 added += 1
               else
                 if fol.followed_at.blank? || fol.followed_at > followed_at
                   fol.followed_at = followed_at
-                  fol.save rescue ActiveRecord::RecordNotUnique false
+                  fol.save! rescue ActiveRecord::RecordNotUnique false
                 end
                 exists += 1
               end
@@ -480,7 +481,7 @@ class User < ActiveRecord::Base
       end
     end
 
-    self.save if self.changed?
+    self.save! if self.changed?
 
     true
   end
@@ -1250,14 +1251,14 @@ class User < ActiveRecord::Base
 
     record.website = self.website
     record.grabbed_at = Time.now
-    record.save
+    record.save!
 
     true
   end
 
   def must_save
     begin
-      self.save
+      self.save!
     rescue ActiveRecord::RecordNotUnique => e
       if e.message =~ /index_users_on_insta_id/
         return User.where(username: self.username).first
@@ -1270,7 +1271,7 @@ class User < ActiveRecord::Base
           exists_user.update_info! force: true
           if exists_user.private? || exists_user.username == self.username
             exists_user.destroy
-            self.save
+            self.save!
           end
         end
       else
@@ -1290,7 +1291,7 @@ class User < ActiveRecord::Base
           exists_user.update_info! force: true
           if exists_user.private? || exists_user.username == self.username
             exists_user.destroy
-            self.save
+            self.save!
           end
         end
       else
