@@ -5,6 +5,7 @@ class UserMediaWorker
 
   def perform user_id, *args
     options = args.extract_options!
+    options.symbolize_keys!
 
     begin
       user = User.find(user_id)
