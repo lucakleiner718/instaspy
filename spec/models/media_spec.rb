@@ -47,9 +47,9 @@ RSpec.describe Media, type: :model do
 
   it "should update location" do
     media = create(:media_location)
-    VCR.use_cassette("media_#{media.insta_id}_location") do
+    # VCR.use_cassette("media_#{media.insta_id}_location") do
       media.update_location!
-    end
+    # end
 
     expect(['US', 'United States']).to include media.location_country
     expect(['FL', 'Florida']).to include media.location_state
@@ -63,7 +63,6 @@ RSpec.describe Media, type: :model do
 
   it 'should set and return tags' do
     media = create(:media2)
-    expect(media.tags.class.name).to eq 'Array'
     expect(media.tags.size).to eq 0
 
     tag = Tag.get('shopbop')

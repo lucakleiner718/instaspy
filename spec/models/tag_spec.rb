@@ -18,7 +18,9 @@ RSpec.describe Tag, type: :model do
       tag.recent_media total_limit: 50
     end
 
-    expect(tag.media.length).to be > 50
+    tag.reload
+
+    expect(tag.media.size).to be > 50
     media = tag.media.first
     expect(media.tag_names).to eq media.tags.map(&:name)
   end

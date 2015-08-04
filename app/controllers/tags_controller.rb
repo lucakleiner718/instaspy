@@ -3,7 +3,7 @@ class TagsController < ApplicationController
   helper_method :sort_column, :sort_direction
 
   def index
-    @tags = Tag.all.joins(:tag_media_counter)
+    @tags = Tag.all.joins('LEFT JOIN tag_media_counters ON tag_media_counters.tag_id = tags.id')
 
     case params[:filter]
       when 'observed'
