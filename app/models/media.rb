@@ -137,10 +137,12 @@ class Media < ActiveRecord::Base
     end
 
     media_tag_insert = tags_list.map(&:id) - media_tags_connections
-    begin
-      MediaTag.connection.execute("INSERT INTO media_tags (media_id, tag_id) VALUES #{media_tag_insert.map{|tag_id| "(#{self.id}, #{tag_id})"}.join(', ')}")
-    rescue ActiveRecord::RecordNotUnique => e
-      self.tags = tags_list.map(&:id)
+    if media_tag_insert.size > 0
+      begin
+        MediaTag.connection.execute("INSERT INTO media_tags (media_id, tag_id) VALUES #{media_tag_insert.map{|tag_id| "(#{self.id}, #{tag_id})"}.join(', ')}")
+      rescue ActiveRecord::RecordNotUnique => e
+        self.tags = tags_list.map(&:id)
+      end
     end
 
     self.tag_names = tags_names

@@ -263,7 +263,7 @@ class Tag < ActiveRecord::Base
 
   def update_media_count!
     amount = self.count_media
-    tmc = self.tag_media_counter
+    tmc = self.tag_media_counter || self.build_tag_media_counter
     tmc.media_count = amount
     tmc.save
   end

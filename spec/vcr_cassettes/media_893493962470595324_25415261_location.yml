@@ -1319,4 +1319,97 @@ http_interactions:
       string: '{"details":"invalid credentials for XaB0y63AcGfc5ZtIrbde","additionalData":[],"type":"PermissionError","subtype":"InvalidCredentials"}'
     http_version: 
   recorded_at: Tue, 07 Jul 2015 11:34:38 GMT
+- request:
+    method: get
+    uri: https://reverse.geocoder.api.here.com/6.2/reversegeocode.json?app_code=ZrESX_vdjfU-LmMli8zopg&app_id=XaB0y63AcGfc5ZtIrbde&gen=4&mode=retrieveAddresses&prox=26.00723076,-80.17822266
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 403
+      message: Forbidden
+    headers:
+      Access-Control-Allow-Origin:
+      - "*"
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 04 Aug 2015 09:28:55 GMT
+      Server:
+      - Apache-Coyote/1.1
+      X-Nlp-Irt:
+      - '622'
+      X-Nlp-Tid:
+      - 1b803b2f-43b6-40c3-a450-bbfbf8fb56c6
+      X-Served-By:
+      - i-e3f1344e.eu-west-1a
+      Content-Length:
+      - '134'
+      Connection:
+      - keep-alive
+    body:
+      encoding: UTF-8
+      string: '{"details":"invalid credentials for XaB0y63AcGfc5ZtIrbde","additionalData":[],"type":"PermissionError","subtype":"InvalidCredentials"}'
+    http_version: 
+  recorded_at: Tue, 04 Aug 2015 09:28:56 GMT
+- request:
+    method: get
+    uri: https://nominatim.openstreetmap.org/reverse?accept-language=en&addressdetails=1&format=json&lat=26.00723076&lon=-80.17822266
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Tue, 04 Aug 2015 09:28:56 GMT
+      Server:
+      - Apache/2.4.7 (Ubuntu)
+      X-Powered-By:
+      - PHP/5.5.9-1ubuntu4.11
+      Access-Control-Allow-Methods:
+      - OPTIONS,GET
+      Access-Control-Max-Age:
+      - '8640000'
+      Access-Control-Allow-Origin:
+      - "*"
+      Content-Type:
+      - application/json; charset=UTF-8
+      Connection:
+      - close
+      Transfer-Encoding:
+      - chunked
+    body:
+      encoding: ASCII-8BIT
+      string: !binary |-
+        eyJwbGFjZV9pZCI6IjU4MDAyNTQ5NSIsImxpY2VuY2UiOiJEYXRhIMKpIE9w
+        ZW5TdHJlZXRNYXAgY29udHJpYnV0b3JzLCBPRGJMIDEuMC4gaHR0cDpcL1wv
+        d3d3Lm9wZW5zdHJlZXRtYXAub3JnXC9jb3B5cmlnaHQiLCJsYXQiOiIyNi4w
+        MDcyMzUiLCJsb24iOiItODAuMTc4NDIiLCJkaXNwbGF5X25hbWUiOiI0OTks
+        IFNvdXRoIDM1dGggQXZlbnVlLCBIb2xseXdvb2QsIEJyb3dhcmQgQ291bnR5
+        LCBGbG9yaWRhLCAzMzAyMSwgVW5pdGVkIFN0YXRlcyBvZiBBbWVyaWNhIiwi
+        YWRkcmVzcyI6eyJob3VzZV9udW1iZXIiOiI0OTkiLCJyb2FkIjoiU291dGgg
+        MzV0aCBBdmVudWUiLCJzdWJ1cmIiOiJIb2xseXdvb2QiLCJjb3VudHkiOiJC
+        cm93YXJkIENvdW50eSIsInN0YXRlIjoiRmxvcmlkYSIsInBvc3Rjb2RlIjoi
+        MzMwMjEiLCJjb3VudHJ5IjoiVW5pdGVkIFN0YXRlcyBvZiBBbWVyaWNhIiwi
+        Y291bnRyeV9jb2RlIjoidXMifX0=
+    http_version: 
+  recorded_at: Tue, 04 Aug 2015 09:28:57 GMT
 recorded_with: VCR 2.9.3
