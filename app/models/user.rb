@@ -419,12 +419,18 @@ class User < ActiveRecord::Base
               fol = fol.first_or_initialize
               if fol.new_record?
                 fol.followed_at = followed_at
-                fol.save! rescue ActiveRecord::RecordNotUnique false
+                begin
+                  fol.save!
+                rescue ActiveRecord::RecordNotUnique => e
+                end
                 added += 1
               else
                 if fol.followed_at.blank? || fol.followed_at > followed_at
                   fol.followed_at = followed_at
-                  fol.save! rescue ActiveRecord::RecordNotUnique false
+                  begin
+                    fol.save!
+                  rescue ActiveRecord::RecordNotUnique => e
+                  end
                 end
                 exists += 1
               end
@@ -647,12 +653,18 @@ class User < ActiveRecord::Base
               fol = fol.first_or_initialize
               if fol.new_record?
                 fol.followed_at = followed_at
-                fol.save rescue ActiveRecord::RecordNotUnique false
+                begin
+                  fol.save!
+                rescue ActiveRecord::RecordNotUnique => e
+                end
                 added += 1
               else
                 if fol.followed_at.blank? || fol.followed_at > followed_at
                   fol.followed_at = followed_at
-                  fol.save rescue ActiveRecord::RecordNotUnique false
+                  begin
+                    fol.save!
+                  rescue ActiveRecord::RecordNotUnique => e
+                  end
                 end
                 exists += 1
               end
