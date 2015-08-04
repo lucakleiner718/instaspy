@@ -96,7 +96,7 @@ class Media < ActiveRecord::Base
 
     tags_names.map!(&:downcase)
 
-    find_more = tags_names
+    find_more = [].concat tags_names
     if tags_found.size > 0
       find_more -= tags_found.map{|el| el.name.downcase}
     end
@@ -118,9 +118,9 @@ class Media < ActiveRecord::Base
       end
     end
 
-    tags = []
+    tags_list = []
     if tags_found.size > 0
-      tags = tags_names.map do |tag_name|
+      tags_list = tags_names.map do |tag_name|
         tags_found.select{|el| el.name.downcase == tag_name.downcase}.first
       end
     end
@@ -128,19 +128,19 @@ class Media < ActiveRecord::Base
     media_tags_connections = []
     unless is_new
       media_tags_connections = MediaTag.where(media_id: self.id).pluck(:tag_id)
-      if tags.size > 0
-        deleted_tags = media_tags_connections - tags.map(&:id)
+      if tags_list.size > 0
+        deleted_tags = media_tags_connections - tags_list.map(&:id)
         if deleted_tags.size > 0
           MediaTag.where(media_id: self.id, tag_id: deleted_tags).destroy_all
         end
       end
     end
 
-    media_tag_insert = tags.map(&:id) - media_tags_connections
+    media_tag_insert = tags_list.map(&:id) - media_tags_connections
     begin
       MediaTag.connection.execute("INSERT INTO media_tags (media_id, tag_id) VALUES #{media_tag_insert.map{|tag_id| "(#{self.id}, #{tag_id})"}.join(', ')}")
     rescue ActiveRecord::RecordNotUnique => e
-      self.tags = tags.map(&:id)
+      self.tags = tags_list.map(&:id)
     end
 
     self.tag_names = tags_names
