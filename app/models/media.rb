@@ -141,7 +141,7 @@ class Media < ActiveRecord::Base
       begin
         MediaTag.connection.execute("INSERT INTO media_tags (media_id, tag_id) VALUES #{media_tag_insert.map{|tag_id| "(#{self.id}, #{tag_id})"}.join(', ')}")
       rescue ActiveRecord::RecordNotUnique => e
-        self.tags_ids = tags_list.map(&:id)
+        self.tags = tags_list
       end
     end
 
