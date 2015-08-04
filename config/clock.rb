@@ -49,7 +49,7 @@ module Clockwork
     ReportProcessProgressWorker.spawn
   }
 
-  every(5.minutes, 'ImportUsersWorker') {
+  every(10.minutes, 'ImportUsersWorker') {
     ImportUsersWorker.spawn
   }
 

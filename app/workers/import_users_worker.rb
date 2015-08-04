@@ -49,7 +49,7 @@ class ImportUsersWorker
   end
 
   def self.spawn
-    5.times do
+    2.times do
       file = Dir.glob(Rails.root.join('tmp/cache/instaspy320/users*.csv')).map{|file| [file, file.match(/\/users-\d+-(\d+)\.csv$/)[1]]}.sort{|a,b| a[1].to_i <=> b[1].to_i}.shuffle.first.try(:first)
       self.perform_async file
     end
