@@ -19,16 +19,19 @@ class UsersController < ApplicationController
   def show
     @user = User.find_by(username: params[:id])
 
-    data = Follower.collection.aggregate(
-      { "$match" => { user_id: @user.id, followed_at: { '$ne' => nil } } },
-      { "$group" => {
-        _id: { month: { "$month" => "$followed_at" }, year: { "$year" => "$followed_at" } },
-        count: { "$sum" => 1 } } },
-      { "$sort" => { followed_at: 1 } }
-    )
-    data = data.inject({}) do |obj, el|
-      date = DateTime.parse("#{el['_id']['year']}/#{el['_id']['month']}/1").to_i * 1000
-      obj[date] = el['count']
+    data = Follower.connection.execute("
+        SELECT * FROM (
+            SELECT sum(1) as total, extract(month from followed_at) as month, extract(year from followed_at) as year
+            FROM followers
+            WHERE user_id=#{@user.id} AND followed_at is not null
+            GROUP BY extract(month from followed_at), extract(year from followed_at)
+        ) as temp
+        ORDER BY year, total
+    ")
+
+    data = data.to_a.inject({}) do |obj, el|
+      date = DateTime.parse("#{el['year']}/#{el['month']}/1").to_i * 1000
+      obj[date] = el['total'].to_i
       obj
     end
     @data = data.sort
