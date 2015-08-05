@@ -71,11 +71,11 @@ class Report < ActiveRecord::Base
   end
 
   def input_amount
-    if self.amounts[:input].blank?
-      self.amounts[:input] = self.original_csv.size
+    if self.amounts['input'].blank?
+      self.amounts['input'] = self.original_csv.size
       self.save
     end
-    self.amounts[:input]
+    self.amounts['input']
   end
 
   private
