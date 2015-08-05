@@ -26,5 +26,5 @@
     </tbody>
   </table>
 
-  <%= paginate @users %>
+  <%= paginate @users, num_pages: (User.last.id/20 + 1) %>
 </div>
