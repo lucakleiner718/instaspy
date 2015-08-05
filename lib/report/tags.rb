@@ -150,6 +150,7 @@ class Report::Tags < Report::Base
     header += ['Feedly Subscribers'] if @report.output_data.include? 'feedly'
     header += ['Media Link', 'Media Likes', 'Media Comments', 'Media Date']
     header += ['Media Image'] if @report.output_data.include? 'media_url'
+    header += ['Relation']
 
     @report.processed_csv.each do |row|
       tag_id = row[1]
@@ -183,6 +184,8 @@ class Report::Tags < Report::Base
 
               row += [media[:link], media[:likes_amount], media[:comments_amount], media[:created_time].strftime('%m/%d/%Y %H:%M:%S')]
               row += [media[:image]] if @report.output_data.include? 'media_url'
+
+              row << tag.name
 
               csv << row
             end

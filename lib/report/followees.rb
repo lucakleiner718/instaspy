@@ -81,6 +81,7 @@ class Report::Followees < Report::Base
     header += ['AVG Likes'] if @report.output_data.include? 'likes'
     header += ['Feedly Subscribers'] if @report.output_data.include? 'feedly'
     header.slice! 4,1 if @report.output_data.include?('slim') || @report.output_data.include?('slim_followers')
+    header += ['Relation']
 
     User.where(id: @report.processed_ids).each do |user|
       csv_string = CSV.generate do |csv|
@@ -98,6 +99,7 @@ class Report::Followees < Report::Base
             feedly = u.feedly.first
             row.concat [feedly ? feedly.subscribers_amount : '']
           end
+          row << user.username
 
           csv << row
         end
