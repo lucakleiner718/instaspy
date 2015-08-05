@@ -5,7 +5,7 @@ class TagChartWorker
 
   def perform tag_id, amount_of_days=Tag::CHART_DAYS
     tag =
-      if tag_id.numeric?
+      if tag_id.class.name == 'Fixnum' || tag_id.numeric?
         Tag.find(tag_id)
       else
         Tag.where(name: tag_id).first
