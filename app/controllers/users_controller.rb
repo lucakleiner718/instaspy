@@ -2,19 +2,20 @@ class UsersController < ApplicationController
   def index
     @users = User.page(params[:page]).per(20)
 
-    # @followees = {}
-    # Follower.where(follower_id: @users.map(&:id)).each do |f|
-    #   @followees[f.follower_id] ||= 0
-    #   @followees[f.follower_id] += 1
-    # end
-    #
-    # @followers = {}
-    # Follower.where(user_id: @users.map(&:id)).each do |f|
-    #   @followees[f.user_id] ||= 0
-    #   @followees[f.user_id] += 1
-    # end
+    @followees = {}
+    Follower.where(follower_id: @users.map(&:id)).each do |f|
+      @followees[f.follower_id] ||= 0
+      @followees[f.follower_id] += 1
+    end
+
+    @followers = {}
+    Follower.where(user_id: @users.map(&:id)).each do |f|
+      @followees[f.user_id] ||= 0
+      @followees[f.user_id] += 1
+    end
   end
 
+  # TODO
   def show
     @user = User.find_by(username: params[:id])
 
