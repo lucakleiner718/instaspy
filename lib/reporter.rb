@@ -90,7 +90,7 @@ class Reporter
         MediaTag.where(tag_id: tag.id).pluck(:media_id).uniq.in_groups_of(10_000, false) do |group|
           media_users_ids += Media.where(id: group).where("created_at > ?", starts).where("created_at <= ?", ends).pluck(:user_id).uniq
         end
-        users_ids = User.where(id: media_users_ids).nin(website: [nil, '']).where("created_at >= ?", starts).where("created_at <= ?", ends).pluck(:id)
+        users_ids = User.where(id: media_users_ids).where('website is not null AND website != ""').where("created_at >= ?", starts).where("created_at <= ?", ends).pluck(:id)
         users_size = users_ids.size
         processed = 0
 
