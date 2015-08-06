@@ -310,7 +310,7 @@ class User < ActiveRecord::Base
     options = args.extract_options!
     return false if self.insta_id.blank?
 
-    options = options.inject({}){|obj, (k, v)| obj[k.to_sym] = v; obj} # convert all string keys to symbols
+    options.symbolize_keys!
 
     cursor = options[:start_cursor] ? options[:start_cursor].to_f.round(3).to_i * 1_000 : nil
     finish_cursor = options[:finish_cursor] ?  options[:finish_cursor].to_f.round(3).to_i * 1_000 : nil
@@ -399,7 +399,7 @@ class User < ActiveRecord::Base
 
         UserWorker.perform_async(user.id, true) if options[:deep]
 
-        user.must_save if user.changed?
+        user = user.must_save if user.changed?
 
         followers_ids << user.id
 
