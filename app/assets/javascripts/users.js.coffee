@@ -2,8 +2,6 @@ $(document).on 'ready page:load', ->
   chart_box = $('#user-followers-chart')
   return false if chart_box.length == 0
 
-  console.log chart_box.data('data')
-
   categories = []
   $.each chart_box.data('data'), (index, row) ->
     categories.push row[0]
@@ -18,6 +16,9 @@ $(document).on 'ready page:load', ->
 #      text: 'Source: Instagram.com'
     xAxis:
       type: 'datetime'
+      dateTimeLabelFormats:
+        month: '%b \'%y'
+        year: '%Y'
       lineColor: '#fff'
       tickColor: '#fff'
       labels:

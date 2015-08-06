@@ -39,6 +39,21 @@ class User < ActiveRecord::Base
     end
   end
 
+  # around_save do
+  #   begin
+  #     yield
+  #   rescue ActiveRecord::RecordNotUnique => e
+  #     if self.insta_id.present?
+  #       if e.message =~ /username/
+  #         # user = self.where(username: username).where("insta_id != ?", exists_insta_id).first
+  #         # user.update_info! force: true if user.present?
+  #       else
+  #         raise e
+  #       end
+  #     end
+  #   end
+  # end
+
   def full_name=(value)
     value.strip! if value.present?
     write_attribute(:full_name, value)

@@ -10,6 +10,8 @@ class ReportRecentMediaWorker
       user.recent_media total_limit: 20
     end
 
-    Report.find(report_id).push(tmp_list1: user_id)
+    report = Report.find(report_id)
+    report.tmp_list1.push user_id
+    report.save
   end
 end
