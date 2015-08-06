@@ -148,155 +148,16 @@ class Media < ActiveRecord::Base
     self.tag_names = tags_names
   end
 
-  def set_location *args
-    options = args.extract_options!
-
+  def update_location! *args
     return false if self.location_lat.blank? || self.location_lng.blank?
 
-    lookup_list = options[:lookup_list] || [:bing, :google, :yandex, :esri, :here, :nominatim, :opencagedata]
+    gl = Geolocation.new self.location_lat, self.location_lng, self.id
+    location = gl.get_location *args
 
-    while true
-      retries = 0
-      begin
-        default_lookup = Geocoder::Configuration.lookup
+    self.location_country = location[:country]
+    self.location_state = location[:state]
+    self.location_city = location[:city]
 
-        lookup = options[:lookup] ? options[:lookup] : lookup_list.sample
-
-        time_start = Time.now
-        logger.info "Geocoder search for coords with lookup: #{lookup.to_s.cyan}. default: #{default_lookup.to_s.black.on_white}. Media id: #{self.id}. Time: #{(Time.now - time_start).to_f.round(2)}s"
-        resp = Geocoder.search("#{self.location_lat},#{self.location_lng}", lookup: lookup)
-      rescue TimeoutError, SocketError, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Errno::ECONNRESET,
-        Zlib::BufError, Zlib::DataError => e
-        logger.info "Geocoder exception #{e.class.name} #{e.message}".light_red
-        sleep 10
-        retries += 1
-        retry if retries <= 5
-        return false
-      rescue Geocoder::ResponseParseError => e
-        logger.info "Geocoder exception #{e.class.name}::#{e.message} / #{e.try :response}".light_red
-        lookup_list = lookup_list - [lookup]
-        retry
-      rescue Geocoder::InvalidRequest => e
-        return false
-      rescue Geocoder::OverQueryLimitError, Geocoder::ServiceUnavailable => e
-        logger.info "Geocoder exception #{e.class.name}::#{e.message}".light_red
-        lookup_list = lookup_list - [lookup]
-        retry
-      end
-
-      break if resp.first
-
-      lookup_list = lookup_list - [lookup]
-
-      break if lookup_list.size == 0
-      break if retries > 5
-      retries += 1
-    end
-
-    country = state = city = country_lookup = nil
-
-    row = resp.first
-    case row.class.name
-      when 'Geocoder::Result::Here'
-        address = row.data['Location']['Address']
-        country_lookup = Country.find_country_by_alpha3(address['Country'])
-
-        country = country_lookup ? country_lookup.alpha2 : address['Country']
-        state = address['State']
-        city = address['City']
-      when 'Geocoder::Result::Google'
-        row.address_components.each do |address_component|
-          if address_component['types'].include?('country')
-            country = address_component['short_name'] || address_component['long_name']
-          end
-          if address_component['types'].include?('administrative_area_level_1')
-            state = address_component['short_name'] || address_component['long_name']
-          end
-          if address_component['types'].include?('locality')
-            city = address_component['short_name'] || address_component['long_name']
-          end
-        end
-      when 'Geocoder::Result::Yandex'
-        address = row.data['GeoObject']['metaDataProperty']['GeocoderMetaData']['AddressDetails']
-
-        country = Country.find_country_by_name(address['Country']['CountryName']).alpha2 rescue nil
-
-        if country.blank?
-          country = Country.find_country_by_name(address['Country']['Locality']['Premise']['PremiseName']).alpha2 rescue nil
-        end
-
-        state = address['Country']['AdministrativeArea']['AdministrativeAreaName'] rescue nil
-
-        if state.blank?
-          state = address['Country']['Thoroughfare']['ThoroughfareName'] rescue nil
-        end
-
-        city = address['Country']['AdministrativeArea']['Locality']['DependentLocality']['DependentLocalityName'] rescue nil
-
-        if city.blank?
-          city = address['Country']['Locality']['LocalityName'] rescue nil
-        end
-
-        if city.blank?
-          city = address['Country']['AdministrativeArea']['SubAdministrativeArea']['SubAdministrativeAreaName'] rescue nil
-        end
-
-      when 'Geocoder::Result::Esri'
-        address = row.data['address']
-        if address
-          country_lookup = Country.find_country_by_alpha3(address['CountryCode'])
-          country = country_lookup ? country_lookup.alpha2 : address['CountryCode']
-          state = address['Region']
-          city = address['City']
-        end
-
-      when 'Geocoder::Result::Bing'
-        address = row.data['address']
-        country = address['countryRegion']
-        country = 'KR' if country == 'South Korea'
-        country_lookup = Country.find_country_by_name(country)
-
-        country = country_lookup ? country_lookup.alpha2 : country
-        state = address['adminDistrict']
-        city = address['locality'] || address['adminDistrict2']
-
-      when 'Geocoder::Result::Nominatim'
-        address = row.data['address']
-        if address
-          country = address['country']
-          state = address['state']
-          city = address['city']
-        end
-
-      when 'Geocoder::Result::Opencagedata'
-        address = row.data['components']
-        if address
-          country = address['country']
-          state = address['state']
-          city = address['city']
-        end
-    end
-
-    if country
-      country_lookup = Country.find_country_by_name(country) unless country_lookup
-      country_lookup = Country.find_country_by_alpha2(country) unless country_lookup
-      country_lookup = Country.find_country_by_alpha3(country) unless country_lookup
-    end
-
-    if country == "US" && !country_lookup.states[state]
-      st = country_lookup.states.select{|k, v| v['name'] == state}.first
-      state = st.first if st
-    end
-
-    self.location_country = country
-    self.location_state = state
-    self.location_city = city
-
-    self.location
-  end
-
-  def update_location! *args
-    self.set_location *args
     self.save!
   end
 
