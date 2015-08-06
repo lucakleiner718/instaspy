@@ -3,6 +3,11 @@ class User < ActiveRecord::Base
   has_many :media, class_name: 'Media', dependent: :destroy
   has_many :feedly
 
+  has_many :user_followers, class_name: 'Follower', foreign_key: :user_id, dependent: :destroy
+  has_many :followers, through: :user_followers
+  has_many :user_followees, class_name: 'Follower', foreign_key: :follower_id, dependent: :destroy
+  has_many :followees, through: :user_followees
+
   validates :insta_id, format: { with: /\A\d+\z/ }
   # validates :username, length: { maximum: 30 }#uniqueness: true, if: 'username.present?'
 
@@ -288,6 +293,14 @@ class User < ActiveRecord::Base
     jobs
   end
 
+  def followers_size
+    Follower.where(user: self).size
+  end
+
+  def followees_size
+    Follower.where(follower: self).size
+  end
+
   # Updating list of all followers for current user
   #
   # @example
@@ -488,8 +501,7 @@ class User < ActiveRecord::Base
         self.delete_duplicated_followers!
 
         unless options[:start_cursor]
-          followers_size = Follower.where(user_id: self.id).size
-          if self.followed_by/followers_size.to_f > 0.95
+          if self.followed_by/self.followers_size.to_f > 0.95
             self.update_attribute :followers_updated_at, Time.now
           end
         end
@@ -505,18 +517,6 @@ class User < ActiveRecord::Base
     self.save! if self.changed?
 
     true
-  end
-
-  def user_followers
-    Follower.where(user_id: self.id)
-  end
-
-  def followers
-    User.where(id: self.user_followers.pluck(:follower_id))
-  end
-
-  def followers_size
-    self.user_followers.size
   end
 
   def update_followers_async
@@ -721,18 +721,6 @@ class User < ActiveRecord::Base
     self.save
 
     true
-  end
-
-  def user_followees
-    Follower.where(follower_id: self.id)
-  end
-
-  def followees
-    User.where(id: self.user_followees.pluck(:user_id))
-  end
-
-  def followees_size
-    self.user_followees.size
   end
 
   def set_data data
