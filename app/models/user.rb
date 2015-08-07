@@ -418,17 +418,9 @@ class User < ActiveRecord::Base
 
         if new_record
           followers_create << [self.id, user.id, followed_at]
-          # Follower.create(user_id: self.id, follower_id: user.id, followed_at: followed_at)
-          # added += 1
         else
-          # fol = Follower.where(user_id: self.id, follower_id: user.id)
-
           if options[:reload]
             followers_create << [self.id, user.id, followed_at]
-            # fol = fol.build
-            # fol.followed_at = followed_at
-            # fol.save!
-            # added += 1
           else
             fol_exists = fols.select{ |el| el.follower_id == user.id }.first
 
@@ -438,20 +430,7 @@ class User < ActiveRecord::Base
               end
               exists += 1
             else
-              # fol = fol.build
-              # fol.followed_at = followed_at
-              # begin
-              #   fol.save!
-              #   added += 1
-              # rescue ActiveRecord::RecordNotUnique => e
-              #   fol = Follower.where(user_id: self.id, follower_id: user.id).first
-              #   if fol && (fol.followed_at.blank? || fol.followed_at > followed_at)
-              #     fol.update_column :followed_at, followed_at
-              #   end
-              #   exists += 1
-              # end
               followers_create << [self.id, user.id, followed_at]
-              # added += 1
             end
           end
         end
@@ -467,6 +446,7 @@ class User < ActiveRecord::Base
             fol = Follower.where(user_id: follower[0], follower_id: follower[1]).first_or_initialize
             fol.followed_at = follower[2]
             fol.save!
+          end
         end
       end
 
