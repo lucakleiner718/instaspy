@@ -58,9 +58,10 @@ class Report::Base
     @report.processed_input = filepath
   end
 
-  def process_user_info
+  def process_user_info ids=nil
+    ids ||= @report.processed_ids
+
     unless @report.steps.include?('user_info')
-      ids = @report.processed_ids
       users = User.where(id: ids).outdated(1.day).pluck(:id, :grabbed_at)
       not_updated = users.select{|r| r[1].blank? || r[1] < 36.hours.ago}.map(&:first)
 
@@ -73,7 +74,9 @@ class Report::Base
     end
   end
 
-  def process_likes ids
+  def process_likes ids=nil
+    ids ||= @report.processed_ids
+
     # if we need avg likes data and it is not yet grabbed
     if @report.output_data.include?('likes') && !@report.steps.include?('likes')
       ids = self.get_cached('get_likes', ids)
@@ -93,7 +96,9 @@ class Report::Base
     end
   end
 
-  def process_comments ids
+  def process_comments id=nil
+    ids ||= @report.processed_ids
+
     # if we need avg likes data and it is not yet grabbed
     if @report.output_data.include?('comments') && !@report.steps.include?('comments')
       ids = self.get_cached('get_comments', ids)
@@ -113,7 +118,9 @@ class Report::Base
     end
   end
 
-  def process_location ids
+  def process_location ids=nil
+    ids ||= @report.processed_ids
+
     # if we need location data and it is not yet grabbed
     if @report.output_data.include?('location') && !@report.steps.include?('location')
       ids = self.get_cached('get_location', ids)
@@ -133,7 +140,9 @@ class Report::Base
     end
   end
 
-  def process_feedly ids
+  def process_feedly ids=nil
+    ids ||= @report.processed_ids
+
     # if we need feedly subscribers amount and it is not yet grabbed
     if @report.output_data.include?('feedly') && !@report.steps.include?('feedly')
       with_website = []
@@ -181,6 +190,81 @@ class Report::Base
     rescue => e
     end
     @report.data.delete(name)
+  end
+
+  def grab_followers ids=nil
+    ids ||= @report.processed_ids
+
+    if @report.steps.include?('user_info') && !@report.steps.include?('followers')
+      users = User.where(id: ids).not_private.where("followers_updated_at is null OR followers_updated_at < ?", 3.days.ago).map{|u| [u.id, u.followed_by, u.followers_size, u]}
+      for_update = users.select{ |r| r[2]/r[1].to_f < 0.95 || r[2]/r[1].to_f > 1.2 }
+
+      if for_update.size == 0
+        @report.steps.push 'followers'
+      else
+        for_update.each do |row|
+          if row[1] < 20_000 || (row[2]/row[1].to_f > 1.2)
+            UserFollowersWorker.perform_async row[0], ignore_exists: true
+          else
+            row[3].update_followers_batch
+          end
+        end
+        @progress += (ids.size - for_update.size) / ids.size.to_f / @parts_amount
+      end
+    end
+  end
+
+  def update_followers ids=nil
+    ids ||= @report.processed_ids
+
+    if @report.steps.include?('followers')
+
+      if @report.data['followers_file'].blank?
+        # ids of ALL followers of provided users
+        followers_ids = Follower.where(user_id: ids)
+        followers_ids = followers_ids.where("followed_at >= ?", @report.date_from) if @report.date_from
+        followers_ids = followers_ids.where("followed_at <= ?", @report.date_to) if @report.date_to
+        followers_ids = followers_ids.pluck(:follower_id).uniq
+
+        filepath = "reports/reports_data/report-#{@report.id}-followers-ids"
+        FileManager.save_file filepath, content: followers_ids.join(',')
+        @report.data['followers_file'] = filepath
+
+        @report.amounts[:followers] = followers_ids.size
+        @report.save
+      else
+        followers_ids = FileManager.read_file(@report.data['followers_file']).split(',')
+      end
+
+      @followers_ids = followers_ids
+
+      # update followers info, so in report we will have actual media amount, followers and etc. data
+      unless @report.steps.include?('followers_info')
+
+        followers_to_update = self.get_cached('followers_to_update', followers_ids)
+
+        not_updated = []
+        followers_to_update.in_groups_of(10_000, false) do |ids|
+          # grab all users without data and data outdated for 7 days
+          users = User.where(id: ids).outdated(7.days).pluck(:id, :grabbed_at)
+          # select users only without data and outdated for 8 days, to avoid adding new users on each iteration
+          list = users.select{|r| r[1].blank? || r[1] < 8.days.ago}.map(&:first)
+          if list.size > 0
+            not_updated.concat list
+            list.each { |uid| UserWorker.perform_async uid }
+          end
+        end
+
+        if not_updated.size == 0
+          self.delete_cached('followers_to_update')
+          @report.steps.push 'followers_info'
+        else
+          self.save_cached('followers_to_update', not_updated)
+          @progress += (followers_ids.size - not_updated.size) / followers_ids.size.to_f / @parts_amount
+        end
+        @report.save
+      end
+    end
   end
 
 end

@@ -9,7 +9,13 @@ class Report < ActiveRecord::Base
   OUTPUT_DATA = [
     ['AVG Likes', 'likes'], ['AVG Comments', 'comments'], ['Location', 'location'], ['Feedly subscribers amount', 'feedly'],
     ['Last media date', 'last_media_date'], ['Slim (1k+ followers, with email)', 'slim'],
-    ['Slim (1k+ followers)', 'slim_followers'], ['Media Image URL', 'media_url'], ['Include All Media', 'all_media']
+    ['Slim (1k+ followers)', 'slim_followers'], ['Media Image URL', 'media_url'], ['Include All Media', 'all_media'],
+    ['Followers Analytics', 'followers_analytics']
+  ]
+
+  GOALS = [
+    ['Followers', 'followers'], ['Followees', 'followees'], ['Users', 'users'], ['Tags', 'tags'],
+    ['Recent Media', 'recent-media']
   ]
 
   def input
