@@ -308,7 +308,6 @@ class User < ActiveRecord::Base
   #
   # @option options :reload [Boolean] default: false, if reload is set to true,
   #     code will download whole list of followers and replace exists list by new one
-  # @option options :deep [Boolean] default: false, if need to updated info for each added user in background
   # @option options :ignore_exists [Boolean] default: false, iterates over all followers list
   # @option options :start_cursor [Integer] start time for followers lookup in seconds (timestamp)
   # @option options :finish_cursor [Integer] end time for followers lookup in seconds (timestamp)
@@ -388,16 +387,15 @@ class User < ActiveRecord::Base
 
       end_ig = Time.now
 
-      users = User.where(insta_id: resp.data.map{|el| el['id']}).to_a
-      fols = Follower.where(user_id: self.id).where(follower_id: users.map(&:id)).to_a
+      exists_users = User.where(insta_id: resp.data.map{|el| el['id']}).to_a
+      fols = Follower.where(user_id: self.id).where(follower_id: exists_users.map(&:id)).to_a
+
+      followers_create = []
 
       resp.data.each do |user_data|
-        # logger.debug "Row #{user_data['username']} start"
-        row_start = Time.now
-
         new_record = false
 
-        user = users.select{|el| el.insta_id == user_data['id']}.first
+        user = exists_users.select{|el| el.insta_id == user_data['id']}.first
         unless user
           user = User.new insta_id: user_data['id']
           new_record = true
@@ -410,63 +408,66 @@ class User < ActiveRecord::Base
 
         user.set_data user_data
 
-        UserWorker.perform_async(user.id, true) if options[:deep]
-
+        # this can return another user or same saved
         user = user.must_save if user.changed?
 
         followers_ids << user.id
 
-        # if request is first, withour cursor
-        followed_at = Time.now
-        # cursor is kind of timestamp
-        followed_at = Time.at(cursor.to_i/1000) if cursor
+        # cursor is kind of timestamp or if request is first
+        followed_at = cursor ? Time.at(cursor.to_i/1000) : Time.now
 
         if new_record
-          Follower.create(user_id: self.id, follower_id: user.id, followed_at: followed_at)
-          added += 1
+          followers_create << [self.id, user.id, followed_at]
+          # Follower.create(user_id: self.id, follower_id: user.id, followed_at: followed_at)
+          # added += 1
         else
-          fol = Follower.where(user_id: self.id, follower_id: user.id)
+          # fol = Follower.where(user_id: self.id, follower_id: user.id)
 
           if options[:reload]
-            fol.first_or_initialize
-            if fol.followed_at.blank? || fol.followed_at > followed_at
-              fol.followed_at = followed_at
-              fol.save!
-            end
-            added += 1
+            followers_create << [self.id, user.id, followed_at]
+            # fol = fol.build
+            # fol.followed_at = followed_at
+            # fol.save!
+            # added += 1
           else
-            fol_exists = fols.select{|el| el.follower_id == user.id }.first
+            fol_exists = fols.select{ |el| el.follower_id == user.id }.first
 
             if fol_exists
               if fol_exists.followed_at.blank? || fol_exists.followed_at > followed_at
-                fol_exists.followed_at = followed_at
-                fol_exists.save!
+                fol_exists.update_column :followed_at, followed_at
               end
               exists += 1
             else
-              fol = fol.first_or_initialize
-              if fol.new_record?
-                fol.followed_at = followed_at
-                begin
-                  fol.save!
-                rescue ActiveRecord::RecordNotUnique => e
-                end
-                added += 1
-              else
-                if fol.followed_at.blank? || fol.followed_at > followed_at
-                  fol.followed_at = followed_at
-                  begin
-                    fol.save!
-                  rescue ActiveRecord::RecordNotUnique => e
-                  end
-                end
-                exists += 1
-              end
+              # fol = fol.build
+              # fol.followed_at = followed_at
+              # begin
+              #   fol.save!
+              #   added += 1
+              # rescue ActiveRecord::RecordNotUnique => e
+              #   fol = Follower.where(user_id: self.id, follower_id: user.id).first
+              #   if fol && (fol.followed_at.blank? || fol.followed_at > followed_at)
+              #     fol.update_column :followed_at, followed_at
+              #   end
+              #   exists += 1
+              # end
+              followers_create << [self.id, user.id, followed_at]
+              # added += 1
             end
           end
         end
+      end
 
-        # logger.debug "Row #{user_data['username']} end / time: #{(Time.now - row_start).round(2)}s"
+      added += followers_create.size
+
+      if followers_create.size > 0
+        begin
+          Follower.connection.execute("INSERT INTO followers (user_id, follower_id, followed_at, created_at) VALUES #{followers_create.map{|r| r << Time.now; "(#{r.map{|el| "'#{el}'"}.join(', ')})"}.join(', ')}")
+        rescue => e
+          followers_create.each do |follower|
+            fol = Follower.where(user_id: follower[0], follower_id: follower[1]).first_or_initialize
+            fol.followed_at = follower[2]
+            fol.save!
+        end
       end
 
       total_exists += exists
