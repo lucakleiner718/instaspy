@@ -201,9 +201,10 @@ class Report::Base
 
       if for_update.size == 0
         @report.steps.push 'followers'
+        @report.save!
       else
         for_update.each do |row|
-          if row[1] < 20_000 || (row[2]/row[1].to_f > 1.2)
+          if row[1] < 2_000 || (row[2]/row[1].to_f > 1.2)
             UserFollowersWorker.perform_async row[0], ignore_exists: true
           else
             row[3].update_followers_batch
@@ -263,6 +264,63 @@ class Report::Base
           @progress += (followers_ids.size - not_updated.size) / followers_ids.size.to_f / @parts_amount
         end
         @report.save
+      end
+    end
+  end
+
+  def grab_followees ids=nil
+    ids ||= @report.processed_ids
+
+    if @report.steps.include?('user_info') && !@report.steps.include?('followees')
+      users = User.where(id: ids).not_private.where("followees_updated_at is null OR followees_updated_at < ?", 3.days.ago).map{ |u| [u.id, u.follows, u.followees_size] }
+      for_update = users.select{|r| r[2]/r[1].to_f < 0.95 || r[2]/r[1].to_f > 1.2 }
+
+      if for_update.size == 0
+        @report.steps << 'followees'
+      else
+        for_update.each { |row| UserFolloweesWorker.perform_async(row[0], ignore_exists: true) }
+        @progress += (ids.size - for_update.size) / ids.size.to_f/ @parts_amount
+      end
+    end
+  end
+
+  def update_followees ids=nil
+    ids ||= @report.processed_ids
+
+    if @report.steps.include?('followees')
+
+      if @report.data['followees_file'].blank?
+        # ids of ALL followees of provided users
+        followees_ids = Follower.where(follower_id: ids)
+        followees_ids = followees_ids.where("followed_at >= ?", @report.date_from) if @report.date_from.present?
+        followees_ids = followees_ids.where("followed_at <= ?", @report.date_to) if @report.date_to.present?
+        followees_ids = followees_ids.pluck(:user_id).uniq
+
+        filepath = "reports/reports_data/report-#{@report.id}-followees-ids"
+        FileManager.save_file filepath, content: followees_ids.join(',')
+        @report.data['followees_file'] = filepath
+
+        @report.amounts[:followees] = followees_ids.size
+        @report.save
+      else
+        followees_ids = FileManager.read_file(@report.data['followees_file']).split(',')
+      end
+
+      @followees_ids = followees_ids
+
+      # update followees info, so in report we will have actual media amount, followees and etc. data
+      unless @report.steps.include?('followees_info')
+        not_updated = []
+        followees_ids.in_groups_of(10_000, false) do |ids|
+          users = User.where(id: ids).outdated(7.days).pluck(:id, :grabbed_at)
+          not_updated.concat users.select{|r| r[1].blank? || r[1] < 8.days.ago}.map(&:first)
+        end
+        if not_updated.size == 0
+          @report.steps << 'followees_info'
+        else
+          not_updated.each { |uid| UserWorker.perform_async uid }
+          @progress += (followees_ids.size - not_updated.size) / followees_ids.size.to_f / @parts_amount
+        end
       end
     end
   end
