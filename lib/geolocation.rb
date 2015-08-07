@@ -43,6 +43,7 @@ class Geolocation
       end
 
       @row = resp.first
+      raise Exception.new("Wrong class name #{@row.class.name.downcase}") unless @row.class.name.downcase.match(/::(\w+)$/)
       method_name = "process_#{@row.class.name.downcase.match(/::(\w+)$/)[1]}".to_sym
 
       break if @row
