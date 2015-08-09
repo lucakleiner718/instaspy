@@ -1,5 +1,6 @@
 class Feedly < ActiveRecord::Base
 
+  self.table_name = 'feedly'
   belongs_to :user
 
   # validates :website, uniqueness: true, presence: true
