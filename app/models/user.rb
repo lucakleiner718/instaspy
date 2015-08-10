@@ -718,7 +718,7 @@ class User < ActiveRecord::Base
     end
   end
 
-  def self.add_by_username username
+  def self.get_by_username username
     return false if username.blank? || username.size > 30 || username !~ /\A[a-zA-Z0-9\._]+\z/
 
     username.downcase!
@@ -779,7 +779,7 @@ class User < ActiveRecord::Base
       User.where(insta_id: username.to_s).first_or_create
     else
       username = username.to_s.strip.downcase
-      User.add_by_username(username)
+      User.get_by_username(username)
     end
   end
 
@@ -1106,7 +1106,7 @@ class User < ActiveRecord::Base
 
     usernames.each do |row|
       logger.debug "Start #{row[0]}"
-      user = User.add_by_username row[0]
+      user = User.get_by_username row[0]
       if user && user.email.blank?
         user.email = row[2]
         user.save
@@ -1295,6 +1295,23 @@ class User < ActiveRecord::Base
     end
 
     self
+  end
+
+  def profile_picture
+    unless @profile_picture
+      client = InstaClient.new.client
+      info = client.user(self.insta_id)
+      @profile_picture = info.data['profile_picture']
+    end
+    @profile_picture
+  end
+
+  def location?
+    self.location_country.present?
+  end
+
+  def location
+    [self.location_country, self.location_state, self.location_city].join(', ')
   end
 
 end

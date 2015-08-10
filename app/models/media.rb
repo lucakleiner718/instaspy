@@ -154,6 +154,8 @@ class Media < ActiveRecord::Base
     gl = Geolocation.new self.location_lat, self.location_lng, self.id
     location = gl.get_location *args
 
+    return false unless location
+
     self.location_country = location[:country]
     self.location_state = location[:state]
     self.location_city = location[:city]

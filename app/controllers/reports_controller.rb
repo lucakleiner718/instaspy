@@ -52,7 +52,7 @@ class ReportsController < ApplicationController
   end
 
   def followers_report
-    user = User.add_by_username params[:name]
+    user = User.get_by_username params[:name]
     if user
       user.update_followers true
       FollowersReportMailer.user(user).deliver

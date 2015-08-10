@@ -1,7 +1,7 @@
 class FollowersReport
 
   def initialize username
-    @user = User.add_by_username username
+    @user = User.get_by_username username
   end
 
   # regularly update latest followers of specified account

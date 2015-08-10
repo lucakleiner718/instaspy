@@ -2,7 +2,7 @@ class ImportUsersWorker
   include Sidekiq::Worker
 
   def perform file
-    return unless File.exists?(file)
+    return if !file || !File.exists?(file)
     csv = CSV.read(file)
     header = csv.shift
     csv_ids = csv.inject({}){|obj, el| obj[el[1]] = el; obj}

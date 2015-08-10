@@ -435,7 +435,7 @@ class Reporter
       csv << ['Username', 'Likes', 'Comments', 'Date', 'Link', "Tags"]
 
       usernames.each do |username|
-        user = User.add_by_username(username)
+        user = User.get_by_username(username)
         unames << user.username
 
         user.media.order(created_time: :desc).limit(amount).each do |m|
@@ -665,7 +665,7 @@ class Reporter
       users = User.where(username: usernames_group)
 
       (usernames_group - users.pluck(:username)).each do |username|
-        u = User.add_by_username username
+        u = User.get_by_username username
         if u
           u.update_info!
           results << [u.username, u.bio]

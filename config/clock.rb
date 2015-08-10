@@ -49,9 +49,9 @@ module Clockwork
     ReportProcessProgressWorker.spawn
   }
 
-  every(10.minutes, 'ImportUsersWorker') {
-    ImportUsersWorker.spawn
-  }
+  # every(10.minutes, 'ImportUsersWorker') {
+  #   ImportUsersWorker.spawn
+  # }
 
   # Weekly Reports
 
