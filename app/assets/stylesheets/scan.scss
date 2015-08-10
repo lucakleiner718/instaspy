@@ -1,0 +1,50 @@
+.profile-page {
+  font-family: proxima-nova, 'Helvetica Neue', Arial, Helvetica, sans-serif;
+  font-size: 17px;
+
+  .header {
+    padding: 20px 0;
+    margin-bottom: 45px;
+
+    .avatar{
+      text-align: center;
+      img{}
+    }
+
+    .author-info{
+      .username-and-follow{
+        .username{
+          font-size: 34px;
+          font-weight: normal;
+          margin: 5px 0 10px;
+        }
+      }
+      .biography{
+        margin: 10px 0;
+        .full-name{
+          font-weight: bold;
+        }
+      }
+
+      .additional{
+        margin: 10px 0;
+      }
+    }
+
+    .statistics{
+      list-style: none;
+      margin: 10px 0;
+      padding: 0;
+
+      .statistic{
+        float: left;
+        margin-right: 20px;
+      }
+    }
+  }
+}
+
+#followers-bars{
+  width: 100%;
+  height: 300px;
+}

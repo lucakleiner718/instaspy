@@ -1,0 +1,49 @@
+<div class="profile-page">
+  <header class="header">
+    <div class="row">
+      <div class="col-sm-3">
+        <div class="avatar">
+          <%= image_tag @user.profile_picture, class: "img-circle" %>
+        </div>
+      </div>
+      <div class="col-sm-9">
+        <div class="author-info">
+          <div class="username-and-follow">
+            <h1 class="username"><%= @user.username %></h1>
+          </div>
+          <div class="biography">
+            <span class="full-name"><%= @user.full_name %></span>.
+            <span class="bio"><%= @user.bio %></span> <%= link_to @user.website.sub(/^https?:\/\//, ''), @user.website, class: "website-link", rel: "nofollow me", target: "_blank" if @user.website.present? %>
+          </div>
+          <div class="additional">
+            <% if @user.location? %>
+              Location: <strong><%= @user.location %></strong>
+            <% end %>
+          </div>
+          <ul class="statistics">
+            <li class="statistic">
+              <span><span class="posts-statistic-count"><strong><%= @user.media_amount %></strong></span> media</span>
+            </li>
+            <li class="statistic">
+              <span><span class="followed-by-statistic-count" title="<%= @user.followed_by %>"><strong><%= number_to_human @user.followed_by, units: { thousand: 'K', million: 'M' }, format: "%n%u" %></strong></span> followers</span>
+            </li>
+            <li class="statistic">
+              <span><span class="follows-statistic-count"><strong><%= number_to_human @user.follows, units: { thousand: 'K', million: 'M' }, format: "%n%u" %></strong></span> follows</span>
+            </li>
+
+            <% if @user.avg_likes_updated_at? %>
+              <li class="statistic">
+                <span><span class="avg-likes-statistic"><strong><%= @user.avg_likes %></strong></span> avg. likes</span>
+              </li>
+              <li class="statistic">
+                <span><span class="avg-comments-statistic"><strong><%= @user.avg_comments %></strong></span> avg. comments</span>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div id="followers-bars" data-data="<%= @user.followers_analytics.to_a %>"></div>
+</div>

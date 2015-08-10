@@ -1314,4 +1314,31 @@ class User < ActiveRecord::Base
     [self.location_country, self.location_state, self.location_city].join(', ')
   end
 
+  def followers_analytics
+    groups = ['0-100', '100-250', '250-500', '500-1000', '1,000-10,000', '10,000+']
+    amounts = {}
+
+    followers_ids = Follower.where(user_id: self.id).pluck(:follower_id)
+    followers_ids.in_groups_of(10_000, false) do |ids|
+      User.where(id: ids).where(followed_by: nil).pluck(:id).each { |id| UserWorker.perform_async id }
+      User.where(id: ids).where('followed_by is not null').pluck(:followed_by).each do |followers_size|
+        groups.each do |group|
+          amounts[group] ||= 0
+          from, to = group.gsub(/,|\+/, '').split('-').map(&:to_i)
+          if to.present?
+            if followers_size >= from && followers_size < to
+              amounts[group] += 1
+            end
+          else
+            if followers_size >= from
+              amounts[group] += 1
+            end
+          end
+        end
+      end
+    end
+
+    amounts
+  end
+
 end

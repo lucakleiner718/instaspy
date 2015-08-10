@@ -16,7 +16,7 @@ class UsersController < ApplicationController
   end
 
   # TODO
-  def show
+  def followers_chart
     @user = User.find_by(username: params[:id])
 
     data = Follower.connection.execute("
@@ -80,4 +80,25 @@ class UsersController < ApplicationController
 
     send_data csv_string, :type => 'text/csv; charset=utf-8; header=present', disposition: :attachment, filename: "users-export-#{users.size}-#{Time.now.to_i}.csv"
   end
+
+  def scan
+    if params[:username]
+      @user = User.get_by_username(params[:username])
+
+      @user.update_followers_batch if @user.followers_size < @user.followed_by * 0.9
+      UserLocationWorker.perform_async @user.id unless @user.location?
+      UserAvgDataWorker.perform_async @user.id unless @user.avg_comments_updated_at
+
+      redirect_to users_scan_show_path username: params[:username]
+    else
+      render layout: 'scan'
+    end
+  end
+
+  def scan_show
+    @user = User.get_by_username(params[:username])
+    @user.update_info!
+    render layout: 'scan'
+  end
+
 end

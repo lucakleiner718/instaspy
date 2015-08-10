@@ -4,7 +4,10 @@ Rails.application.routes.draw do
   post 'users/duplicates' => 'users#duplicates', as: :users_duplicates
   get 'users/export' => 'users#export', as: :users_export
   post 'users/export/process' => 'users#export_process', as: :users_export_process
-  get 'users/:id' => 'users#show', as: :user
+  # get 'users/followers-chart/:id' => 'users#followers_chart', as: :user_followers_chart
+
+  get 'users/scan' => 'users#scan', as: :users_scan
+  get 'users/scan/:username' => 'users#scan_show', as: :users_scan_show
 
   root to: 'pages#home'
 
