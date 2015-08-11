@@ -48,8 +48,10 @@
                 <span class="desc">Total followers</span>
               </div>
               <div class="col-sm-3">
-                <%= (@user.followers.where('followed_by > 250').size / @user.followers_size.to_f * 100).round %>%<br/>
-                <span class="desc">Percent of followers with user base that have more than 250 followers</span>
+                <% if @user.followers_size > 0 %>
+                  <%= (@user.followers.where('followed_by > 250').size / @user.followers_size.to_f * 100).round %>%<br/>
+                  <span class="desc">Percent of followers with user base that have more than 250 followers</span>
+                <% end %>
               </div>
             </div>
           </div>
