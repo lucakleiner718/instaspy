@@ -84,6 +84,7 @@ class UsersController < ApplicationController
   def scan
     if params[:username]
       @user = User.get_by_username(params[:username])
+      @user.update_info!
 
       UserFollowersWorker.perform_async @user.id if @user.followers_size < @user.followed_by * 0.9
       UserLocationWorker.perform_async @user.id unless @user.location?
