@@ -8,38 +8,51 @@
       </div>
       <div class="col-sm-9">
         <div class="author-info">
-          <div class="username-and-follow">
-            <h1 class="username"><%= @user.username %></h1>
-          </div>
-          <div class="biography">
-            <span class="full-name"><%= @user.full_name %></span>.
-            <span class="bio"><%= @user.bio %></span> <%= link_to @user.website.sub(/^https?:\/\//, ''), @user.website, class: "website-link", rel: "nofollow me", target: "_blank" if @user.website.present? %>
-          </div>
-          <div class="additional">
-            <% if @user.location? %>
-              Location: <strong><%= @user.location %></strong>
-            <% end %>
-          </div>
           <ul class="statistics">
             <li class="statistic">
-              <span><span class="posts-statistic-count"><strong><%= @user.media_amount %></strong></span> media</span>
+              <span class="statistic-label">Username:</span>
+              <span class="statistic-value"><%= @user.username %></span>
             </li>
             <li class="statistic">
-              <span><span class="followed-by-statistic-count" title="<%= @user.followed_by %>"><strong><%= number_to_human @user.followed_by, units: { thousand: 'K', million: 'M' }, format: "%n%u" %></strong></span> followers</span>
+              <span class="statistic-label">Full name:</span>
+              <span class="statistic-value"><%= @user.full_name %></span>
             </li>
             <li class="statistic">
-              <span><span class="follows-statistic-count"><strong><%= number_to_human @user.follows, units: { thousand: 'K', million: 'M' }, format: "%n%u" %></strong></span> follows</span>
+              <span class="statistic-label">Website:</span>
+              <span class="statistic-value">
+                <%= link_to @user.website.sub(/^https?:\/\//, ''), @user.website, class: "website-link", rel: "nofollow me", target: "_blank" if @user.website.present? %>
+              </span>
             </li>
-
+            <% if @user.location? %>
+              <li class="statistic">
+                <span class="statistic-label">Location:</span>
+                <span class="statistic-value location-statistic"><%= @user.location %></span>
+              </li>
+            <% end %>
             <% if @user.avg_likes_updated_at? %>
               <li class="statistic">
-                <span><span class="avg-likes-statistic"><strong><%= @user.avg_likes %></strong></span> avg. likes</span>
+                <span class="statistic-label">AVG Likes:</span>
+                <span class="statistic-value avg-likes-statistic"><%= @user.avg_likes %></span>
               </li>
               <li class="statistic">
-                <span><span class="avg-comments-statistic"><strong><%= @user.avg_comments %></strong></span> avg. comments</span>
+                <span class="statistic-label">AVG Comments:</span>
+                <span class="statistic-value avg-comments-statistic"><%= @user.avg_comments %></span>
               </li>
             <% end %>
           </ul>
+
+          <div class="followers-info">
+            <div class="row text-center">
+              <div class="col-sm-2">
+                <%= @user.followed_by %><br/>
+                <span class="desc">Total followers</span>
+              </div>
+              <div class="col-sm-3">
+                <%= (@user.followers.where('followed_by > 250').size / @user.followers_size.to_f * 100).round %>%<br/>
+                <span class="desc">Percent of followers with user base that have more than 250 followers</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

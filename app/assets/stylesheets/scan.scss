@@ -35,10 +35,29 @@
       list-style: none;
       margin: 10px 0;
       padding: 0;
+      display: table;
 
       .statistic{
-        float: left;
+        display: table-row;
         margin-right: 20px;
+
+        .statistic-label{
+          display: table-cell;
+          padding-right: 5px;
+        }
+        .statistic-value{
+          display: table-cell;
+        }
+      }
+    }
+
+    .followers-info{
+      .desc{
+        font-size: 12px;
+        font-style: italic;
+        line-height: 1.3;
+        display: inline-block;
+        vertical-align: top;
       }
     }
   }
