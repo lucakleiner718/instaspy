@@ -264,35 +264,6 @@ class User < ActiveRecord::Base
     ((dates.last - dates.first) / dates.size.to_f).round(2)
   end
 
-  def update_followers_batch *args
-    self.update_info! force: true
-
-    if self.followed_by < 2_000
-      UserFollowersWorker.perform_async self.id
-      return true
-    end
-
-    speed = nil
-    if self.user_followers.where("followed_at is not null").size > 2
-      speed = self.follow_speed
-    end
-
-    speed = 2_000 if !speed || speed > 2_000
-
-    jobs = []
-
-    start = Time.now.to_i
-    amount = (self.followed_by/1_000).ceil
-    amount.times do |i|
-      start_cursor = start-i*speed*100
-      next if start_cursor < 0
-      finish_cursor = i+1 < amount ? start-(i+1)*speed*100 : nil
-      jobs << UserFollowersWorker.perform_async(self.id, start_cursor: start_cursor, finish_cursor: finish_cursor, ignore_exists: true)
-    end
-
-    jobs
-  end
-
   def followers_size
     Follower.where(user: self).size
   end
@@ -445,7 +416,7 @@ class User < ActiveRecord::Base
           followers_create.each do |follower|
             fol = Follower.where(user_id: follower[0], follower_id: follower[1]).first_or_initialize
             fol.followed_at = follower[2]
-            fol.save!
+            fol.save! rescue false
           end
         end
       end

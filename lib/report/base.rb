@@ -204,11 +204,7 @@ class Report::Base
         @report.save!
       else
         for_update.each do |row|
-          if row[1] < 2_000 || (row[2]/row[1].to_f > 1.2)
-            UserFollowersWorker.perform_async row[0], ignore_exists: true
-          else
-            row[3].update_followers_batch
-          end
+          UserFollowersWorker.perform_async row[0], ignore_exists: true, batch: true
         end
         @progress += (ids.size - for_update.size) / ids.size.to_f / @parts_amount
       end
