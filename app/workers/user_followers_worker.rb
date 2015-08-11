@@ -19,9 +19,9 @@ class UserFollowersWorker
     if !options[:batch] && options[:ignore_batch]
       options.delete(:ignore_batch)
       options.delete(:batch)
-      user.update_followers *args, *options
+      user.update_followers *args, options
     else
-      batch_update user, *args, *options
+      batch_update user, *args, options
     end
   end
 

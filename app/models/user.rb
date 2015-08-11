@@ -290,6 +290,7 @@ class User < ActiveRecord::Base
   #   Script stops if found more than 5 exists followers from list in database
   #
   def update_followers *args
+    binding.pry
     options = args.extract_options!
     return false if self.insta_id.blank?
 
