@@ -1291,7 +1291,7 @@ class User < ActiveRecord::Base
 
     followers_ids = Follower.where(user_id: self.id).pluck(:follower_id)
     followers_ids.in_groups_of(10_000, false) do |ids|
-      User.where(id: ids).where(followed_by: nil).pluck(:id).each { |id| UserWorker.perform_async id }
+      # User.where(id: ids).where(followed_by: nil).pluck(:id).each { |id| UserWorker.perform_async id }
       User.where(id: ids).where('followed_by is not null').pluck(:followed_by).each do |followers_size|
         groups.each do |group|
           amounts[group] ||= 0
@@ -1308,6 +1308,8 @@ class User < ActiveRecord::Base
         end
       end
     end
+
+    UserUpdateFollowersWorker.perform_async self.id
 
     amounts
   end
