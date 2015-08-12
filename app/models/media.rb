@@ -160,7 +160,7 @@ class Media < ActiveRecord::Base
     self.location_state = location[:state]
     self.location_city = location[:city]
 
-    self.save!
+    self.save! if self.changed?
   end
 
   def self.get_by_location lat, lng, *args
