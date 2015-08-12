@@ -4,7 +4,7 @@ class Geolocation
     @lat = lat
     @lng = lng
     @media_id = media_id
-    @lookup_list = [:bing, :google, :yandex, :esri, :nominatim, :opencagedata]
+    @lookup_list = [:bing, :google, :yandex, :esri, :nominatim] #opencagedata
     @default_lookup = Geocoder::Configuration.lookup
   end
 
