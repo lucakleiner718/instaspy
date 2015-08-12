@@ -1,7 +1,7 @@
 jQuery ($) ->
   followers_bars = $('#followers-bars')
   return if followers_bars.length == 0
-  
+
   data = followers_bars.data('data')
   if data.length > 0
     followers_bars.highcharts

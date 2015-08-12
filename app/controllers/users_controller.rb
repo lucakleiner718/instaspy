@@ -86,9 +86,7 @@ class UsersController < ApplicationController
       @user = User.get_by_username(params[:username])
       @user.update_info!
 
-      UserFollowersWorker.perform_async @user.id if @user.followers_size < @user.followed_by * 0.9
-      UserLocationWorker.perform_async @user.id unless @user.location?
-      UserAvgDataWorker.perform_async @user.id unless @user.avg_comments_updated_at
+      UsersScanWorker.perform_async @user.id
 
       redirect_to users_scan_show_path username: params[:username]
     else
