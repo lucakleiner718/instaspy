@@ -20,7 +20,7 @@ class Geolocation
     resp = Curl.get("http://geo.socialrootdata.com/nearest?lat=#{@lat}&lng=#{@lng}")
     json = JSON.parse resp.body_str
     # {"name":"Qars Al Sarab Desert Resort By Anantara","country_code":"AE","region_code":"01","time":0.004598645}
-    {country: json['country_code'], state: json['region_code'], city: json['city']}
+    {country: json['country_code'], state: json['region'], city: json['city']}
   end
 
   def get_from_external
@@ -80,10 +80,10 @@ class Geolocation
       @country_lookup = Country.find_country_by_alpha3(@country) unless @country_lookup
     end
 
-    if @country == "US" && !@country_lookup.states[@state]
-      st = @country_lookup.states.select{|k, v| v['name'] == @state}.first
-      @state = st.first if st
-    end
+    # if @country == "US" && !@country_lookup.states[@state]
+    #   st = @country_lookup.states.select{|k, v| v['name'] == @state}.first
+    #   @state = st.first if st
+    # end
 
     @country = @country_lookup.alpha2 if @country_lookup
 
