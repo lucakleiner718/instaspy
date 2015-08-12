@@ -395,7 +395,7 @@ class Reporter
 
     filepath = "reports/followees-report-#{Time.now.to_i}.csv"
     File.write "public/#{filepath}", csv_string
-    Rails.env.production? ? "http://107.170.110.156/#{filepath}" : "http://localhost:3000/#{filepath}"
+    Rails.env.production? ? "http://socialrootdata.com/#{filepath}" : "http://localhost:3000/#{filepath}"
   end
 
   # def b
@@ -478,7 +478,7 @@ class Reporter
     filepath = "reports/users-followees-#{files.size}-#{Time.now.to_i}.zip"
     File.write("public/#{filepath}", binary_data)
 
-    "http://107.170.110.156/#{filepath}"
+    "http://socialrootdata.com/#{filepath}"
   end
 
   def self.users_followers usernames
@@ -511,7 +511,7 @@ class Reporter
     filepath = "reports/users-followers-#{files.size}-#{Time.now.to_i}.zip"
     File.write("public/#{filepath}", binary_data)
 
-    "http://107.170.110.156/#{filepath}"
+    "http://socialrootdata.com/#{filepath}"
   end
 
   def self.users_export *args
@@ -607,7 +607,7 @@ class Reporter
 
     filepath = "reports/media-report-#{Time.now.to_i}.csv"
     File.write "public/#{filepath}", csv_string
-    Rails.env.production? ? "http://107.170.110.156/#{filepath}" : "http://localhost:3000/#{filepath}"
+    Rails.env.production? ? "http://socialrootdata.com/#{filepath}" : "http://localhost:3000/#{filepath}"
   end
 
   def self.process_usernames_file filename

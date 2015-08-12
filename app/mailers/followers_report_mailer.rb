@@ -97,7 +97,7 @@ class FollowersReportMailer < ActionMailer::Base
 
       path = "reports/#{tag_name}-publishers-#{Time.now.to_i}.csv"
       File.write "public/#{path}", csv_string
-      files << "http://107.170.110.156/reports/#{path}"
+      files << "http://socialrootdata.com/reports/#{path}"
     end
 
     files

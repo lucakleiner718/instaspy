@@ -85,7 +85,7 @@ Rails.application.configure do
   # config.action_mailer.smtp_settings = { address: 'localhost', port: 1025 }
   # config.action_mailer.default_url_options = { host: "localhost:3000" }
 
-  config.action_mailer.default_url_options = { host: "107.170.110.156" }
+  config.action_mailer.default_url_options = { host: "socialrootdata.com" }
 end
 
 # ActionMailer::Base.smtp_settings[:enable_starttls_auto] = false

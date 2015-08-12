@@ -2,7 +2,7 @@ FactoryGirl.define do
   factory :instagram_account, class: InstagramAccount do
     client_id '1580f11e7be6444cbb6e941dcd7b8c6c'
     client_secret '43662ac3db0143ccb83385f783bff770'
-    redirect_uri 'http://107.170.110.156/oauth/signin'
+    redirect_uri 'http://socialrootdata.com/oauth/signin'
   end
 end
 

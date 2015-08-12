@@ -101,7 +101,7 @@
   ["9a266c5ee1ab420fa3f45f2066416aec", "e3986232920444ce9969600a17ab6ae2", [[35938880, "35938880.9a266c5.e55be4ddd5ff4dcb9e4485c05724730c"]]],
   ["bd13bd37539b494fb74035fa79bcd776", "13d91c6ce18a451cb5c072444a7ea260", [[35938880, "35938880.bd13bd3.4e33eabf7c504319966c89b4f2f3c9c8"]]]
 ].each do |r|
-  ia = InstagramAccount.where(client_id: r[0], client_secret: r[1]).first_or_create(redirect_uri: 'http://107.170.110.156/oauth/signin')
+  ia = InstagramAccount.where(client_id: r[0], client_secret: r[1]).first_or_create(redirect_uri: 'http://socialrootdata.com/oauth/signin')
   r[2].each do |k|
     ia.logins.where(access_token: k[1], ig_id: k[0]).first_or_create
   end
