@@ -9,9 +9,10 @@ class Geolocation
   end
 
   def get_location *args
-    resp = get_from_internal *args
-    resp = get_from_external *args unless resp
-    resp
+    # resp = get_from_internal *args
+    # resp = get_from_external *args unless resp
+    # resp
+    get_from_external *args
   end
 
   protected
