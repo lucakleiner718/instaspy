@@ -17,14 +17,14 @@ class Geolocation
 
   protected
 
-  def get_from_internal
+  def get_from_internal *args
     resp = Curl.get("http://geo.socialrootdata.com/nearest?lat=#{@lat}&lng=#{@lng}")
     json = JSON.parse resp.body_str
     # {"name":"Qars Al Sarab Desert Resort By Anantara","country_code":"AE","region_code":"01","time":0.004598645}
     {country: json['country_code'], state: json['region'], city: json['city']}
   end
 
-  def get_from_external
+  def get_from_external *args
     options = args.extract_options!
 
     lookup_list = options[:lookup_list] || @lookup_list
