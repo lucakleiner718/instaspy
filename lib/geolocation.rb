@@ -9,11 +9,11 @@ class Geolocation
   end
 
   def get_location *args
+    options = args.extract_options!
     resp = nil
-    resp = get_from_internal *args if rand(100) == 1
-    resp = get_from_external *args unless resp
+    resp = get_from_internal *args, options if options[:internal] || rand(100) == 1
+    resp = get_from_external *args, options unless resp
     resp
-    get_from_external *args
   end
 
   protected
