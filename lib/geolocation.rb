@@ -9,9 +9,10 @@ class Geolocation
   end
 
   def get_location *args
-    # resp = get_from_internal *args
-    # resp = get_from_external *args unless resp
-    # resp
+    resp = nil
+    resp = get_from_internal *args if rand(100) == 1
+    resp = get_from_external *args unless resp
+    resp
     get_from_external *args
   end
 
@@ -21,7 +22,7 @@ class Geolocation
     resp = Curl.get("http://geo.socialrootdata.com/nearest?lat=#{@lat}&lng=#{@lng}")
     json = JSON.parse resp.body_str
     # {"name":"Qars Al Sarab Desert Resort By Anantara","country_code":"AE","region_code":"01","time":0.004598645}
-    {country: json['country_code'], state: json['region'], city: json['city']}
+    {country: json['country_code'], state: json['region'], city: json['city']} if json['country_code']
   end
 
   def get_from_external *args
