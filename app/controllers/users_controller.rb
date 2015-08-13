@@ -97,7 +97,7 @@ class UsersController < ApplicationController
 
   def scan_show
     @user = User.get_by_username(params[:username])
-    @user.update_info!
+    @user.update_info! force: @user.profile_picture.blank?
     render layout: 'scan'
   end
 
