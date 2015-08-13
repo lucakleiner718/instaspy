@@ -67,3 +67,20 @@
   width: 100%;
   height: 300px;
 }
+
+
+
+.scan-form{
+  margin-top: 18px;
+
+  input[type=text]{
+    width: 280px;
+    display: inline-block;
+    vertical-align: top;
+  }
+
+  button{
+    display: inline-block;
+    vertical-align: top;
+  }
+}
