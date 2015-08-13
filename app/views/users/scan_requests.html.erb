@@ -1,0 +1,18 @@
+<table class="table">
+  <thead>
+  <tr>
+    <td>Username</td>
+    <td>Date</td>
+  </tr>
+  </thead>
+  <% @requests.each do |request| %>
+    <tbody>
+    <tr>
+      <td><%= link_to request.username, users_scan_show_path(username: request.username) %></td>
+      <td><%= request.created_at.to_s :datetime %></td>
+    </tr>
+    </tbody>
+  <% end %>
+</table>
+
+<%= paginate @requests %>

@@ -87,6 +87,7 @@ class UsersController < ApplicationController
       @user.update_info!
 
       UsersScanWorker.perform_async @user.id
+      ScanRequest.create username: params[:username]
 
       redirect_to users_scan_show_path username: params[:username]
     else
@@ -98,6 +99,10 @@ class UsersController < ApplicationController
     @user = User.get_by_username(params[:username])
     @user.update_info!
     render layout: 'scan'
+  end
+
+  def scan_requests
+    @requests = ScanRequest.all.order(created_at: :desc).page(params[:page]).per(20)
   end
 
 end

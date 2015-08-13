@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150802212629) do
+ActiveRecord::Schema.define(version: 20150813064945) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -140,6 +140,13 @@ ActiveRecord::Schema.define(version: 20150802212629) do
     t.text     "output_data",     default: [],              array: true
     t.text     "not_processed",   default: [],              array: true
     t.json     "steps",           default: []
+  end
+
+  create_table "scan_requests", force: :cascade do |t|
+    t.string   "username"
+    t.string   "email"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "stats", force: :cascade do |t|
