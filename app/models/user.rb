@@ -1290,7 +1290,7 @@ class User < ActiveRecord::Base
     [self.location_country, self.location_state, self.location_city].join(', ')
   end
 
-  def followers_analytics recount: false
+  def get_followers_analytics recount: false
     fa = read_attribute :followers_analytics
 
     if !fa || fa.size == 0 || !self.followers_analytics_updated_at || self.followers_analytics_updated_at < 2.weeks.ago || recount ||
