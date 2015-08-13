@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150813064945) do
+ActiveRecord::Schema.define(version: 20150813070729) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -189,7 +189,7 @@ ActiveRecord::Schema.define(version: 20150813064945) do
   add_index "track_users", ["user_id"], name: "index_track_users_on_user_id", unique: true, using: :btree
 
   create_table "users", force: :cascade do |t|
-    t.string   "insta_id",                limit: 20
+    t.string   "insta_id",                       limit: 20
     t.string   "username"
     t.string   "full_name"
     t.string   "bio"
@@ -197,7 +197,7 @@ ActiveRecord::Schema.define(version: 20150813064945) do
     t.integer  "follows"
     t.integer  "followed_by"
     t.integer  "media_amount"
-    t.boolean  "private",                            default: false
+    t.boolean  "private",                                   default: false
     t.datetime "grabbed_at"
     t.string   "email"
     t.string   "location_country"
@@ -210,8 +210,10 @@ ActiveRecord::Schema.define(version: 20150813064945) do
     t.datetime "avg_comments_updated_at"
     t.datetime "followers_updated_at"
     t.datetime "followees_updated_at"
-    t.datetime "created_at",                                         null: false
-    t.datetime "updated_at",                                         null: false
+    t.datetime "created_at",                                                null: false
+    t.datetime "updated_at",                                                null: false
+    t.json     "followers_analytics",                       default: {}
+    t.datetime "followers_analytics_updated_at"
   end
 
   add_index "users", ["avg_comments"], name: "index_users_on_avg_comments", using: :btree
