@@ -438,7 +438,10 @@ class User < ActiveRecord::Base
         end
       end
 
-      break if !options[:ignore_exists] && exists > 5
+      if !options[:ignore_exists] && exists > 5
+        self.followers_updated_time!
+        break
+      end
 
       cursor = resp.pagination['next_cursor']
 
@@ -452,9 +455,7 @@ class User < ActiveRecord::Base
         end
         self.delete_duplicated_followers!
 
-        if self.followed_by/self.followers_size.to_f >= 0.95
-          self.update_attribute :followers_updated_at, Time.now
-        end
+        self.followers_updated_time!
 
         break
       end
@@ -1322,6 +1323,12 @@ class User < ActiveRecord::Base
     end
 
     fa
+  end
+
+  def followers_updated_time!
+    if self.followed_by/self.followers_size.to_f >= 0.95
+      self.update_attribute :followers_updated_at, Time.now
+    end
   end
 
 end
