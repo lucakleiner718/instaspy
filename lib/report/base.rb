@@ -196,7 +196,7 @@ class Report::Base
     ids ||= @report.processed_ids
 
     if @report.steps.include?('user_info') && !@report.steps.include?('followers')
-      users = User.where(id: ids).not_private.where("followers_updated_at is null OR followers_updated_at < ?", 3.days.ago).map{|u| [u.id, u.followed_by, u.followers_size, u]}
+      users = User.where(id: ids).not_private.where("followers_updated_at is null OR followers_updated_at < ?", 7.days.ago).map{|u| [u.id, u.followed_by, u.followers_size, u]}
       for_update = users.select{ |r| r[2]/r[1].to_f < 0.95 || r[2]/r[1].to_f > 1.2 }
 
       if for_update.size == 0

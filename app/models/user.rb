@@ -452,11 +452,10 @@ class User < ActiveRecord::Base
         end
         self.delete_duplicated_followers!
 
-        unless options[:start_cursor]
-          if self.followed_by/self.followers_size.to_f > 0.95
-            self.update_attribute :followers_updated_at, Time.now
-          end
+        if self.followed_by/self.followers_size.to_f >= 0.95
+          self.update_attribute :followers_updated_at, Time.now
         end
+
         break
       end
 
@@ -681,6 +680,7 @@ class User < ActiveRecord::Base
     self.bio = data['bio'] unless data['bio'].nil?
     self.website = data['website'] unless data['website'].nil?
     self.insta_id = data['id'] if self.insta_id.blank?
+    self.profile_picture = data['profile_picture']
 
     if data['counts'].present?
       self.media_amount = data['counts']['media'] if data['counts']['media'].present?
@@ -1269,12 +1269,10 @@ class User < ActiveRecord::Base
   end
 
   def profile_picture
-    unless @profile_picture
-      client = InstaClient.new.client
-      info = client.user(self.insta_id)
-      @profile_picture = info.data['profile_picture']
+    unless read_attribute :profile_picture
+      self.update_info! force: true
     end
-    @profile_picture
+    read_attribute :profile_picture
   end
 
   def location?
@@ -1288,7 +1286,8 @@ class User < ActiveRecord::Base
   def followers_analytics recount: false
     fa = read_attribute :followers_analytics
 
-    if !fa || fa.size == 0 || !self.followers_analytics_updated_at || self.followers_analytics_updated_at < 2.weeks.ago || recount
+    if !fa || fa.size == 0 || !self.followers_analytics_updated_at || self.followers_analytics_updated_at < 2.weeks.ago || recount ||
+      fa.values.sum < self.followed_by*0.8
 
       groups = ['0-100', '100-250', '250-500', '500-1000', '1,000-10,000', '10,000+']
       amounts = {}

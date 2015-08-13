@@ -45,7 +45,11 @@
             <div class="row text-center">
               <div class="col-sm-2">
                 <%= @user.followed_by %><br/>
-                <span class="desc">Total followers</span>
+                <span class="desc">Total followers
+                  <% if @user.followers_updated_at.present? %>
+                    <br/>Last updated: <%= @user.followers_updated_at.strftime '%b %d' %>
+                  <% end %>
+                </span>
               </div>
               <div class="col-sm-3">
                 <% if @user.followers_size > 0 %>
