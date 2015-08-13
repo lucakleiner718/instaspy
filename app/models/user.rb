@@ -359,9 +359,12 @@ class User < ActiveRecord::Base
       end_ig = Time.now
 
       exists_users = User.where(insta_id: resp.data.map{|el| el['id']}).to_a
-      fols = Follower.where(user_id: self.id).where(follower_id: exists_users.map(&:id)).to_a
+      fols = Follower.where(user_id: self.id, follower_id: exists_users.map(&:id)).to_a
 
-      followers_create = []
+      followers_to_create = []
+      followers_for_update = []
+      # cursor is kind of timestamp or if request is first
+      followed_at = cursor ? Time.at(cursor.to_i/1000) : Time.now.utc
 
       resp.data.each do |user_data|
         new_record = false
@@ -384,36 +387,39 @@ class User < ActiveRecord::Base
 
         followers_ids << user.id
 
-        # cursor is kind of timestamp or if request is first
-        followed_at = cursor ? Time.at(cursor.to_i/1000) : Time.now
-
         if new_record
-          followers_create << [self.id, user.id, followed_at]
+          followers_to_create << [self.id, user.id, followed_at]
         else
           if options[:reload]
-            followers_create << [self.id, user.id, followed_at]
+            followers_to_create << [self.id, user.id, followed_at]
           else
             fol_exists = fols.select{ |el| el.follower_id == user.id }.first
 
             if fol_exists
               if fol_exists.followed_at.blank? || fol_exists.followed_at > followed_at
-                fol_exists.update_column :followed_at, followed_at
+                # fol_exists.update_column :followed_at, followed_at
+                followers_for_update << fol_exists.id
               end
               exists += 1
             else
-              followers_create << [self.id, user.id, followed_at]
+              followers_to_create << [self.id, user.id, followed_at]
             end
           end
         end
       end
 
-      added += followers_create.size
+      if followers_for_update.size > 0
+        Follower.where(id: followers_for_update).update_all(followed_at: followed_at)
+      end
 
-      if followers_create.size > 0
+      added += followers_to_create.size
+
+      if followers_to_create.size > 0
         begin
-          Follower.connection.execute("INSERT INTO followers (user_id, follower_id, followed_at, created_at) VALUES #{followers_create.map{|r| r << Time.now; "(#{r.map{|el| "'#{el}'"}.join(', ')})"}.join(', ')}")
+          Follower.connection.execute("INSERT INTO followers (user_id, follower_id, followed_at, created_at) VALUES #{followers_to_create.map{|r| r << Time.now; "(#{r.map{|el| "'#{el}'"}.join(', ')})"}.join(', ')}")
         rescue => e
-          followers_create.each do |follower|
+          Rails.logger.info "Exception when try to multiple insert followers".black.on_white
+          followers_to_create.each do |follower|
             fol = Follower.where(user_id: follower[0], follower_id: follower[1]).first_or_initialize
             fol.followed_at = follower[2]
             fol.save! rescue false
