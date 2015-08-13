@@ -11,7 +11,7 @@ class Geolocation
   def get_location *args
     options = args.extract_options!
     resp = nil
-    resp = get_from_internal *args, options if options[:internal] || rand(100) == 1
+    resp = get_from_internal *args, options if options[:internal] || rand(10) == 1
     resp = get_from_external *args, options unless resp
     resp
   end
@@ -73,6 +73,8 @@ class Geolocation
       retries += 1
       break if retries > 5
     end
+
+    return false unless method_name
 
     send method_name
 
