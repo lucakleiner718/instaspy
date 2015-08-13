@@ -1275,13 +1275,6 @@ class User < ActiveRecord::Base
     self
   end
 
-  def profile_picture
-    unless read_attribute :profile_picture
-      self.update_info! force: true
-    end
-    read_attribute :profile_picture
-  end
-
   def location?
     self.location_country.present?
   end
@@ -1290,7 +1283,7 @@ class User < ActiveRecord::Base
     [self.location_country, self.location_state, self.location_city].join(', ')
   end
 
-  def get_followers_analytics recount: false
+  def followers_analytics recount: false
     fa = read_attribute :followers_analytics
 
     if !fa || fa.size == 0 || !self.followers_analytics_updated_at || self.followers_analytics_updated_at < 2.weeks.ago || recount ||
