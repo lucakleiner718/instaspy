@@ -88,7 +88,7 @@ class Reporter
         # catching all users, which did post media with specified tag
         media_users_ids = []
         MediaTag.where(tag_id: tag.id).pluck(:media_id).uniq.in_groups_of(10_000, false) do |group|
-          media_users_ids += Media.where(id: group).where("created_at > ?", starts).where("created_at <= ?", ends).pluck(:user_id).uniq
+          media_users_ids += Media.where(id: group).where("created_time > ?", starts).where("created_time <= ?", ends).pluck(:user_id).uniq
         end
         users_ids = User.where(id: media_users_ids).where("website is not null AND website != ''").where("created_at >= ?", starts).where("created_at <= ?", ends).pluck(:id)
         users_size = users_ids.size
@@ -101,7 +101,7 @@ class Reporter
           ts = Time.now
 
           # select latest media item with current tag for each user from group
-          media_items = Media.where(user_id: users_group_ids).where(tag_names: tag.name).order(created_time: :desc).uniq{|m| m.user_id}
+          media_items = Media.where(user_id: users_group_ids).has_tag(tag.name).order(created_time: :desc).uniq{|m| m.user_id}
 
           Rails.logger.debug "#{"[Media Report]".cyan} Media Item request took #{(Time.now - ts).to_f.round(2)}s"
 
@@ -123,7 +123,7 @@ class Reporter
                 media_items.slice! media_items.index{|m| m.user_id.to_s == user.id}
                 # media = Media.find(media_found[0])
               else
-                media = Media.where(user_id: user.id).where(tag_names: tag.name).order(created_time: :desc).first
+                media = Media.where(user_id: user.id).has_tag(tag.name).order(created_time: :desc).first
               end
 
               # if we don't have media for that user and tag
@@ -172,7 +172,7 @@ class Reporter
 
   def self.tag_authors tag, timeframe=1.year.ago
     users = []
-    tag.media.where('created_at > ?', timeframe).includes(:user).each do |media|
+    tag.media.where('created_time > ?', timeframe).includes(:user).each do |media|
       users << media.user
     end
 

@@ -7,6 +7,7 @@ class Media < ActiveRecord::Base
   scope :with_coordinates, -> { where("location_lat is not null AND location_lng is not null") }
   scope :with_country, -> { where("location_country is not null AND location_country != ''") }
   scope :without_location, -> { where("location_lat is null").where(location_present: nil) }
+  scope :has_tag, -> (tag_name) { where('tag_names @> ?', "{#{tag_name}}") }
 
   def location
     loc = []
