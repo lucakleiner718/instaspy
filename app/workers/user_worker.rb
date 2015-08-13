@@ -1,8 +1,7 @@
 class UserWorker
   include Sidekiq::Worker
 
-  sidekiq_options queue: :middle, unique: true, unique_args: -> (args) { [ args.first ] },
-    unique_unlock_order: :before_yield
+  sidekiq_options queue: :middle, unique: true, unique_args: -> (args) { [ args.first ] }, retry: false
 
   def perform user_id, *args
     options = args.extract_options!
@@ -18,7 +17,7 @@ class UserWorker
 
     options.symbolize_keys!
 
-    user.update_info! options if user
+    user.update_info! options
   end
 
   def self.spawn amount=10_000
