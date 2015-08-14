@@ -1,6 +1,7 @@
 class UserUpdateFollowersWorker
 
   include Sidekiq::Worker
+  sidekiq_options unique: true, unique_args: -> (args) { [ args.first ] }
 
   def perform user_id
     followers_ids = Follower.where(user_id: user_id).pluck(:follower_id)
