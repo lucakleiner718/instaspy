@@ -14,6 +14,7 @@ class ReportWorker
       notify_email: (ENV['insta_debug'] || Rails.env.development? ? 'me@antonzaytsev.com' : 'rob@ladylux.com')
 
     r.data['email_subject'] = "Weekly InstaSpy report #{date_to.strftime('%m/%d/%y')}-#{date_from.strftime('%m/%d/%y')}"
+    r.note = "Weekly tags publishers report #{date_to.strftime('%m/%d/%y')}-#{date_from.strftime('%m/%d/%y')}"
 
     r.save
 
