@@ -1,6 +1,0 @@
-<% if @file %>
-  Link to download report <%= @file %>
-<% end %>
-<% if @not_processed && @not_processed.size > 0 %>
-  <p>Not processed usernames (probably couldn't find by username or account is private): <%= @not_processed.join(', ') %></p>
-<% end %>

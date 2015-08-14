@@ -1077,41 +1077,6 @@ class User < ActiveRecord::Base
     self.save
   end
 
-  def self.process_usernames usernames
-    processed = 0
-    initial = usernames.size
-    added = []
-
-    usernames.each do |row|
-      logger.debug "Start #{row[0]}"
-      user = User.get_by_username row[0]
-      if user && user.email.blank?
-        user.email = row[2]
-        user.save
-      end
-
-      if user
-        user.update_info! if user.grabbed_at.blank? || user.grabbed_at < 1.week.ago
-        added << [user.username, user.full_name, user.website, user.bio, user.follows, user.followed_by, user.media_amount, user.email]
-      end
-
-      processed += 1
-
-      logger.debug "Progress #{processed}/#{initial} (#{(processed/initial.to_f * 100).to_i}%)"
-    end
-
-    csv_string = CSV.generate do |csv|
-      csv << ['Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followers', 'Media amount', 'Email']
-      added.each do |row|
-        csv << row
-      end
-    end
-
-    logger.debug "Added #{added.size}"
-
-    GeneralMailer.process_usernames_file(csv_string).deliver
-  end
-
   def outdated?
     self.grabbed_at.blank? || self.grabbed_at < 1.week.ago || self.bio.nil? || self.website.nil? || self.follows.blank? ||
       self.followed_by.blank? || self.full_name.nil? || self.insta_id.blank? || self.username.blank?

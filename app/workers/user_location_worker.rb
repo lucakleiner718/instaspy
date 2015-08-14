@@ -1,7 +1,7 @@
 class UserLocationWorker
-  include Sidekiq::Worker
 
-  sidekiq_options queue: :low, retry: 3, unique: true, unique_args: -> (args) { [ args.first ] }
+  include Sidekiq::Worker
+  sidekiq_options unique: true, unique_args: -> (args) { [ args.first ] }
 
   def perform user_id
     begin

@@ -1,6 +1,6 @@
 class UsersScanWorker
-  include Sidekiq::Worker
 
+  include Sidekiq::Worker
   sidekiq_options queue: :critical, unique: true, unique_args: -> (args) { [ args.first ] }
 
   def perform user_id, *args

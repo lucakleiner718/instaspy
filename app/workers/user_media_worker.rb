@@ -1,6 +1,6 @@
 class UserMediaWorker
-  include Sidekiq::Worker
 
+  include Sidekiq::Worker
   sidekiq_options queue: :middle, unique: true, unique_args: -> (args) { [ args.first ] }
 
   def perform user_id, *args

@@ -1,7 +1,7 @@
 class UserWorker
-  include Sidekiq::Worker
 
-  sidekiq_options queue: :middle, unique: true, unique_args: -> (args) { [ args.first ] }, retry: false
+  include Sidekiq::Worker
+  sidekiq_options queue: :middle, unique: true, unique_args: -> (args) { [ args.first ] }
 
   def perform user_id, *args
     options = args.extract_options!
