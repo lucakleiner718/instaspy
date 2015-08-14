@@ -1313,7 +1313,7 @@ class User < ActiveRecord::Base
 
       UserUpdateFollowersWorker.perform_async self.id
 
-      self.followers_analytics = amounts
+      self.followers_analytics = fa
       self.followers_analytics_updated_at = Time.now
       self.save
     end
