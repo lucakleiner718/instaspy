@@ -248,7 +248,6 @@ class Report::Base
           list = users.select{|r| r[1].blank? || r[1] < 8.days.ago}.map(&:first)
           if list.size > 0
             not_updated.concat list
-            list.each { |uid| UserWorker.perform_async uid }
           end
         end
 
@@ -256,6 +255,10 @@ class Report::Base
           self.delete_cached('followers_to_update')
           @report.steps.push 'followers_info'
         else
+          # send to update only first 100k users to not overload query
+          not_updated[0...100_000].each do |uid|
+            UserWorker.perform_async uid
+          end
           self.save_cached('followers_to_update', not_updated)
           @progress += (followers_ids.size - not_updated.size) / followers_ids.size.to_f / @parts_amount
         end
