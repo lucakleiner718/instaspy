@@ -1283,29 +1283,28 @@ class User < ActiveRecord::Base
     [self.location_country, self.location_state, self.location_city].join(', ')
   end
 
-  def followers_analytics recount: false
-    fa = read_attribute :followers_analytics
+  def get_followers_analytics recount: false
+    fa = self.followers_analytics
 
     if !fa || fa.size == 0 || !self.followers_analytics_updated_at || self.followers_analytics_updated_at < 2.weeks.ago || recount ||
       fa.values.sum < self.followed_by*0.8
 
       groups = ['0-100', '100-250', '250-500', '500-1000', '1,000-10,000', '10,000+']
-      amounts = {}
 
       followers_ids = Follower.where(user_id: self.id).pluck(:follower_id)
       followers_ids.in_groups_of(10_000, false) do |ids|
         # User.where(id: ids).where(followed_by: nil).pluck(:id).each { |id| UserWorker.perform_async id }
         User.where(id: ids).where('followed_by is not null').pluck(:followed_by).each do |followers_size|
           groups.each do |group|
-            amounts[group] ||= 0
+            fa[group] ||= 0
             from, to = group.gsub(/,|\+/, '').split('-').map(&:to_i)
             if to.present?
               if followers_size >= from && followers_size < to
-                amounts[group] += 1
+                fa[group] += 1
               end
             else
               if followers_size >= from
-                amounts[group] += 1
+                fa[group] += 1
               end
             end
           end
@@ -1317,8 +1316,6 @@ class User < ActiveRecord::Base
       self.followers_analytics = amounts
       self.followers_analytics_updated_at = Time.now
       self.save
-
-      fa = read_attribute :followers_analytics
     end
 
     fa
