@@ -31,7 +31,7 @@ class ReportMailer < ActionMailer::Base
 
   def tags report_id
     @report = Report.find(report_id)
-    @file = "#{ENV['FILES_DIR']}/#{@report.result_data}"
-    mail to: @report.notify_email, subject: "Requested InstaSpy tags publishers report"
+    @file = FileManager.file_url @report.result_data
+    mail to: @report.notify_email, subject: (@report.data['email_subject'] || "Requested InstaSpy tags publishers report")
   end
 end

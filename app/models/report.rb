@@ -4,7 +4,18 @@ class Report < ActiveRecord::Base
 
   after_destroy :delete_data_files
 
-  validates :format, presence: true
+  before_create do
+    self.status = 'new'
+  end
+
+  after_create do
+    csv_string = Report.process_input @input
+    filepath = "reports/reports_data/report-#{self.id}-original-input.csv"
+    FileManager.save_file filepath, content: csv_string
+    self.update_attribute :original_input, filepath
+
+    ReportProcessNewWorker.perform_async self.id
+  end
 
   OUTPUT_DATA = [
     ['AVG Likes', 'likes'], ['AVG Comments', 'comments'], ['Location', 'location'], ['Feedly subscribers amount', 'feedly'],
@@ -17,6 +28,8 @@ class Report < ActiveRecord::Base
     ['Followers', 'followers'], ['Followees', 'followees'], ['Users', 'users'], ['Tags', 'tags'],
     ['Recent Media', 'recent-media']
   ]
+
+  validates :format, presence: true, inclusion: { in: GOALS.map{|el| el[1]} }
 
   def input
     @input

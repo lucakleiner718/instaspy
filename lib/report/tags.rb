@@ -214,7 +214,7 @@ class Report::Tags < Report::Base
     @report.finished_at = Time.now
     @report.save
 
-    ReportMailer.users(@report.id).deliver if @report.notify_email.present?
+    ReportMailer.tags(@report.id).deliver if @report.notify_email.present?
 
     self.after_finish
   end
