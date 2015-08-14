@@ -53,7 +53,7 @@
               </div>
               <div class="col-sm-3">
                 <% if @user.followers_size > 0 %>
-                  <%= (@user.followers.where('followed_by > 250').size / @user.followers_size.to_f * 100).round %>%<br/>
+                  <%= @user.get_popular_followers_percentage %>%<br/>
                   <span class="desc">Percent of followers with user base that have more than 250 followers</span>
                 <% end %>
               </div>
@@ -64,7 +64,10 @@
     </div>
   </header>
 
-  <div id="followers-bars" data-data="<%= @user.get_followers_analytics.to_a %>"></div>
+  <% fa = @user.get_followers_analytics %>
+  <% if fa %>
+    <div id="followers-bars" data-data="<%= fa.to_a %>"></div>
+  <% end %>
 </div>
 
 <br/>

@@ -1284,10 +1284,21 @@ class User < ActiveRecord::Base
   end
 
   def get_followers_analytics recount: false
-    fa = self.followers_analytics
+    fa = self.data[:followers_analytics]
 
-    if !fa || fa.size == 0 || !self.followers_analytics_updated_at || self.followers_analytics_updated_at < 2.weeks.ago || recount ||
-      fa.values.sum < self.followed_by*0.8
+    if !fa || fa.size == 0 || fa[:updated_at].blank? || fa[:updated_at] < 2.weeks.ago || recount
+      # || fa[:values].values.sum < self.followed_by*0.8
+
+      if self.followed_by > 30_000
+        if self.followers_size < self.followed_by * 0.8
+          UserUpdateFollowersWorker.perform_async self.id
+        else
+          UserFollowersAnalyticsWorker.perform_async self.id
+        end
+        return false
+      end
+
+      amounts = {}
 
       groups = ['0-100', '100-250', '250-500', '500-1000', '1,000-10,000', '10,000+']
 
@@ -1296,15 +1307,15 @@ class User < ActiveRecord::Base
         # User.where(id: ids).where(followed_by: nil).pluck(:id).each { |id| UserWorker.perform_async id }
         User.where(id: ids).where('followed_by is not null').pluck(:followed_by).each do |followers_size|
           groups.each do |group|
-            fa[group] ||= 0
+            amounts[group] ||= 0
             from, to = group.gsub(/,|\+/, '').split('-').map(&:to_i)
             if to.present?
               if followers_size >= from && followers_size < to
-                fa[group] += 1
+                amounts[group] += 1
               end
             else
               if followers_size >= from
-                fa[group] += 1
+                amounts[group] += 1
               end
             end
           end
@@ -1313,12 +1324,30 @@ class User < ActiveRecord::Base
 
       UserUpdateFollowersWorker.perform_async self.id
 
-      self.followers_analytics = fa
-      self.followers_analytics_updated_at = Time.now
+      self.data[:followers_analytics] = {
+        values: amounts,
+        updated_at: Time.now
+      }
       self.save
     end
 
-    fa
+    self.data[:followers_analytics][:values]
+  end
+
+  def get_popular_followers_percentage recount: false
+    pfp = self.data[:popular_followers_percentage]
+    if !pfp || pfp.size == 0 || pfp[:updated_at].blank? || pfp[:updated_at] < 2.weeks.ago || recount
+      if self.followers_size > 0
+        self.data[:popular_followers_percentage] = {
+          values: (self.followers.where('followed_by > 250').size / self.followers_size.to_f * 100).round,
+          updated_at: Time.now
+        }
+        self.save
+      else
+        return false
+      end
+    end
+    self.data[:popular_followers_percentage][:values]
   end
 
   def followers_updated_time!
