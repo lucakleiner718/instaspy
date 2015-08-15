@@ -245,7 +245,13 @@ class Report::Base
           # grab all users without data and data outdated for 7 days
           users = User.where(id: ids).outdated(7.days).pluck(:id, :grabbed_at)
           # select users only without data and outdated for 8 days, to avoid adding new users on each iteration
-          list = users.select{|r| r[1].blank? || r[1] < 8.days.ago}.map(&:first)
+          list = users.select{|r| r[1].blank? || r[1] < 10.days.ago}.map(&:first)
+
+          if @report.output_data.include?('slim')
+            users_exclude = User.where(id: ids).where('(grabbed_at is not null AND email is null) OR (grabbed_at is not null AND grabbed_at < ? AND followed_by is not null AND followed_by < 900)', 2.months.ago).pluck(:id)
+            list -= users_exclude
+          end
+
           if list.size > 0
             not_updated.concat list
           end
