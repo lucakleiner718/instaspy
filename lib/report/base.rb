@@ -241,14 +241,16 @@ class Report::Base
         followers_to_update = self.get_cached('followers_to_update', followers_ids)
 
         not_updated = []
-        followers_to_update.in_groups_of(10_000, false) do |ids|
+        followers_to_update.in_groups_of(100_000, false) do |followers_ids|
           # grab all users without data and data outdated for 7 days
-          users = User.where(id: ids).outdated(7.days).pluck(:id, :grabbed_at)
+          users = User.where(id: followers_ids).outdated(7.days).pluck(:id, :grabbed_at)
           # select users only without data and outdated for 8 days, to avoid adding new users on each iteration
           list = users.select{|r| r[1].blank? || r[1] < 10.days.ago}.map(&:first)
 
+          # in slim report we need only users with emails and over 1k followers. do not update follower if we grab data
+          # for him and there is no email in bio
           if @report.output_data.include?('slim')
-            users_exclude = User.where(id: ids).where('(grabbed_at is not null AND email is null) OR (grabbed_at is not null AND grabbed_at < ? AND followed_by is not null AND followed_by < 900)', 2.months.ago).pluck(:id)
+            users_exclude = User.where(id: list).where('(grabbed_at is not null AND email is null) OR (grabbed_at is not null AND grabbed_at < ? AND followed_by is not null AND followed_by < 900)', 2.months.ago).pluck(:id)
             list -= users_exclude
           end
 

@@ -1,13 +1,14 @@
 class UserFollowersWorker
 
   include Sidekiq::Worker
-  # sidekiq_options unique: true, unique_args: -> (args) { [ args.first ] }
 
   def perform user_id, *args
     options = args.extract_options!
     options.symbolize_keys!
 
     user = User.find(user_id)
+
+    return false if user.followers_size >= user.followed_by
 
     if !options[:batch] && options[:ignore_batch]
       options.delete(:ignore_batch)
@@ -22,6 +23,8 @@ class UserFollowersWorker
 
   def batch_update user, *args
     user.update_info! force: true
+
+    return false if user.followers_size >= user.followed_by
 
     if user.followed_by < 2_000
       UserFollowersWorker.perform_async user.id, ignore_batch: true
