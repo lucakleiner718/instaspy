@@ -105,4 +105,20 @@ class UsersController < ApplicationController
     @requests = ScanRequest.all.order(created_at: :desc).page(params[:page]).per(20)
   end
 
+  def followers
+    @user = User.get(params[:username])
+    followers_ids = Follower.where(user_id: @user.id).pluck(:follower_id)
+
+    csv_string = CSV.generate do |csv|
+      csv << ['Username', 'Full Name', 'URL', 'BIO', 'Follows', 'Followers']
+      followers_ids.in_groups_of(100_000, false) do |ids|
+        User.where(id: ids).pluck(:username, :full_name, :website, :bio, :follows, :followed_by).each do |u|
+          csv << u
+        end
+      end
+    end
+
+    send_data csv_string, :type => 'text/csv; charset=utf-8; header=present', disposition: :attachment, filename: "#{@user.username}-follower-#{Time.now.to_i}.csv"
+  end
+
 end

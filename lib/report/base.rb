@@ -227,7 +227,7 @@ class Report::Base
         FileManager.save_file filepath, content: followers_ids.join(',')
         @report.data['followers_file'] = filepath
 
-        @report.amounts[:followers] = followers_ids.size
+        # @report.amounts[:followers] = followers_ids.size
         @report.save
       else
         followers_ids = FileManager.read_file(@report.data['followers_file']).split(',')
@@ -307,7 +307,7 @@ class Report::Base
         FileManager.save_file filepath, content: followees_ids.join(',')
         @report.data['followees_file'] = filepath
 
-        @report.amounts[:followees] = followees_ids.size
+        # @report.amounts[:followees] = followees_ids.size
         @report.save
       else
         followees_ids = FileManager.read_file(@report.data['followees_file']).split(',')

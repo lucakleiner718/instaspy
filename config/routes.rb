@@ -9,6 +9,7 @@ Rails.application.routes.draw do
   get 'users/scan' => 'users#scan', as: :users_scan
   get 'users/scan/:username' => 'users#scan_show', as: :users_scan_show
   get 'users/scan_requests' => 'users#scan_requests', as: :users_scan_requests
+  get 'users/:username/followers.csv' => 'users#followers', as: :user_followers
 
   root to: 'pages#home'
 

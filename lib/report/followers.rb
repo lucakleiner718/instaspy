@@ -8,6 +8,8 @@ class Report::Followers < Report::Base
 
     self.process_user_info
 
+    @report.amounts[:followers] = User.where(id: @report.processed_ids).pluck(:followed_by).sum
+
     self.grab_followers
     self.update_followers
 
