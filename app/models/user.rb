@@ -1130,25 +1130,34 @@ class User < ActiveRecord::Base
   end
 
   def get_popular_followers_percentage recount: false
-    pfp = self.data[:popular_followers_percentage]
-    if !pfp || pfp.size == 0 || pfp[:updated_at].blank? || pfp[:updated_at] < 2.weeks.ago || recount
+    pfp = self.data['popular_followers_percentage']
+    if !pfp || pfp.size == 0 || pfp['updated_at'].blank? || pfp['updated_at'] < 2.weeks.ago || recount
       if self.followers_size > 0
-        self.data[:popular_followers_percentage] = {
-          values: (self.followers.where('followed_by > 250').size / self.followers_size.to_f * 100).round,
-          updated_at: Time.now
+        fol_ids = self.follower_ids
+        amount = 0
+        fol_ids.in_groups_of(100_000, false) do |g|
+          amount += User.where(id: g).where('followed_by > 250').size
+        end
+        self.data['popular_followers_percentage'] = {
+          'value' => (amount / fol_ids.size.to_f * 100).round,
+          'updated_at' => Time.now
         }
         self.save
       else
         return false
       end
     end
-    self.data[:popular_followers_percentage][:values]
+    self.data['popular_followers_percentage']['value']
   end
 
   def followers_updated_time!
     if self.followed_by/self.followers_size.to_f >= 0.95
       self.update_attribute :followers_updated_at, Time.now
     end
+  end
+
+  def follower_ids
+    Follower.where(user_id: self.id).pluck(:follower_id)
   end
 
 end
