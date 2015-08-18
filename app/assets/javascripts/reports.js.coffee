@@ -28,6 +28,13 @@ jQuery ($) ->
     else
       $('#report_output_data_media_url, #report_output_data_all_media').closest('.checkbox').hide()
 
+    if $(this).val() == 'users-export'
+      $('#report_input').closest('.form-group').hide()
+      $('#report_country, #report_state, #report_city').closest('.form-group').show()
+    else
+      $('#report_input').closest('.form-group').show()
+      $('#report_country, #report_state, #report_city').closest('.form-group').hide()
+
 
   $('#report_format').trigger('change')
 

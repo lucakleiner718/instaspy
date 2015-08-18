@@ -1,4 +1,6 @@
 class Report < ActiveRecord::Base
+
+  attr_accessor :country, :state, :city
   
   scope :active, -> { where(:status.in => ['new', 'in_process']) }
 
@@ -9,10 +11,12 @@ class Report < ActiveRecord::Base
   end
 
   after_create do
-    csv_string = Report.process_input @input
-    filepath = "reports/reports_data/report-#{self.id}-original-input.csv"
-    FileManager.save_file filepath, content: csv_string
-    self.update_attribute :original_input, filepath
+    if self.format != 'users-export'
+      csv_string = Report.process_input @input
+      filepath = "reports/reports_data/report-#{self.id}-original-input.csv"
+      FileManager.save_file filepath, content: csv_string
+      self.update_attribute :original_input, filepath
+    end
 
     ReportProcessNewWorker.perform_async self.id
   end
@@ -26,7 +30,7 @@ class Report < ActiveRecord::Base
 
   GOALS = [
     ['Followers', 'followers'], ['Followees', 'followees'], ['Users', 'users'], ['Tags', 'tags'],
-    ['Recent Media', 'recent-media']
+    ['Recent Media', 'recent-media'], ['Users export', 'users-export']
   ]
 
   validates :format, presence: true, inclusion: { in: GOALS.map{|el| el[1]} }
@@ -82,11 +86,11 @@ class Report < ActiveRecord::Base
   end
 
   def original_input_url
-    "#{ENV['FILES_DIR']}/#{self.original_input}"
+    FileManager.file_url self.original_input
   end
 
   def result_data_url
-    "#{ENV['FILES_DIR']}/#{self.result_data}"
+    FileManager.file_url self.result_data
   end
 
   def input_amount

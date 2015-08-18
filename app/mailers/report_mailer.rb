@@ -13,20 +13,26 @@ class ReportMailer < ActionMailer::Base
 
   def followers report_id
     @report = Report.find(report_id)
-    @file = "#{ENV['FILES_DIR']}/#{@report.result_data}"
+    @file = FileManager.file_url @report.result_data
     mail to: @report.notify_email, subject: "Requested InstaSpy followers report"
   end
 
   def followees report_id
     @report = Report.find(report_id)
-    @file = "#{ENV['FILES_DIR']}/#{@report.result_data}"
+    @file = FileManager.file_url @report.result_data
     mail to: @report.notify_email, subject: "Requested InstaSpy followees report"
   end
 
   def users report_id
     @report = Report.find(report_id)
-    @file = "#{ENV['FILES_DIR']}/#{@report.result_data}"
+    @file = FileManager.file_url @report.result_data
     mail to: @report.notify_email, subject: "Requested InstaSpy users report"
+  end
+
+  def users_export report_id
+    @report = Report.find(report_id)
+    @file = FileManager.file_url @report.result_data
+    mail to: @report.notify_email, subject: "Requested InstaSpy users export"
   end
 
   def tags report_id

@@ -200,7 +200,7 @@ class Reporter
     else
       filepath = "reports/users-report-#{Time.now.to_i}.csv"
       FileManager.save_file filepath, content: csv_string
-      "#{ENV['FILES_DIR']}/#{filepath}"
+      FileManager.file_url filepath
     end
   end
 

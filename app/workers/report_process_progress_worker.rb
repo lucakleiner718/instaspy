@@ -8,22 +8,11 @@ class ReportProcessProgressWorker
 
     return unless report
 
-    case report.format
-      when 'followers'
-        rep = Report::Followers.new(report)
-      when 'followees'
-        rep = Report::Followees.new(report)
-      when 'users'
-        rep = Report::Users.new(report)
-      when 'tags'
-        rep = Report::Tags.new(report)
-      when 'recent-media'
-        rep = Report::RecentMedia.new(report)
-      else
-        rep = nil
+    if report.format.in?(Report::GOALS.map(&:last))
+      klass = "Report::#{report.format.titleize.gsub(/\s/, '')}".constantize
+      rep = klass.new(report)
+      rep.reports_in_process
     end
-
-    rep.reports_in_process if rep
   end
 
   def self.spawn

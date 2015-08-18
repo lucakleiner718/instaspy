@@ -1,0 +1,9 @@
+<p>Report file: <%= link_to "Download", @file %></p>
+<% if @report.note.present? %>
+  <table>
+    <tr>
+      <td><strong>Note:</strong></td>
+      <td><%= simple_format @report.note %></td>
+    </tr>
+  </table>
+<% end %>

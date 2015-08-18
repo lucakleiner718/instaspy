@@ -27,6 +27,13 @@ class ReportsController < ApplicationController
 
   def create
     @report = Report.new report_params
+
+    if @report.format == 'users-export'
+      @report.data['country'] = @report.country if @report.country.present?
+      @report.data['state'] = @report.state if @report.state.present?
+      @report.data['city'] = @report.city if @report.city.present?
+    end
+
     @report.output_data.select!{|r| r.present?}
     @report.date_from = DateTime.strptime(report_params['date_from'], '%m/%d/%Y') if report_params['date_from'].present?
     @report.date_to = DateTime.strptime(report_params['date_to'], '%m/%d/%Y').end_of_day if report_params['date_to'].present?
@@ -79,6 +86,6 @@ class ReportsController < ApplicationController
   end
 
   def report_params
-    params.require(:report).permit(:input, :format, :notify_email, :note, :date_from, :date_to, output_data: [])
+    params.require(:report).permit(:input, :format, :notify_email, :note, :date_from, :date_to, :country, :state, :city, output_data: [])
   end
 end

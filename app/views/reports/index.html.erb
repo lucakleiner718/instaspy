@@ -30,7 +30,17 @@
   <% @reports.each do |report| %>
     <tr>
       <td>
-        <%= report.format == 'tags' ? 'Publishers' : report.format.titleize %> for <%= report.input_amount %> <%= report.format != 'tags' ? 'usernames' : 'tags' %>
+        <strong><%= report.format == 'tags' ? 'Publishers' : report.format.titleize %></strong>
+        <% if report.format == 'users-export' %>
+          <br/>
+          <% filters = [] %>
+          <% filters << "Country: #{report.data['country']}" if report.data['country'].present? %>
+          <% filters << "State: #{report.data['state']}" if report.data['state'].present? %>
+          <% filters << "City: #{report.data['city']}" if report.data['city'].present? %>
+          <%= filters.join("<br>").html_safe %>
+        <% else %>
+          for <%= report.input_amount %> <%= report.format != 'tags' ? 'usernames' : 'tags' %>
+        <% end %>
         <span class="glyphicon glyphicon-question-sign report-info" aria-hidden="true" data-container="body" data-toggle="popover" data-placement="right" data-html="true" data-content="Output data: <%= report.output_data.size > 0 ? report.output_data.join(', ') : 'No extra fields' %><br>Amounts: <%= report.amounts.inject([]){|ar, (k,v)| ar << "#{k.to_s.titleize}=#{v}"; ar}.join(', ') %>" data-trigger="hover"></span>
         <% if report.notify_email.present? %>
           <br>Notification to: <%= report.notify_email %>
