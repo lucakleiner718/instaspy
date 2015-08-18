@@ -66,10 +66,11 @@ class ReportsController < ApplicationController
       @report.status = 'stopped'
     end
 
+    @report.save
+
     ReportProcessNewWorker.spawn
     ReportProcessProgressWorker.spawn
 
-    @report.save
     respond_to do |format|
       format.json { render json: { success: true, status: @report.status } }
     end

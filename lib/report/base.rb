@@ -74,12 +74,12 @@ class Report::Base
     end
   end
 
-  def process_likes ids=nil
-    ids ||= @report.processed_ids
+  def process_likes processed_ids=nil
+    processed_ids ||= @report.processed_ids
 
     # if we need avg likes data and it is not yet grabbed
     if @report.output_data.include?('likes') && !@report.steps.include?('likes')
-      ids = self.get_cached('get_likes', ids)
+      ids = self.get_cached('get_likes', processed_ids)
       get_likes = []
       ids.in_groups_of(5_000, false) do |ids|
         users = User.where(id: ids).without_likes.with_media.not_private.pluck(:id)
@@ -91,17 +91,17 @@ class Report::Base
         @report.steps.push 'likes'
       else
         self.save_cached('get_likes', get_likes)
-        @progress += (ids.size - get_likes.size) / ids.size.to_f / @parts_amount
+        @progress += (processed_ids.size - get_likes.size) / processed_ids.size.to_f / @parts_amount
       end
     end
   end
 
-  def process_comments id=nil
-    ids ||= @report.processed_ids
+  def process_comments processed_ids=nil
+    processed_ids ||= @report.processed_ids
 
     # if we need avg likes data and it is not yet grabbed
     if @report.output_data.include?('comments') && !@report.steps.include?('comments')
-      ids = self.get_cached('get_comments', ids)
+      ids = self.get_cached('get_comments', processed_ids)
       get_comments = []
       ids.in_groups_of(5_000, false) do |ids|
         users = User.where(id: ids).without_comments.with_media.not_private.pluck(:id)
@@ -113,20 +113,20 @@ class Report::Base
         @report.steps.push 'comments'
       else
         self.save_cached('get_comments', get_comments)
-        @progress += (ids.size - get_comments.size) / ids.size.to_f / @parts_amount
+        @progress += (processed_ids.size - get_comments.size) / processed_ids.size.to_f / @parts_amount
       end
     end
   end
 
-  def process_location ids=nil
-    ids ||= @report.processed_ids
+  def process_location processed_ids=nil
+    processed_ids ||= @report.processed_ids
 
     # if we need location data and it is not yet grabbed
     if @report.output_data.include?('location') && !@report.steps.include?('location')
-      ids = self.get_cached('get_location', ids)
+      ids = self.get_cached('get_location', processed_ids)
       get_location = []
-      ids.in_groups_of(5_000, false) do |ids|
-        users = User.where(id: ids).without_location.with_media.not_private.pluck(:id)
+      ids.in_groups_of(5_000, false) do |g|
+        users = User.where(id: g).without_location.with_media.not_private.pluck(:id)
         users.each { |uid| UserLocationWorker.perform_async(uid) }
         get_location.concat users
       end
@@ -135,7 +135,7 @@ class Report::Base
         @report.steps.push 'location'
       else
         self.save_cached('get_location', get_location)
-        @progress += (ids.size - get_location.size) / ids.size.to_f / @parts_amount
+        @progress += (processed_ids.size - get_location.size) / processed_ids.size.to_f / @parts_amount
       end
     end
   end
