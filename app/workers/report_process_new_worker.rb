@@ -8,22 +8,13 @@ class ReportProcessNewWorker
 
     return if !report || Report.where(status: :in_process).size > (ENV['ACTIVE_REPORTS_AMOUNT'] || 1).to_i-1
 
-    case report.format
-      when 'followers'
-        rep = Report::Followers.new(report)
-      when 'followees'
-        rep = Report::Followees.new(report)
-      when 'users'
-        rep = Report::Users.new(report)
-      when 'tags'
-        rep = Report::Tags.new(report)
-      when 'recent-media'
-        rep = Report::RecentMedia.new(report)
-      else
-        rep = nil
+    if report.format.in?(Report::GOALS.map(&:last))
+      klass = "Report::#{report.format.titleize.gsub(/\s/, '')}".constantize rescue false
+      if klass
+        rep = klass.new(report)
+        rep.reports_new
+      end
     end
-
-    rep.reports_new if rep
   end
 
   def self.spawn

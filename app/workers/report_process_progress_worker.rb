@@ -8,8 +8,8 @@ class ReportProcessProgressWorker
 
     return unless report
 
-    if report.format.in?(Report::GOALS.map(&:last))
-      klass = "Report::#{report.format.titleize.gsub(/\s/, '')}".constantize
+    klass = "Report::#{report.format.titleize.gsub(/\s/, '')}".constantize rescue false
+    if klass
       rep = klass.new(report)
       rep.reports_in_process
     end
