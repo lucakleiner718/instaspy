@@ -5,6 +5,18 @@
         <div class="avatar">
           <%= image_tag @user.profile_picture, class: "img-circle" %>
         </div>
+        <% if @update_progress < 100 %>
+          <br/>
+          <div class="update-progress">
+            <label for="">Profile update status:</label>
+            <div class="progress">
+              <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="<%= @update_progress %>"
+                   aria-valuemin="0" aria-valuemax="100" style="width: <%= @update_progress %>%">
+                <%= @update_progress %>% Complete
+              </div>
+            </div>
+          </div>
+        <% end %>
       </div>
       <div class="col-sm-9">
         <div class="author-info">

@@ -268,6 +268,18 @@ class User < ActiveRecord::Base
     Follower.where(user: self).size
   end
 
+  def followers_size_cached
+    self.data['followers_size'] ||= {'value' => nil, 'updated_at' => nil}
+    if self.data['followers_size'].blank? || !self.data['followers_size']['updated_at'] ||
+      self.data['followers_size']['updated_at'] < 2.weeks.ago
+
+      self.data['followers_size']['value'] = self.followers_size
+      self.save
+    end
+
+    self.data['followers_size']['value']
+  end
+
   def followees_size
     Follower.where(follower: self).size
   end
@@ -340,7 +352,7 @@ class User < ActiveRecord::Base
     logger.debug ">> [#{self.username.green}] follows: #{self.follows}"
 
     if options[:continue]
-      last_follow_time = Follower.where(follower_id: self.id).not(followed_at: nil).order(followed_at: :asc).first
+      last_follow_time = Follower.where(follower_id: self.id).where("followed_at is not null").order(followed_at: :asc).first.try(:followed_at)
       if last_follow_time
         cursor = last_follow_time.followed_at.to_i * 1_000
       end
@@ -488,7 +500,7 @@ class User < ActiveRecord::Base
       end
 
       if finish_cursor && cursor.to_i < finish_cursor
-        Rails.logger.info "#{"Stopped".red} by finish_cursor point finish_cursor: #{Time.at(finish_cursor/1000)} (#{finish_cursor}) / cursor: #{Time.at(cursor.to_i/1000)} (#{cursor}) / added: #{total_added}"
+        Rails.logger.debug "#{"Stopped".red} by finish_cursor point finish_cursor: #{Time.at(finish_cursor/1000)} (#{finish_cursor}) / cursor: #{Time.at(cursor.to_i/1000)} (#{cursor}) / added: #{total_added}"
         break
       end
     end
@@ -531,6 +543,7 @@ class User < ActiveRecord::Base
       sleep 10
       retries += 1
       retry if retries <= 5
+      raise e
     end
 
     data = nil

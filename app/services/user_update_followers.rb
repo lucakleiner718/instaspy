@@ -20,9 +20,9 @@ class UserUpdateFollowers < ServiceObject
     return false if options[:start_cursor] && options[:start_cursor] < 0
 
     if options[:continue]
-      last_follow_time = Follower.where(user_id: user.id).where("followed_at is not null").order(followed_at: :asc).select(:followed_at).first
+      last_follow_time = Follower.where(user_id: user.id).where("followed_at is not null").order(followed_at: :asc).first.try(:followed_at)
       if last_follow_time
-        cursor = last_follow_time.followed_at.to_i * 1_000
+        cursor = last_follow_time.to_i * 1_000
       end
     end
 
@@ -50,13 +50,13 @@ class UserUpdateFollowers < ServiceObject
       rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::InternalServerError,
         Instagram::GatewayTimeout, JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError,
         Errno::EPIPE, Errno::ETIMEDOUT => e
-        Rails.logger.info e.message
+        logger.debug e.message
         sleep 10*retries
         retries += 1
         retry if retries <= 5
         raise e
       rescue Instagram::BadRequest => e
-        Rails.logger.info e.message
+        logger.debug e.message
         if e.message =~ /you cannot view this resource/
           break
         elsif e.message =~ /this user does not exist/
@@ -131,7 +131,7 @@ class UserUpdateFollowers < ServiceObject
         begin
           Follower.connection.execute("INSERT INTO followers (user_id, follower_id, followed_at, created_at) VALUES #{followers_to_create.map{|r| r << Time.now; "(#{r.map{|el| "'#{el}'"}.join(', ')})"}.join(', ')}")
         rescue => e
-          Rails.logger.info "Exception when try to multiple insert followers".black.on_white
+          logger.debug "Exception when try to multiple insert followers".black.on_white
           followers_to_create.each do |follower|
             fol = Follower.where(user_id: follower[0], follower_id: follower[1]).first_or_initialize
             fol.followed_at = follower[2]
@@ -180,7 +180,7 @@ class UserUpdateFollowers < ServiceObject
       end
 
       if finish_cursor && cursor.to_i < finish_cursor
-        Rails.logger.info "#{"Stopped".red} by finish_cursor point finish_cursor: #{Time.at(finish_cursor/1000)} (#{finish_cursor}) / cursor: #{Time.at(cursor.to_i/1000)} (#{cursor}) / added: #{total_added}"
+        logger.debug "#{"Stopped".red} by finish_cursor point finish_cursor: #{Time.at(finish_cursor/1000)} (#{finish_cursor}) / cursor: #{Time.at(cursor.to_i/1000)} (#{cursor}) / added: #{total_added}"
         break
       end
     end

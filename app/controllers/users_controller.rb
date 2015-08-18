@@ -98,6 +98,15 @@ class UsersController < ApplicationController
   def scan_show
     @user = User.get_by_username(params[:username])
     @user.update_info! force: @user.profile_picture.blank?
+
+    steps_amount = 3
+    steps = 0
+    steps +=1 if @user.grabbed_at.present?
+    steps +=1 if @user.followers_size >= @user.followed_by*0.9
+    steps +=1 if @user.data['followers_analytics'] && @user.data['followers_analytics']['updated_at']
+
+    @update_progress = (steps / steps_amount.to_f * 100).round
+
     render layout: 'scan'
   end
 
