@@ -1098,7 +1098,7 @@ class User < ActiveRecord::Base
       groups = ['0-100', '100-250', '250-500', '500-1000', '1,000-10,000', '10,000+']
 
       followers_ids = Follower.where(user_id: self.id).pluck(:follower_id)
-      followers_ids.in_groups_of(10_000, false) do |ids|
+      followers_ids.in_groups_of(100_000, false) do |ids|
         # User.where(id: ids).where(followed_by: nil).pluck(:id).each { |id| UserWorker.perform_async id }
         User.where(id: ids).where('followed_by is not null').pluck(:followed_by).each do |followers_size|
           groups.each do |group|
