@@ -196,7 +196,7 @@ class Report::Base
     ids ||= @report.processed_ids
 
     if @report.steps.include?('user_info') && !@report.steps.include?('followers')
-      users = User.where(id: ids).not_private.where("followers_updated_at is null OR followers_updated_at < ?", 7.days.ago).map{|u| [u.id, u.followed_by, u.followers_size, u]}
+      users = User.where(id: ids).not_private.where("followers_updated_at is null OR followers_updated_at < ?", 10.days.ago).map{|u| [u.id, u.followed_by, u.followers_size, u]}
       for_update = users.select{ |r| r[2]/r[1].to_f < 0.95 || r[2]/r[1].to_f > 1.2 }
 
       if for_update.size == 0
@@ -243,9 +243,9 @@ class Report::Base
         not_updated = []
         followers_to_update.in_groups_of(100_000, false) do |followers_ids|
           # grab all users without data and data outdated for 7 days
-          users = User.where(id: followers_ids).outdated(7.days).pluck(:id, :grabbed_at)
+          users = User.where(id: followers_ids).outdated(14.days).pluck(:id, :grabbed_at)
           # select users only without data and outdated for 8 days, to avoid adding new users on each iteration
-          list = users.select{|r| r[1].blank? || r[1] < 10.days.ago}.map(&:first)
+          list = users.select{|r| r[1].blank? || r[1] < 17.days.ago}.map(&:first)
 
           # in slim report we need only users with emails and over 1k followers. do not update follower if we grab data
           # for him and there is no email in bio

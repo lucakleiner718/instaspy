@@ -13,10 +13,11 @@ class Report::UsersExport < Report::Base
   end
 
   def reports_in_process
+    @report.data['parts'].each {|f| File.delete Rails.root.join('tmp', f)}
+
     range = 100_000
     parts_size = (@report.amounts['found_users'] / range.to_f).ceil
-    (parts_size - @report.data['parts'].size).times do |i|
-      i += @report.data['parts'].size
+    parts_size.times do |i|
       users = scope.offset(range * i).limit(range)
 
       csv_string = Reporter.users_export ids: users.pluck(:id), return_csv: true, additional_columns: [:location]
@@ -45,7 +46,6 @@ class Report::UsersExport < Report::Base
           filepath_full = Rails.root.join('tmp', filename)
           zipfile.add(File.basename(filepath_full), filepath_full)
         end
-        # zipfile.get_output_stream("myFile") { |os| os.write "myFile contains just this" }
       end
 
       filepath = "reports/reports_data/report-#{@report.id}-archive.zip"
