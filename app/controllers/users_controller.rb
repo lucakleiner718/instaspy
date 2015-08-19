@@ -103,7 +103,7 @@ class UsersController < ApplicationController
     steps = 0
     steps +=1 if @user.grabbed_at.present?
     steps +=1 if @user.followers_size >= @user.followed_by*0.9
-    steps +=1 if @user.data['followers_analytics'] && @user.data['followers_analytics']['updated_at']
+    steps +=1 if @user.data_get_value('followers_analytics')
 
     @update_progress = (steps / steps_amount.to_f * 100).round
 
@@ -127,7 +127,7 @@ class UsersController < ApplicationController
       end
     end
 
-    send_data csv_string, :type => 'text/csv; charset=utf-8; header=present', disposition: :attachment, filename: "#{@user.username}-follower-#{Time.now.to_i}.csv"
+    send_data csv_string, :type => 'text/csv; charset=utf-8; header=present', disposition: :attachment, filename: "#{@user.username}-followers-#{Time.now.to_i}.csv"
   end
 
 end

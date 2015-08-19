@@ -1079,9 +1079,9 @@ class User < ActiveRecord::Base
   end
 
   def get_followers_analytics recount: false
-    fa = self.data[:followers_analytics]
+    fa = data_get_value 'followers_analytics', lifetime: 2.weeks, recount: recount
 
-    if !fa || fa.size == 0 || fa[:updated_at].blank? || fa[:updated_at] < 2.weeks.ago || recount
+    if !fa
       # || fa[:values].values.sum < self.followed_by*0.8
 
       if self.followed_by > 30_000
@@ -1119,35 +1119,32 @@ class User < ActiveRecord::Base
 
       UserUpdateFollowersWorker.perform_async self.id
 
-      self.data[:followers_analytics] = {
-        values: amounts,
-        updated_at: Time.now
-      }
+      fa = amounts
+      data_set_value 'followers_analytics', amounts
       self.save
     end
 
-    self.data[:followers_analytics][:values]
+    fa
   end
 
   def get_popular_followers_percentage recount: false
-    pfp = self.data['popular_followers_percentage']
-    if !pfp || pfp.size == 0 || pfp['updated_at'].blank? || pfp['updated_at'] < 2.weeks.ago || recount
+    pfp = data_get_value 'popular_followers_percentage', lifetime: 1.day, recount: recount
+    if !pfp
       if self.followers_size > 0
         fol_ids = self.follower_ids
         amount = 0
         fol_ids.in_groups_of(100_000, false) do |g|
           amount += User.where(id: g).where('followed_by > 250').size
         end
-        self.data['popular_followers_percentage'] = {
-          'value' => (amount / fol_ids.size.to_f * 100).round,
-          'updated_at' => Time.now
-        }
+        pfp = (amount / fol_ids.size.to_f * 100).round
+        data_set_value 'popular_followers_percentage', pfp
         self.save
       else
         return false
       end
     end
-    self.data['popular_followers_percentage']['value']
+
+    pfp
   end
 
   def followers_updated_time!
@@ -1160,4 +1157,39 @@ class User < ActiveRecord::Base
     Follower.where(user_id: self.id).pluck(:follower_id)
   end
 
+  def followers_preparedness recount: false
+    fp = data_get_value 'followers_preparedness', lifetime: 1.day, recount: recount
+    if !fp
+      parts = 2
+      count = 0
+      count += self.followers_size >= self.followed_by*0.95 ? 1 : self.followers_size/self.followed_by.to_f
+
+      grabbed_users = 0
+      fol_ids = self.follower_ids
+      fol_ids.in_groups_of(100_000, false) do |ids|
+        grabbed_users += User.where(id: ids).where('grabbed_at is not null').size
+      end
+
+      count += grabbed_users == fol_ids.size ? 1 : grabbed_users/fol_ids.size.to_f
+
+      fp = (count/parts.to_f*100).round
+      data_set_value 'followers_preparedness', fp
+      self.save
+    end
+    fp
+  end
+
+  def data_get_value key, lifetime: 7.days, recount: false
+    item = self.data[key]
+    if !item || item.size == 0 || !item['value'] || item['updated_at'].blank? || item['updated_at'] < lifetime.ago || recount
+      return false
+    end
+    item['value']
+  end
+
+  def data_set_value key, value
+    self.data[key] ||= {}
+    self.data[key]['value'] = value
+    self.data[key]['updated_at'] = Time.now.utc
+  end
 end
