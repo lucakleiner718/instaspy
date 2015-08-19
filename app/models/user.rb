@@ -1084,7 +1084,7 @@ class User < ActiveRecord::Base
     if !fa
       # || fa[:values].values.sum < self.followed_by*0.8
 
-      if self.followed_by > 30_000
+      if self.followers_preparedness < 90
         if self.followers_size < self.followed_by * 0.8
           UserUpdateFollowersWorker.perform_async self.id
         else
