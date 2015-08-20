@@ -102,8 +102,8 @@ class UsersController < ApplicationController
     steps_amount = 3
     steps = 0
     steps +=1 if @user.grabbed_at.present?
-    steps +=1 if @user.followers_size >= @user.followed_by*0.9
-    steps +=1 if @user.data_get_value('followers_analytics')
+    steps +=1 if @user.followers_preparedness == 100
+    steps +=1 if @user.get_followers_analytics
 
     @update_progress = (steps / steps_amount.to_f * 100).round
 
