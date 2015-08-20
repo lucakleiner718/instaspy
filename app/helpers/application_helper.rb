@@ -13,8 +13,8 @@ module ApplicationHelper
 
   def output_data report
     elements = []
-    elements << "Date from: #{report.date_from}"
-    elements << "Date to: #{report.date_to}"
+    elements << "Date from: #{report.date_from}" if report.date_from.present?
+    elements << "Date to: #{report.date_to}" if report.date_to.present?
     elements << "Output data: #{report.output_data.size > 0 ? report.output_data.join(', ') : 'No extra fields'}"
     elements << "Amounts: #{report.amounts.inject([]){|ar, (k,v)| ar << "#{k.to_s.titleize}=#{v}"; ar}.join(', ')}"
     elements.join("<br>").html_safe
