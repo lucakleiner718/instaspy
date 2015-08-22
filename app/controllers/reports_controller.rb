@@ -14,6 +14,8 @@ class ReportsController < ApplicationController
         @reports = @reports.where(status: ['new', 'in_process'])
     end
 
+    @reports = @reports.order(finished_at: :desc) if params[:format] == 'finished'
+
     if params[:sort]
       @reports = @reports.order("#{params[:sort]} #{params[:direction]}")
     end
