@@ -345,7 +345,7 @@ class User < ActiveRecord::Base
     cursor = options[:start_cursor] ? options[:start_cursor].to_f.round(3).to_i * 1_000 : nil
     finish_cursor = options[:finish_cursor] ?  options[:finish_cursor].to_f.round(3).to_i * 1_000 : nil
 
-    self.update_info!
+    self.update_info! force: true
 
     return false if self.destroyed? || self.private?
 
@@ -388,6 +388,7 @@ class User < ActiveRecord::Base
       rescue Instagram::BadRequest => e
         Rails.logger.info e.message
         if e.message =~ /you cannot view this resource/
+          self.update_info! force: true
           break
         elsif e.message =~ /this user does not exist/
           self.destroy

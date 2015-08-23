@@ -40,7 +40,7 @@ group :development, :test do
 end
 
 group :production do
-  gem 'puma', '~> 2.8.2'                                    # Production Web Server
+  gem 'puma', '~> 2.8.2'
 end
 
 gem 'jquery-ui-rails'

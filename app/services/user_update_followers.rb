@@ -58,6 +58,7 @@ class UserUpdateFollowers < ServiceObject
       rescue Instagram::BadRequest => e
         logger.debug e.message
         if e.message =~ /you cannot view this resource/
+          user.update_info! force: true
           break
         elsif e.message =~ /this user does not exist/
           user.destroy
