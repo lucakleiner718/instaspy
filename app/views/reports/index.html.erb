@@ -7,7 +7,7 @@
 
 <div class="row">
   <div class="col-sm-4">
-    <%= link_to 'Active', reports_path(params: { format: :new }), class: "label label-primary", title: 'New and In Process' %>
+    <%= link_to 'Active', reports_path(params: { format: :active }), class: "label label-primary", title: 'New and In Process' %>
     <%= link_to 'New', reports_path(params: { format: :new }), class: "label label-primary" %>
     <%= link_to 'In Process', reports_path(params:  { format: :in_process }), class: "label label-primary" %>
     <%= link_to 'Finished', reports_path(params: { format: :finished }), class: "label label-primary" %>
