@@ -196,7 +196,7 @@ class Report::Base
     ids ||= @report.processed_ids
 
     if @report.steps.include?('user_info') && !@report.steps.include?('followers')
-      users = User.where(id: ids).not_private.where("followers_updated_at is null OR followers_updated_at < ?", 10.days.ago).map{|u| [u.id, u.followed_by, u.followers_size, u]}
+      users = User.where(id: ids).not_private.where("followers_updated_at is null OR followers_updated_at < ?", 10.days.ago).where('followed_by > 0').map{|u| [u.id, u.followed_by, u.followers_size, u]}
       for_update = users.select{ |r| r[2]/r[1].to_f < 0.95 || r[2]/r[1].to_f > 1.2 }
 
       if for_update.size == 0
@@ -276,10 +276,10 @@ class Report::Base
   end
 
   def grab_followees ids=nil
-    ids ||= @report.processed_ids
+    ids = @report.processed_ids
 
     if @report.steps.include?('user_info') && !@report.steps.include?('followees')
-      users = User.where(id: ids).not_private.where("followees_updated_at is null OR followees_updated_at < ?", 3.days.ago).map{ |u| [u.id, u.follows, u.followees_size] }
+      users = User.where(id: ids).not_private.where("followees_updated_at is null OR followees_updated_at < ?", 3.days.ago).where('follows > 0').map{ |u| [u.id, u.follows, u.followees_size] }
       for_update = users.select{|r| r[2]/r[1].to_f < 0.95 || r[2]/r[1].to_f > 1.2 }
 
       if for_update.size == 0
