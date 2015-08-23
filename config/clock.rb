@@ -41,11 +41,8 @@ module Clockwork
     DailyMediaStatWorker.spawn
   }
 
-  every(5.minutes, 'ReportProcessNewWorker') {
+  every(2.minutes, 'ReportProcess') {
     ReportProcessNewWorker.spawn
-  }
-
-  every(5.minutes, 'ReportProcessProgressWorker') {
     ReportProcessProgressWorker.spawn
   }
 

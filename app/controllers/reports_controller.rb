@@ -3,7 +3,7 @@ class ReportsController < ApplicationController
   helper_method :sort_column, :sort_direction
 
   def index
-    @reports = Report.order(created_at: :desc, started_at: :desc, finished_at: :desc)
+    @reports = Report.all
 
     case params[:format]
       when 'all'
@@ -14,10 +14,12 @@ class ReportsController < ApplicationController
         @reports = @reports.where(status: ['new', 'in_process'])
     end
 
-    @reports = @reports.order(finished_at: :desc) if params[:format] == 'finished'
-
     if params[:sort]
       @reports = @reports.order("#{params[:sort]} #{params[:direction]}")
+    elsif params[:format] == 'finished'
+      @reports = @reports.order(finished_at: :desc)
+    else
+      @reports = @reports.order(created_at: :desc, started_at: :desc, finished_at: :desc)
     end
 
     @reports = @reports.page(params[:page]).per(20)

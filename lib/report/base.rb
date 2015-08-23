@@ -276,7 +276,7 @@ class Report::Base
   end
 
   def grab_followees ids=nil
-    ids = @report.processed_ids
+    ids ||= @report.processed_ids
 
     if @report.steps.include?('user_info') && !@report.steps.include?('followees')
       users = User.where(id: ids).not_private.where("followees_updated_at is null OR followees_updated_at < ?", 3.days.ago).where('follows > 0').map{ |u| [u.id, u.follows, u.followees_size] }
