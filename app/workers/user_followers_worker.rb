@@ -31,19 +31,14 @@ class UserFollowersWorker
       return true
     end
 
-    speed = nil
-    if user.user_followers.where("followed_at is not null").size > 2
-      speed = user.follow_speed
-    end
-
-    speed = 2_000 if !speed || speed > 2_000
+    follow_speed = 1_000
 
     start = Time.now.to_i
     amount = (user.followed_by/1_000).ceil
     amount.times do |i|
-      start_cursor = start-i*speed*100
+      start_cursor = start-i*follow_speed*100
       next if start_cursor < 0
-      finish_cursor = i+1 < amount ? start-(i+1)*speed*100 : nil
+      finish_cursor = i+1 < amount ? start-(i+1)*follow_speed*100 : nil
       UserFollowersWorker.perform_async(user.id, start_cursor: start_cursor, finish_cursor: finish_cursor, ignore_exists: true, ignore_batch: true)
     end
   end
