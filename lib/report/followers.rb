@@ -8,7 +8,9 @@ class Report::Followers < Report::Base
 
     self.process_user_info
 
-    @report.amounts[:followers] = User.where(id: @report.processed_ids).pluck(:followed_by).sum
+    if @report.steps.include? 'user_info'
+      @report.amounts[:followers] = User.where(id: @report.processed_ids).pluck(:followed_by).sum
+    end
 
     self.grab_followers
     self.update_followers
@@ -42,6 +44,8 @@ class Report::Followers < Report::Base
     header.slice! 4,1 if @report.output_data.include?('slim') || @report.output_data.include?('slim_followers')
     header += ['Relation']
 
+    total_followers_amount = 0
+
     User.where(id: @report.processed_ids).each do |user|
       filename = "#{user.username}-followers-#{Time.now.to_i}.csv"
       unless File.exists? Rails.root.join('tmp', filename)
@@ -63,6 +67,8 @@ class Report::Followers < Report::Base
             row << user.username
 
             csv << row
+
+            total_followers_amount += 1
           end
         end
 
@@ -70,6 +76,8 @@ class Report::Followers < Report::Base
       end
       files << filename
     end
+
+    @report.amounts[:followers_in_report] = total_followers_amount
 
     if files.size > 0
       zipfilename = Rails.root.join("tmp", "followers-report-#{Time.now.to_i}.zip")
