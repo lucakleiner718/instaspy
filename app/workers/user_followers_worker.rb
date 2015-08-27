@@ -15,7 +15,7 @@ class UserFollowersWorker
 
     user = User.find(user_id)
 
-    return false if jobs_exists? (user.id) || user.followers_size >= user.followed_by
+    return false if UserFollowersWorker.jobs_exists?(user.id) || user.followers_size >= user.followed_by
 
     if !options[:batch] && options[:ignore_batch]
       options.delete(:ignore_batch)
@@ -46,8 +46,6 @@ class UserFollowersWorker
     jobs
   end
 
-  private
-
   def batch_update user, *args
     user.update_info! force: true
 
@@ -70,13 +68,13 @@ class UserFollowersWorker
     end
   end
 
-  def jobs_exists? user_id
+  def self.jobs_exists? user_id
     exists = false
     queue_jobs = Sidekiq::Queue.new(UserFollowersWorker.sidekiq_options['queue'])
     queue_jobs.each do |job|
       if job.klass == 'UserFollowersWorker' && job.args[0].to_i == user_id.to_i
         exists = true
-        return
+        break
       end
     end
 
@@ -85,7 +83,7 @@ class UserFollowersWorker
       workers.each do |process_id, thread_id, work|
         if work['payload']['class'] == 'UserFollowersWorker' && work['payload']['args'][0].to_i == user_id.to_i
           exists = true
-          return
+          break
         end
       end
     end
