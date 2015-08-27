@@ -35,6 +35,17 @@ class UserFollowersWorker
     end
   end
 
+  def self.get_jobs user_id
+    jobs = []
+    queue_jobs = Sidekiq::Queue.new(UserFollowersWorker.sidekiq_options['queue'])
+    queue_jobs.each do |job|
+      if job.klass == 'UserFollowersWorker' && job.args[0].to_i == user_id.to_i
+        jobs << job
+      end
+    end
+    jobs
+  end
+
   private
 
   def batch_update user, *args
@@ -68,6 +79,18 @@ class UserFollowersWorker
         return
       end
     end
+
+    unless exists
+      workers = Sidekiq::Workers.new
+      workers.each do |process_id, thread_id, work|
+        if work['payload']['class'] == 'UserFollowersWorker' && work['payload']['args'][0].to_i == user_id.to_i
+          exists = true
+          return
+        end
+      end
+    end
+
     exists
   end
+
 end
