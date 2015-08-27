@@ -10,7 +10,7 @@ class ReportsController < ApplicationController
 
       when 'new', 'in_process', 'finished'
         @reports = @reports.where(status: params[:format])
-      when nil || 'active'
+      when nil, 'active'
         @reports = @reports.where(status: ['new', 'in_process'])
     end
 
