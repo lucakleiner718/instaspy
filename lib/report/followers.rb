@@ -103,4 +103,10 @@ class Report::Followers < Report::Base
 
     self.after_finish
   end
+
+  def after_finish
+    super
+    ReportStopJobs.new.perform @report.id
+  end
+
 end

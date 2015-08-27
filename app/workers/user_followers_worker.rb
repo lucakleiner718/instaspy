@@ -1,6 +1,12 @@
 class UserFollowersWorker
 
-  include Sidekiq::Worker
+  include Sidekiq::Worker, unique: true, unique_args: -> (args) {
+      if args[1] && args[1][:start_cursor]
+        args
+      else
+        [ args.first ]
+      end
+    }
 
   def perform user_id, *args
     options = args.extract_options!
