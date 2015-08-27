@@ -15,7 +15,7 @@ class UserFollowersWorker
 
     user = User.find(user_id)
 
-    return false if UserFollowersWorker.jobs_exists?(user.id) || user.followers_size >= user.followed_by
+    return false if user.followers_size >= user.followed_by
 
     if !options[:batch] && options[:ignore_batch]
       options.delete(:ignore_batch)
@@ -47,9 +47,11 @@ class UserFollowersWorker
   end
 
   def batch_update user, *args
+    return if UserFollowersWorker.jobs_exists?(user.id)
+
     user.update_info! force: true
 
-    return false if user.followers_size >= user.followed_by
+    return if user.followers_size >= user.followed_by
 
     if user.followed_by < 2_000
       UserFollowersWorker.perform_async user.id, ignore_batch: true

@@ -202,6 +202,7 @@ class Report::Base
       if for_update.size == 0
         @report.steps.push 'followers'
         @report.save!
+        User.where(id: ids).not_private.where("followers_updated_at is null OR followers_updated_at < ?", 10.days.ago).where('followed_by > 0').update_all(followers_updated_at: Time.now)
       else
         for_update.each do |row|
           UserFollowersWorker.perform_async row[0], ignore_exists: true, batch: true
