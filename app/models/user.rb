@@ -1040,7 +1040,14 @@ class User < ActiveRecord::Base
           exists_user.update_info! force: true
           if exists_user.private? || exists_user.username == self.username
             exists_user.destroy
-            self.save!
+            begin
+              self.save!
+            rescue ActiveRecord::RecordNotUnique => e
+              if e.message =~ /index_users_on_insta_id/
+                self.destroy
+                return User.where(insta_id: self.insta_id).first
+              end
+            end
           end
         end
       else

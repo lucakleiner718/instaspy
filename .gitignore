@@ -15,6 +15,7 @@
 /vendor/emerald
 /public/assets
 /public/reports
+/public/transform
 
 /config/database.yml
 /config/god.rb
