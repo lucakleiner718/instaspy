@@ -16,14 +16,14 @@ class UserLocationFixWorker
 
       user.location_country, user.location_state, user.location_city = country, state, city
 
-      user.save
+      user.save if user.changed?
     end
   end
 
   def self.spawn
     users = User.where(location_country: 'US').where('location_state like ?', 'US,%').pluck(:id)
     users.in_groups_of(1_000, false) do |ids|
-      self.perform_async ids
+      UserLocationFixWorker.perform_async ids
     end
   end
 end
