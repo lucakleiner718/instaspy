@@ -4,7 +4,7 @@ Rails.application.routes.draw do
   post 'users/duplicates' => 'users#duplicates', as: :users_duplicates
   get 'users/export' => 'users#export', as: :users_export
   post 'users/export/process' => 'users#export_process', as: :users_export_process
-  # get 'users/followers-chart/:id' => 'users#followers_chart', as: :user_followers_chart
+  get 'users/followers-chart/:id' => 'users#followers_chart', as: :user_followers_chart
 
   get 'users/scan' => 'users#scan', as: :users_scan
   get 'users/scan/:username' => 'users#scan_show', as: :users_scan_show
@@ -43,7 +43,7 @@ Rails.application.routes.draw do
 
   require 'sidekiq/web'
   Sidekiq::Web.use Rack::Auth::Basic do |username, password|
-    username == 'rob' && password == 'awesomeLA'
+    username == 'rob' && password == 'foawesomeLA'
   end if Rails.env.production?
   mount Sidekiq::Web, at: "/sidekiq"
 

@@ -17,10 +17,10 @@ class UserFollowersWorker
 
     return false if user.followers_size >= user.followed_by
 
-    if !options[:batch] && options[:ignore_batch]
+    if options[:ignore_batch] && !options[:batch]
       options.delete(:ignore_batch)
       options.delete(:batch)
-      user.update_followers *args, options
+      UserUpdateFollowers.perform user: user, options: options
     else
       batch_update user, *args, options
     end
@@ -47,7 +47,8 @@ class UserFollowersWorker
   end
 
   def batch_update user, *args
-    return if UserFollowersWorker.jobs_exists?(user.id)
+    options = args.extract_options!
+    return if UserFollowersWorker.jobs_exists?(user.id) && !options[:force_batch]
 
     user.update_info! force: true
 
@@ -58,14 +59,16 @@ class UserFollowersWorker
       return true
     end
 
-    follow_speed = 1_000
+    beginning = DateTime.parse('2010-01-01')
+    now = Time.now
+    days_left = (now - beginning).to_i
+    worker_days = 10.days
 
-    start = Time.now.to_i
-    amount = (user.followed_by/1_000).ceil
-    amount.times do |i|
-      start_cursor = start-i*follow_speed*100
-      next if start_cursor < 0
-      finish_cursor = i+1 < amount ? start-(i+1)*follow_speed*100 : nil
+    (days_left/worker_days).times do |i|
+      offset = i*worker_days
+      start_cursor = i > 0 ? start - offset : nil
+      break if start_cursor && start_cursor < 0
+      finish_cursor = i+1 < amount ? start-(i+1)*worker_days : nil
       UserFollowersWorker.perform_async(user.id, start_cursor: start_cursor, finish_cursor: finish_cursor, ignore_exists: true, ignore_batch: true)
     end
   end

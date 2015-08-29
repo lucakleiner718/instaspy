@@ -196,8 +196,8 @@ class Report::Base
     ids ||= @report.processed_ids
 
     if @report.steps.include?('user_info') && !@report.steps.include?('followers')
-      users = User.where(id: ids).not_private.where("followers_updated_at is null OR followers_updated_at < ?", 10.days.ago).where('followed_by > 0').map{|u| [u.id, u.followed_by, u.followers_size, u]}
-      for_update = users.select{ |r| r[2]/r[1].to_f < 0.95 || r[2]/r[1].to_f > 1.2 }
+      users = User.where(id: ids).not_private.where('followed_by > 0').map{|u| [u.id, u.followed_by, u.followers_size, u]}.select{ |r| r[2]/r[1].to_f < 0.95 || r[2]/r[1].to_f > 1.2 }
+      for_update = users
 
       if for_update.size == 0
         @report.steps.push 'followers'
@@ -205,7 +205,7 @@ class Report::Base
         User.where(id: ids).not_private.where("followers_updated_at is null OR followers_updated_at < ?", 10.days.ago).where('followed_by > 0').update_all(followers_updated_at: Time.now)
       else
         for_update.each do |row|
-          UserFollowersWorker.perform_async row[0], ignore_exists: true, batch: true
+          UserFollowersWorker.perform_async row[0], ignore_exists: true
         end
         @progress += (ids.size - for_update.size) / ids.size.to_f / @parts_amount
       end
