@@ -82,14 +82,14 @@ class Geolocation
       @country_lookup = Country.find_country_by_name(@country) unless @country_lookup
       @country_lookup = Country.find_country_by_alpha2(@country) unless @country_lookup
       @country_lookup = Country.find_country_by_alpha3(@country) unless @country_lookup
+
+      @country = @country_lookup.alpha2 if @country_lookup
     end
 
-    # if @country == "US" && !@country_lookup.states[@state]
-    #   st = @country_lookup.states.select{|k, v| v['name'] == @state}.first
-    #   @state = st.first if st
-    # end
-
-    @country = @country_lookup.alpha2 if @country_lookup
+    if @country == 'US' && @state.size == 2 && @country_lookup
+      state = @country_lookup.states[@state.upcase]
+      @state = state['name'] if state
+    end
 
     {country: @country, state: @state, city: @city}
   end
