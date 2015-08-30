@@ -24,6 +24,7 @@ group :development do
   gem 'capistrano3-puma', '~> 0.9.0', require: false
   gem 'capistrano-rvm', '~> 0.1', require: false
   gem "capistrano-sidekiq", require: false
+  gem 'capistrano-bower', require: false
 
   gem 'thin'
   gem 'web-console', '~> 2.0'
