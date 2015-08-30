@@ -205,7 +205,7 @@ class Report::Base
         User.where(id: ids).not_private.where("followers_updated_at is null OR followers_updated_at < ?", 10.days.ago).where('followed_by > 0').update_all(followers_updated_at: Time.now)
       else
         for_update.each do |row|
-          UserFollowersWorker.perform_async row[0], ignore_exists: true
+          UserFollowersWorker.new.perform row[0], ignore_exists: true
         end
         @progress += (ids.size - for_update.size) / ids.size.to_f / @parts_amount
       end

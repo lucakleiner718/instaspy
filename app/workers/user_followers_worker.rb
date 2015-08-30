@@ -63,8 +63,9 @@ class UserFollowersWorker
     now = Time.now
     days_left = (now - beginning).to_i
     worker_days = 10.days
+    amount = (days_left/worker_days.to_f).ceil
 
-    (days_left/worker_days).times do |i|
+    amount.times do |i|
       offset = i*worker_days
       start_cursor = i > 0 ? start - offset : nil
       break if start_cursor && start_cursor < 0
