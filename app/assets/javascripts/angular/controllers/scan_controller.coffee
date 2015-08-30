@@ -1,4 +1,4 @@
-angular.module('scan', ['ngRoute']).controller 'scanProfileController', ($scope, $http, $timeout) ->
+angular.module('scan', ['ngRoute']).controller 'scanProfileController', ['$scope', '$http', '$timeout', ($scope, $http, $timeout) ->
   $scope.username = window.location.pathname.match(/^\/users\/scan\/(.*)$/)[1]
   $scope.website_wo_schema = ->
     if $scope.website
@@ -76,3 +76,4 @@ angular.module('scan', ['ngRoute']).controller 'scanProfileController', ($scope,
     if update
       followersBarsCharts = followersBars.highcharts()
       followersBarsCharts.series[0].setData new_value
+]
