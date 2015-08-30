@@ -60,8 +60,8 @@ class UserFollowersWorker
     end
 
     beginning = DateTime.parse('2010-01-01')
-    now = Time.now
-    days_left = (now - beginning).to_i
+    start = Time.now.to_i
+    days_left = start - beginning.to_i
     worker_days = 10.days
     amount = (days_left/worker_days.to_f).ceil
 
