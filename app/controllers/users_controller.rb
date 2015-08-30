@@ -87,7 +87,7 @@ class UsersController < ApplicationController
       # @user.update_info!
       #
       # UsersScanWorker.perform_async @user.id
-      # ScanRequest.create username: params[:username]
+      ScanRequest.create username: params[:username]
 
       redirect_to users_scan_show_path username: params[:username]
     else
