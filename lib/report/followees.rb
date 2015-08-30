@@ -8,7 +8,9 @@ class Report::Followees < Report::Base
 
     self.process_user_info
 
-    @report.amounts[:followees] = User.where(id: @report.processed_ids).pluck(:follows).sum
+    if @report.steps.include? 'user_info'
+      @report.amounts[:followees] = User.where(id: @report.processed_ids).pluck(:follows).sum
+    end
 
     self.grab_followees
     self.update_followees
@@ -22,6 +24,8 @@ class Report::Followees < Report::Base
 
     @progress += @report.steps.size.to_f / @parts_amount
     @report.progress = @progress.round(2) * 100
+
+    @report.save!
 
     if @parts_amount == @report.steps.size
       @report.status = 'finished'

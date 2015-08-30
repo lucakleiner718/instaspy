@@ -52,7 +52,7 @@ module Clockwork
   every(1.day, 'StatWorker', at: '00:00') { StatWorker.perform_async }
   every(10.minutes, 'LimitsWorker') { LimitsWorker.perform_async }
 
-  every(10.minutes, 'ReportProcess') {
+  every(5.minutes, 'ReportProcess') {
     ReportProcessNewWorker.spawn
     ReportProcessProgressWorker.spawn
   }

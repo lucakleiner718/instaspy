@@ -431,7 +431,10 @@ class User < ActiveRecord::Base
         followed_at = Time.at(cursor.to_i/1000) if cursor
 
         if new_record
-          Follower.create(follower_id: self.id, user_id: user.id, followed_at: followed_at)
+          begin
+            Follower.create(follower_id: self.id, user_id: user.id, followed_at: followed_at)
+          rescue ActiveRecord::RecordNotUnique => e
+          end
           added += 1
         else
           fol = Follower.where(follower_id: self.id, user_id: user.id)

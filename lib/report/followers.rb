@@ -28,6 +28,7 @@ class Report::Followers < Report::Base
     @report.save!
 
     if @parts_amount == @report.steps.size
+      @report.status = 'finished'
       self.finish
     end
 
@@ -57,7 +58,7 @@ class Report::Followers < Report::Base
           followers = followers.where("followed_by >= ?", 1_000) if @report.output_data.include? 'slim_followers'
           followers.each do |u|
             row = [u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email]
-            row.slice! 4,1 if @report.output_data.include? 'slim' || @report.output_data.include?('slim_followers')
+            row.slice! 4,1 if @report.output_data.include?('slim') || @report.output_data.include?('slim_followers')
             row.concat [u.location_country, u.location_state, u.location_city] if @report.output_data.include? 'location'
             row.concat [u.avg_likes] if @report.output_data.include? 'likes'
             if @report.output_data.include? 'feedly'
