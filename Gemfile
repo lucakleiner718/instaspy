@@ -24,7 +24,6 @@ group :development do
   gem 'capistrano3-puma', '~> 0.9.0', require: false
   gem 'capistrano-rvm', '~> 0.1', require: false
   gem "capistrano-sidekiq", require: false
-  gem 'capistrano-bower', require: false
 
   gem 'thin'
   gem 'web-console', '~> 2.0'
@@ -81,5 +80,3 @@ gem 'feedlr', github: 'khelll/feedlr'
 gem 'newrelic_rpm'
 gem 'simple_form'
 gem 'pluck_to_hash'
-
-gem "bower-rails", "~> 0.10.0"
