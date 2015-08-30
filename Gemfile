@@ -80,3 +80,5 @@ gem 'feedlr', github: 'khelll/feedlr'
 gem 'newrelic_rpm'
 gem 'simple_form'
 gem 'pluck_to_hash'
+
+gem "bower-rails", "~> 0.10.0"

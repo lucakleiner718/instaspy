@@ -70,7 +70,7 @@ class User < ActiveRecord::Base
   end
 
   def website=(value)
-    value = value.strip.downcase if value.present?
+    value = value.strip if value.present?
     write_attribute(:website, value)
   end
 
@@ -810,14 +810,6 @@ class User < ActiveRecord::Base
 
   alias :popular_location :update_location!
 
-  def location
-    {
-      country: self.location_country,
-      state: self.location_state,
-      city: self.location_city,
-    }
-  end
-
   def update_media_location
     if self.username.blank? && self.insta_id.present?
       self.update_info! force: true
@@ -1086,6 +1078,7 @@ class User < ActiveRecord::Base
   end
 
   def location
+    return false unless self.location?
     [self.location_country, self.location_state, self.location_city].join(', ')
   end
 
@@ -1093,9 +1086,7 @@ class User < ActiveRecord::Base
     fa = data_get_value 'followers_analytics', lifetime: 2.weeks, recount: recount
 
     if !fa
-      # || fa[:values].values.sum < self.followed_by*0.8
-
-      if self.followers_preparedness < 90
+      if self.followers_info_updated_at.blank? || self.followers_info_updated_at < 1.week.ago
         if self.followers_size < self.followed_by * 0.8
           UserUpdateFollowersWorker.perform_async self.id
         else
@@ -1139,7 +1130,7 @@ class User < ActiveRecord::Base
   end
 
   def get_popular_followers_percentage recount: false
-    pfp = data_get_value 'popular_followers_percentage', lifetime: 1.day, recount: recount
+    pfp = data_get_value 'popular_followers_percentage', lifetime: 14.days, recount: recount
     if !pfp
       if self.followers_size > 0
         fol_ids = self.follower_ids
@@ -1158,6 +1149,14 @@ class User < ActiveRecord::Base
     pfp
   end
 
+  def followers_info_updated_at
+    DateTime.parse(self.data['followers_info_updated_at']) if self.data['followers_info_updated_at'].present?
+  end
+
+  def followers_info_updated_at=followers_info_updated_at
+    self.data['followers_info_updated_at'] = followers_info_updated_at
+  end
+
   def followers_updated_time!
     if self.followed_by/self.followers_size.to_f >= 0.95
       self.update_attribute :followers_updated_at, Time.now
@@ -1173,15 +1172,8 @@ class User < ActiveRecord::Base
     if !fp
       parts = 2
       count = 0
-      count += self.followers_size >= self.followed_by*0.95 ? 1 : self.followers_size/self.followed_by.to_f
-
-      grabbed_users = 0
-      fol_ids = self.follower_ids
-      fol_ids.in_groups_of(100_000, false) do |ids|
-        grabbed_users += User.where(id: ids).where('grabbed_at is not null').size
-      end
-
-      count += grabbed_users == fol_ids.size ? 1 : grabbed_users/fol_ids.size.to_f
+      count += self.followers_updated_at.present? ? 1 : 0
+      count += self.followers_info_updated_at > 1.week.ago ? 1 : 0
 
       fp = (count/parts.to_f*100).round
       data_set_value 'followers_preparedness', fp

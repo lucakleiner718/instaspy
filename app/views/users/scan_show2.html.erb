@@ -1,0 +1,109 @@
+<div class="profile-page">
+  <header class="header">
+    <div class="row">
+      <div class="col-sm-3">
+        <div class="avatar">
+          <%= image_tag @user.profile_picture, class: "img-circle" %>
+        </div>
+        <%# if @update_progress < 100 %>
+          <div class="update-progress">
+            <label for="">Profile update status:</label>
+            <div class="progress">
+              <div class="progress-bar<%= ' progress-bar-striped active' if @update_progress < 100 %>" role="progressbar" aria-valuenow="<%= @update_progress %>"
+                   aria-valuemin="0" aria-valuemax="100" style="width: <%= @update_progress %>%">
+                <%= @update_progress %>% Complete
+              </div>
+            </div>
+          </div>
+        <%# end %>
+
+        <%# if @user.followers_preparedness < 100 %>
+          <div class="followers-preparedness-progress">
+            <label for="">Followers preparedness:</label>
+            <div class="progress">
+              <div class="progress-bar<%= ' progress-bar-striped active' if @user.followers_preparedness < 100 %>" role="progressbar" aria-valuenow="<%= @user.followers_preparedness %>"
+                   aria-valuemin="0" aria-valuemax="100" style="width: <%= @user.followers_preparedness %>%">
+                <%= @user.followers_preparedness %>% Complete
+              </div>
+            </div>
+          </div>
+        <%# end %>
+      </div>
+      <div class="col-sm-9">
+        <div class="author-info">
+          <ul class="statistics">
+            <li class="statistic">
+              <span class="statistic-label">Username:</span>
+              <span class="statistic-value"><%= link_to @user.username, "https://instagram.com/#{@user.username}", target: :_blank, rel: "nofollow me" %></span>
+            </li>
+            <li class="statistic">
+              <span class="statistic-label">Full name:</span>
+              <span class="statistic-value"><%= @user.full_name %></span>
+            </li>
+            <li class="statistic">
+              <span class="statistic-label">Website:</span>
+              <span class="statistic-value">
+                <%= link_to @user.website.sub(/^https?:\/\//, ''), @user.website, class: "website-link", rel: "nofollow me", target: "_blank" if @user.website.present? %>
+              </span>
+            </li>
+            <% if @user.location? %>
+              <li class="statistic">
+                <span class="statistic-label">Location:</span>
+                <span class="statistic-value location-statistic"><%= @user.location %></span>
+              </li>
+            <% end %>
+            <% if @user.avg_likes_updated_at? %>
+              <li class="statistic">
+                <span class="statistic-label">AVG Likes:</span>
+                <span class="statistic-value avg-likes-statistic"><%= @user.avg_likes %></span>
+              </li>
+              <li class="statistic">
+                <span class="statistic-label">AVG Comments:</span>
+                <span class="statistic-value avg-comments-statistic"><%= @user.avg_comments %></span>
+              </li>
+            <% end %>
+          </ul>
+
+          <div class="followers-info">
+            <div class="row text-center">
+              <div class="col-sm-2">
+                <%= @user.followed_by %><br/>
+                <span class="desc">
+                  Total followers
+                  <% if @user.followers_updated_at.present? %>
+                    <br/>Last updated: <%= @user.followers_updated_at.strftime '%b %d' %>
+                  <% end %>
+                  <br/><%= link_to 'Download', user_followers_path(@user.username) %>
+                </span>
+              </div>
+              <div class="col-sm-3">
+                <% if @user.followers_size > 0 %>
+                  <%= @user.get_popular_followers_percentage %>%<br/>
+                  <span class="desc">Percent of followers with user base that have more than 250 followers</span>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <% fa = @user.get_followers_analytics %>
+  <% if fa %>
+    <div id="followers-bars" data-data="<%= fa.to_a %>"></div>
+  <% end %>
+</div>
+
+<br/>
+<br/>
+
+<%= form_tag users_scan_show_path(username: ''), method: :get, class: 'scan-form' do %>
+  <h3 class="text-center">New search</h3>
+  <div class="row">
+    <div class="col-sm-4 col-sm-offset-4 text-center">
+      <input type="text" class="form-control" id="username" placeholder="Enter Username" name="username">
+      <button type="submit" class="btn btn-default">Submit</button>
+    </div>
+  </div>
+<% end %>

@@ -83,11 +83,11 @@ class UsersController < ApplicationController
 
   def scan
     if params[:username]
-      @user = User.get_by_username(params[:username])
-      @user.update_info!
-
-      UsersScanWorker.perform_async @user.id
-      ScanRequest.create username: params[:username]
+      # @user = User.get_by_username(params[:username])
+      # @user.update_info!
+      #
+      # UsersScanWorker.perform_async @user.id
+      # ScanRequest.create username: params[:username]
 
       redirect_to users_scan_show_path username: params[:username]
     else
@@ -96,18 +96,72 @@ class UsersController < ApplicationController
   end
 
   def scan_show
+    # @user = User.get_by_username(params[:username])
+    # @user.update_info! force: @user.profile_picture.blank?
+    #
+    # steps_amount = 3
+    # steps = 0
+    # steps +=1 if @user.grabbed_at.present?
+    # steps +=1 if @user.followers_preparedness == 100
+    # steps +=1 if @user.get_followers_analytics
+    #
+    # @update_progress = (steps / steps_amount.to_f * 100).round
+
+    render layout: 'scan'
+  end
+
+  def scan_data
     @user = User.get_by_username(params[:username])
     @user.update_info! force: @user.profile_picture.blank?
 
-    steps_amount = 3
-    steps = 0
-    steps +=1 if @user.grabbed_at.present?
-    steps +=1 if @user.followers_preparedness == 100
-    steps +=1 if @user.get_followers_analytics
+    if @user.avg_likes_updated_at.blank? || @user.avg_likes_updated_at < 1.month.ago
+      UserAvgDataWorker.perform_async @user.id
+    end
 
-    @update_progress = (steps / steps_amount.to_f * 100).round
+    if @user.location_updated_at.blank? || @user.location_updated_at < 1.month.ago
+      UserLocationWorker.perform_async @user.id
+    end
 
-    render layout: 'scan'
+    if @user.followers_updated_at.blank? || @user.followers_updated_at < 1.month.ago
+      UserFollowersWorker.perform_async @user.id
+    else
+      if @user.followers_info_updated_at.blank? || @user.followers_info_updated_at < 1.week.ago
+        UserUpdateFollowersWorker.perform_async @user.id
+      end
+    end
+
+    popular_followers_percentage = nil
+    if @user.data_get_value('popular_followers_percentage', lifetime: 14.days).blank?
+      if @user.followers_updated_at && @user.followers_updated_at > 1.month.ago
+        UserPopularFollowersWorker.perform_async @user.id
+      end
+    else
+      popular_followers_percentage = @user.get_popular_followers_percentage
+    end
+
+    followers_analytics = nil
+    if @user.data_get_value('followers_analytics', lifetime: 14.days).blank?
+      if @user.followers_updated_at && @user.followers_updated_at > 1.month.ago
+        UserFollowersAnalyticsWorker.perform_async @user.id
+      end
+    else
+      followers_analytics = @user.get_followers_analytics
+    end
+
+    respond_to do |format|
+      format.json { render json: {
+          profile_picture: @user.profile_picture,
+          full_name: @user.full_name,
+          website: @user.website,
+          location: @user.location,
+          avg_likes: @user.avg_likes,
+          avg_comments: @user.avg_comments,
+          followed_by: @user.followed_by,
+          followers_updated_at: (@user.followers_updated_at.strftime('%b %d') if @user.followers_updated_at.present?),
+          popular_followers_percentage: popular_followers_percentage,
+          followers_analytics: (followers_analytics.to_a if followers_analytics)
+        } }
+    end
   end
 
   def scan_requests

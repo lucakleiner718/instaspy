@@ -13,6 +13,7 @@
 /.env
 /.cap_tasks~
 /vendor/emerald
+/vendor/assets/bower_components
 /public/assets
 /public/reports
 /public/transform
