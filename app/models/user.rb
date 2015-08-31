@@ -1088,7 +1088,7 @@ class User < ActiveRecord::Base
 
     if !fa
       if self.followers_info_updated_at.blank? || self.followers_info_updated_at < 1.week.ago
-        if self.followers_size < self.followed_by * 0.8
+        if self.followers_size < self.followed_by * 0.9
           UserUpdateFollowersWorker.perform_async self.id
         else
           UserFollowersAnalyticsWorker.perform_async self.id
@@ -1131,9 +1131,9 @@ class User < ActiveRecord::Base
   end
 
   def get_popular_followers_percentage recount: false
-    pfp = data_get_value 'popular_followers_percentage', lifetime: 14.days, recount: recount
+    pfp = data_get_value 'popular_followers_percentage', lifetime: 7.days, recount: recount
     if !pfp
-      if self.followers_size > 0
+      if self.followers_info_updated_at && self.followers_info_updated_at > 1.week.ago && self.followers_size > self.followed_by * 0.9
         fol_ids = self.follower_ids
         amount = 0
         fol_ids.in_groups_of(100_000, false) do |g|
