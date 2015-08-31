@@ -2,11 +2,27 @@
 <html>
 <head>
   <title>SocailRootData</title>
-  <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track' => true %>
-  <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
+  <%= stylesheet_link_tag    'scan/main', media: 'all', 'data-turbolinks-track' => true %>
+  <%= javascript_include_tag 'scan/main', 'data-turbolinks-track' => true %>
   <%= csrf_meta_tags %>
 </head>
 <body>
+
+<header class="header navbar navbar-default">
+  <div class="container">
+    <div class="row">
+      <div class="navbar-header">
+        <button type="button" data-toggle="collapse" data-target="#navbar-collapse-1" class="navbar-toggle"><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></button><a href="#" class="navbar-brand">SocialRoot</a>
+      </div>
+      <div id="navbar-collapse-1" class="collapse navbar-collapse">
+        <ul class="nav navbar-nav navbar-right">
+          <li><a href="/">Home</a></li>
+          <li><a href="http://socialroot.co" target="_blank">socialroot.co</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</header>
 
 <div class="container">
   <%= yield %>

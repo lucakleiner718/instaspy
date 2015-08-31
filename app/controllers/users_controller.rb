@@ -154,6 +154,7 @@ class UsersController < ApplicationController
           full_name: @user.full_name,
           website: @user.website,
           location: @user.location,
+          email: @user.email,
           avg_likes: @user.avg_likes,
           avg_comments: @user.avg_comments,
           followed_by: @user.followed_by,

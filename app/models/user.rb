@@ -243,6 +243,7 @@ class User < ActiveRecord::Base
     end
     data = json['entry_data']['ProfilePage'].first['user']
 
+    data['profile_picture'] = data['profile_pic_url']
     data['bio'] = data['biography'] || ''
     data['website'] = data['external_url'] || ''
     data['counts'] = {

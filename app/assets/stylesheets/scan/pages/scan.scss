@@ -1,0 +1,24 @@
+.scan-form{
+  margin-top: 18px;
+
+  input[type=text]{
+    width: 280px;
+    display: inline-block;
+    vertical-align: top;
+  }
+
+  button{
+    display: inline-block;
+    vertical-align: top;
+  }
+}
+
+.header {
+  background-color: #fff;
+  border-bottom: 1px solid $gray-lighter;
+  box-shadow: 0 0 2px rgba(0,0,0,.2);
+}
+
+.panel .panel-heading.bg-info{
+  text-transform: none;
+}
