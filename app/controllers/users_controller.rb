@@ -123,7 +123,7 @@ class UsersController < ApplicationController
     end
 
     if @user.followers_updated_at.blank? || @user.followers_updated_at < 1.month.ago
-      UserFollowersWorker.perform_async @user.id
+      UserFollowersWorker.perform_async @user.id, ignore_exists: true
     else
       if @user.followers_info_updated_at.blank? || @user.followers_info_updated_at < 1.week.ago
         UserUpdateFollowersWorker.perform_async @user.id
