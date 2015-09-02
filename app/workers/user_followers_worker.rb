@@ -88,8 +88,10 @@ class UserFollowersWorker
       workers = Sidekiq::Workers.new
       workers.each do |process_id, thread_id, work|
         if work['payload']['class'] == 'UserFollowersWorker' && work['payload']['args'][0].to_i == user_id.to_i
-          exists = true
-          break
+          if work['payload']['args'][1] && work['payload']['args'][1]['ignore_batch']
+            exists = true
+            break
+          end
         end
       end
     end
