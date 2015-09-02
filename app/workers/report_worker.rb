@@ -17,7 +17,5 @@ class ReportWorker
     r.note = "Weekly tags publishers report #{date_to.strftime('%m/%d/%y')}-#{date_from.strftime('%m/%d/%y')}"
 
     r.save
-
-    # Reporter.media_report
   end
 end

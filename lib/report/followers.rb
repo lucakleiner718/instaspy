@@ -12,7 +12,15 @@ class Report::Followers < Report::Base
       @report.amounts[:followers] = User.where(id: @report.processed_ids).pluck(:followed_by).sum
     end
 
-    self.grab_followers
+    if @report.data['only_download']
+      if @report.steps.include?('user_info') && !@report.steps.include?('followers')
+        @report.steps.push 'followers'
+        @report.save
+      end
+    else
+      self.grab_followers
+    end
+
     self.update_followers
 
     # after followers list grabbed and all followers updated
@@ -52,7 +60,10 @@ class Report::Followers < Report::Base
       unless File.exists? Rails.root.join('tmp', filename)
         csv_string = CSV.generate do |csv|
           csv << header
-          followers_ids = Follower.where(user_id: user.id).pluck(:follower_id).uniq
+          followers_ids = Follower.where(user_id: user.id)
+          followers_ids = followers_ids.where("followed_at >= ?", @report.date_from) if @report.date_from
+          followers_ids = followers_ids.where("followed_at <= ?", @report.date_to) if @report.date_to
+          followers_ids = followers_ids.pluck(:follower_id).uniq
           followers = User.where(id: followers_ids)
           followers = followers.where("email is not null").where("followed_by >= ?", 1_000) if @report.output_data.include? 'slim'
           followers = followers.where("followed_by >= ?", 1_000) if @report.output_data.include? 'slim_followers'
@@ -92,7 +103,7 @@ class Report::Followers < Report::Base
       FileManager.save_file filepath, file: zipfilename
       @report.result_data = filepath
 
-      File.delete(zipfilename)
+      File.delete(zipfilename) rescue nil
       files.each { |filename| File.delete(Rails.root.join('tmp', filename)) }
     end
 

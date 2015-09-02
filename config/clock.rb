@@ -26,7 +26,11 @@ module Clockwork
     every(6.hours, 'TagChartWorker') { TagChartWorker.spawn }
 
     # Update followers list for specified users
-    every(12.hours, 'FollowersReport.update') { FollowersReport.track }
+    every(12.hours, 'FollowersReport.update') do
+      TrackUser.where(followers: true).pluck(:user_id).each do |user_id|
+        UserFollowersWorker.perform_async user_id
+      end
+    end
 
     # Save tag stat for chart
     every(1.day, 'TagStat', at: '01:00') { TagStatWorker.spawn }
