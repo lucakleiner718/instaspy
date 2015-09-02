@@ -115,25 +115,25 @@ class UsersController < ApplicationController
     @user.update_info! force: @user.profile_picture.blank?
 
     if @user.avg_likes_updated_at.blank? || @user.avg_likes_updated_at < 1.month.ago
-      UserAvgDataWorker.perform_async @user.id, queue: :scan
+      UserAvgDataWorker.perform_async @user.id
     end
 
     if @user.location_updated_at.blank? || @user.location_updated_at < 1.month.ago
-      UserLocationWorker.perform_async @user.id, queue: :scan
+      UserLocationWorker.perform_async @user.id
     end
 
     if @user.followers_updated_at.blank? || @user.followers_updated_at < 1.month.ago
-      UserFollowersWorker.perform_async @user.id, ignore_exists: true, queue: :scan
+      UserFollowersWorker.perform_async @user.id, ignore_exists: true
     else
       if @user.followers_info_updated_at.blank? || @user.followers_info_updated_at < 1.week.ago
-        UserUpdateFollowersWorker.perform_async @user.id, queue: :scan
+        UserUpdateFollowersWorker.perform_async @user.id
       end
     end
 
     popular_followers_percentage = nil
     if @user.data_get_value('popular_followers_percentage', lifetime: 14.days).blank?
       if @user.followers_updated_at && @user.followers_updated_at > 1.month.ago
-        UserPopularFollowersWorker.perform_async @user.id, queue: :scan
+        UserPopularFollowersWorker.perform_async @user.id
       end
     else
       popular_followers_percentage = @user.get_popular_followers_percentage
@@ -142,7 +142,7 @@ class UsersController < ApplicationController
     followers_analytics = nil
     if @user.data_get_value('followers_analytics', lifetime: 14.days).blank?
       if @user.followers_updated_at && @user.followers_updated_at > 1.month.ago
-        UserFollowersAnalyticsWorker.perform_async @user.id, queue: :scan
+        UserFollowersAnalyticsWorker.perform_async @user.id
       end
     else
       followers_analytics = @user.get_followers_analytics
