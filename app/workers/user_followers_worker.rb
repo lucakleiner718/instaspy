@@ -15,6 +15,8 @@ class UserFollowersWorker
 
     user = User.find(user_id)
 
+    user.update_info! unless user.followed_by
+
     return false if user.followers_size >= user.followed_by
 
     if options[:ignore_batch] && !options[:batch]
@@ -22,7 +24,7 @@ class UserFollowersWorker
       options.delete(:batch)
       UserUpdateFollowers.perform user: user, options: options
     else
-      batch_update user, *args, options
+      batch_collect user, *args, options
     end
   end
 
@@ -46,7 +48,7 @@ class UserFollowersWorker
     jobs
   end
 
-  def batch_update user, *args
+  def batch_collect user, *args
     options = args.extract_options!
     return if UserFollowersWorker.jobs_exists?(user.id) && !options[:force_batch]
 
@@ -59,11 +61,11 @@ class UserFollowersWorker
       return true
     end
 
-    beginning = DateTime.parse('2010-01-01')
+    beginning = DateTime.parse('2010-09-01')
     start = Time.now.to_i
-    days_left = start - beginning.to_i
+    seconds_since_start = start - beginning.to_i
     worker_days = 10.days
-    amount = (days_left/worker_days.to_f).ceil
+    amount = (seconds_since_start/worker_days.to_f).ceil
 
     amount.times do |i|
       offset = i*worker_days
