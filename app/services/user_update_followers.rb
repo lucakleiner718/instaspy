@@ -45,8 +45,8 @@ class UserUpdateFollowers < ServiceObject
       retries = 0
 
       begin
-        @client = InstaClient.new
-        resp = @client.client.user_followed_by user.insta_id, cursor: cursor, count: options[:count]
+        ic = InstaClient.new
+        resp = ic.client.user_followed_by user.insta_id, cursor: cursor, count: options[:count]
       rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::InternalServerError,
         Instagram::GatewayTimeout, JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError,
         Errno::EPIPE, Errno::ETIMEDOUT => e
@@ -64,7 +64,7 @@ class UserUpdateFollowers < ServiceObject
           user.destroy
           return false
         elsif e.message =~ /The access_token provided is invalid/
-          @client.login.destroy
+          ic.invalid_login!
           retry
         end
         raise e

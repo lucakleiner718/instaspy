@@ -92,9 +92,8 @@ class User < ActiveRecord::Base
     if self.insta_id.blank? && self.username.present?
       retries = 0
       begin
-        client = InstaClient.new.client
-        # looking for username via search
-        resp = client.user_search(self.username)
+        ic = InstaClient.new
+        resp = ic.client.user_search(self.username)
       rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::BadRequest, Instagram::InternalServerError, Instagram::GatewayTimeout,
         JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE, Errno::ETIMEDOUT => e
         logger.info "#{">> issue".red} #{e.class.name} :: #{e.message}"
@@ -138,8 +137,8 @@ class User < ActiveRecord::Base
     retries = 0
 
     begin
-      client = InstaClient.new.client
-      info = client.user(self.insta_id)
+      ic = InstaClient.new
+      info = ic.client.user(self.insta_id)
       data = info.data
 
       exists_username = nil
@@ -307,10 +306,6 @@ class User < ActiveRecord::Base
     UserUpdateFollowers.perform user: self, options: options
   end
 
-  def update_followers_async
-    ProcessFollowersWorker.spawn self.id
-  end
-
   def delete_duplicated_followers!
     followers_ids = Follower.where(user_id: self.id).pluck(:follower_id)
     return true if followers_ids.size == followers_ids.uniq.size
@@ -394,6 +389,9 @@ class User < ActiveRecord::Base
         elsif e.message =~ /this user does not exist/
           self.destroy
           return false
+        elsif e.message =~ /The access_token provided is invalid/
+          ic.invalid_login!
+          retry
         end
         raise e
       end
@@ -541,8 +539,8 @@ class User < ActiveRecord::Base
 
     retries = 0
     begin
-      client = InstaClient.new.client
-      resp = client.user_search username
+      ic = InstaClient.new
+      resp = ic.client.user_search username
     rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::BadRequest, Instagram::InternalServerError, Instagram::GatewayTimeout,
       JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE, Errno::ETIMEDOUT => e
       sleep 10
@@ -616,8 +614,8 @@ class User < ActiveRecord::Base
       time_start = Time.now
       retries = 0
       begin
-        client = InstaClient.new
-        media_list = client.client.user_recent_media self.insta_id, count: 100, max_id: max_id
+        ic = InstaClient.new
+        media_list = ic.client.user_recent_media self.insta_id, count: 100, max_id: max_id
       rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::InternalServerError,
         Instagram::GatewayTimeout, JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError,
         Errno::EPIPE, Errno::ETIMEDOUT => e
@@ -634,7 +632,7 @@ class User < ActiveRecord::Base
           self.destroy
           return false
         elsif e.message =~ /The access_token provided is invalid/
-          client.login.destroy
+          ic.invalid_login!
           retry
         end
         raise e

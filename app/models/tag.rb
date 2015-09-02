@@ -63,14 +63,15 @@ class Tag < ActiveRecord::Base
 
       retries = 0
       begin
-        insta_client = InstaClient.new
-        media_list = insta_client.client.tag_recent_media(URI.escape(self.name), max_tag_id: max_tag_id, count: 100)
+        ic = InstaClient.new
+        media_list = ic.client.tag_recent_media(URI.escape(self.name), max_tag_id: max_tag_id, count: 100)
       rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::BadRequest,
         Instagram::InternalServerError, Instagram::GatewayTimeout, Instagram::InternalServerError,
         JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE, Errno::EOPNOTSUPP, Errno::ETIMEDOUT => e
 
         if e.class.name == 'Instagram::BadRequest' && e.message =~ /The access_token provided is invalid/
-          insta_client.login.destroy
+          ic.invalid_login!
+          retry
         end
 
         Rails.logger.debug e

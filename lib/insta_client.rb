@@ -1,7 +1,14 @@
 class InstaClient
 
   def initialize login=nil
-    @login = login || InstagramLogin.all.sample
+    if $insta_client_login
+      @login = $insta_client_login
+      # Rails.logger.debug "I use loaded login #{@login.id}".green
+    else
+      @login = login || InstagramLogin.all.sample
+      $insta_client_login = @login if $insta_client_login.blank? || $insta_client_login.id != @login.id
+      # Rails.logger.debug "I use new login #{@login.id}".cyan
+    end
 
     raise unless @login
 
@@ -21,6 +28,16 @@ class InstaClient
 
   def client
     @client
+  end
+
+  def change_login!
+    @login = (@login ? InstagramLogin.where('id != ?', @login.id) : InstagramLogin.all).sample
+    $insta_client_login = @login
+  end
+
+  def invalid_login!
+    @login.destroy rescue
+    change_login!
   end
 
   # def self.subscriber

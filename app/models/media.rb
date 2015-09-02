@@ -26,8 +26,8 @@ class Media < ActiveRecord::Base
     retries = 0
 
     begin
-      client = InstaClient.new
-      response = client.client.media_item(self.insta_id)
+      ic = InstaClient.new
+      response = ic.client.media_item(self.insta_id)
     rescue Instagram::BadRequest => e
       if e.message =~ /invalid media id/
         self.destroy
@@ -36,7 +36,7 @@ class Media < ActiveRecord::Base
         self.user.update_info! force: true
         return false
       elsif e.message =~ /The access_token provided is invalid/
-        client.login.destroy
+        ic.invalid_login!
         retry
       else
         raise e
@@ -177,8 +177,8 @@ class Media < ActiveRecord::Base
     while true
       retries = 0
       begin
-        client = InstaClient.new.client
-        media_list = client.media_search(lat, lng, distance: options[:distance], min_timestamp: min_timestamp, max_timestamp: max_timestamp, count: 100)
+        ic = InstaClient.new
+        media_list = ic.client.media_search(lat, lng, distance: options[:distance], min_timestamp: min_timestamp, max_timestamp: max_timestamp, count: 100)
       rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::BadRequest,
         Instagram::InternalServerError,
         JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e

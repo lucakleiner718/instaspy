@@ -35,8 +35,8 @@
                remaining += Rails.cache.fetch("insta_login_rate_#{login.id}", expires_in: 1.minute) do
                  amount = 0
                  begin
-                   client = InstaClient.new(login).client
-                   resp = client.utils_raw_response
+                   ic = InstaClient.new(login)
+                   resp = ic.client.utils_raw_response
                    amount = resp.headers[:x_ratelimit_remaining].to_i
                  rescue => e
                    0

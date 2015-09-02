@@ -7,8 +7,8 @@ class IgApiStatWorker
     accounts = InstagramAccount.all
     accounts.each do |account|
       begin
-        client = InstaClient.new(account).client
-        resp = client.utils_raw_response
+        ic = InstaClient.new(account)
+        resp = ic.client.utils_raw_response
         total_limit += resp.headers[:x_ratelimit_remaining].to_i
       rescue => e
       end
