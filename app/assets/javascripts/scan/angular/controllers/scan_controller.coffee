@@ -46,7 +46,7 @@ angular.module('scan', ['ngRoute']).controller('scanProfileController', ['$scope
       min: 0
       allowDecimals: false
       title:
-        text: 'Amount:<br/>'
+        text: false
     legend:
       enabled: false
     tooltip:
