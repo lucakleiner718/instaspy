@@ -56,14 +56,14 @@
         </div>
       </td>
       <td>
-        <div>C: <%= report.created_at.strftime('%m/%d/%y %H:%M:%S') %></div>
-        <div><%= "S: #{report.started_at.strftime('%m/%d/%y %H:%M:%S')}".html_safe if report.started_at %></div>
-        <div><%= "F: #{report.finished_at.strftime('%m/%d/%y %H:%M:%S')}" if report.finished_at %></div>
+        <div style="white-space: nowrap;">C: <%= report.created_at.strftime('%m/%d/%y %H:%M:%S') %></div>
+        <div style="white-space: nowrap;"><%= "S: #{report.started_at.strftime('%m/%d/%y %H:%M:%S')}".html_safe if report.started_at %></div>
+        <div style="white-space: nowrap;"><%= "F: #{report.finished_at.strftime('%m/%d/%y %H:%M:%S')}" if report.finished_at %></div>
       </td>
       <td><%= simple_format report.note %></td>
       <td>
-        <div><%= link_to "Input data", report.original_input_url, target: :_blank %></div>
-        <div><%= link_to 'Results file', report.result_data_url, target: :_blank if report.result_data.present? %></div>
+        <div style="white-space: nowrap;"><%= link_to "Input data", report.original_input_url, target: :_blank %></div>
+        <div style="white-space: nowrap;"><%= link_to 'Results file', report.result_data_url, target: :_blank if report.result_data.present? %></div>
       </td>
       <td>
         <% if report.status == 'stopped' %>

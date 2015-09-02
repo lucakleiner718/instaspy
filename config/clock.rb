@@ -39,23 +39,23 @@ module Clockwork
       DailyMediaStatWorker.spawn
     }
 
-    # Weekly Reports
+    # Update users, which doesn't have info
+    every(30.minutes, 'update.users') { UserWorker.spawn }
 
+    # Weekly Reports
     # Send weekly report about followers for specified users
     every(1.week, 'FollowersReport.report', at: "Wednesday 02:00") { FollowersReportWorker.perform_async }
-
     # Send weekly report about media
     every(1.week, 'media.report', at: "Wednesday 03:00") { ReportWorker.perform_async }
+    # Weekly Reports END
+
   end
 
-
-  # Update users, which doesn't have info
-  every(30.minutes, 'update.users') { UserWorker.spawn }
-
-  # Save some stat
+  # Update some stat
   every(1.day, 'StatWorker', at: '00:00') { StatWorker.perform_async }
   every(10.minutes, 'LimitsWorker') { LimitsWorker.perform_async }
 
+  # Process reports
   every(5.minutes, 'ReportProcess') {
     ReportProcessNewWorker.spawn
     ReportProcessProgressWorker.spawn
