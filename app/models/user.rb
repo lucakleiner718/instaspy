@@ -744,7 +744,16 @@ class User < ActiveRecord::Base
   def update_location! *args
     options = args.extract_options!
 
+    location_correct = false
     if self.location_updated_at && self.location_updated_at > 1.month.ago && self.location_country && !options[:force]
+      location_correct = true
+    end
+    if location_correct && self.location_country == 'US' && self.location_state.size == 2
+      location_correct = false
+      self.fix_media_us_states
+    end
+
+    if location_correct
       return self.location
     end
 
@@ -806,8 +815,6 @@ class User < ActiveRecord::Base
 
     self.location
   end
-
-  alias :popular_location :update_location!
 
   def update_media_location
     if self.username.blank? && self.insta_id.present?
@@ -1193,5 +1200,13 @@ class User < ActiveRecord::Base
     self.data[key] ||= {}
     self.data[key]['value'] = value
     self.data[key]['updated_at'] = Time.now.utc
+  end
+
+  def fix_media_us_states
+    states = Country['US'].states
+    self.media.where(location_country: 'US').where('length(location_state) = 2').each do |media|
+      state = states[media.location_state]
+      media.update_column :location_state, state['name'] if state
+    end
   end
 end
