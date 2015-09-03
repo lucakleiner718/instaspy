@@ -42,19 +42,10 @@ class UserUpdateFollowers < ServiceObject
 
       exists = 0
       added = 0
-      retries = 0
 
       begin
         ic = InstaClient.new
         resp = ic.client.user_followed_by user.insta_id, cursor: cursor, count: options[:count]
-      rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::InternalServerError,
-        Instagram::GatewayTimeout, JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError,
-        Errno::EPIPE, Errno::ETIMEDOUT => e
-        logger.debug e.message
-        sleep 10*retries
-        retries += 1
-        retry if retries <= 5
-        raise e
       rescue Instagram::BadRequest => e
         logger.debug e.message
         if e.message =~ /you cannot view this resource/
@@ -130,7 +121,7 @@ class UserUpdateFollowers < ServiceObject
 
       if followers_to_create.size > 0
         begin
-          Follower.connection.execute("INSERT INTO followers (user_id, follower_id, followed_at, created_at) VALUES #{followers_to_create.map{|r| r << Time.now; "(#{r.map{|el| "'#{el}'"}.join(', ')})"}.join(', ')}")
+          Follower.connection.execute("INSERT INTO followers (user_id, follower_id, followed_at, created_at) VALUES #{followers_to_create.map{|r| r << Time.now.utc; "(#{r.map{|el| "'#{el}'"}.join(', ')})"}.join(', ')}")
         rescue => e
           logger.debug "Exception when try to multiple insert followers".black.on_white
           followers_to_create.each do |follower|

@@ -90,18 +90,8 @@ class User < ActiveRecord::Base
 
     # if we know only username, but no insta id
     if self.insta_id.blank? && self.username.present?
-      retries = 0
-      begin
-        ic = InstaClient.new
-        resp = ic.client.user_search(self.username)
-      rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::BadRequest, Instagram::InternalServerError, Instagram::GatewayTimeout,
-        JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE, Errno::ETIMEDOUT => e
-        logger.info "#{">> issue".red} #{e.class.name} :: #{e.message}"
-        retries += 1
-        sleep 10*retries
-        retry if retries <= 5
-        raise e
-      end
+      ic = InstaClient.new
+      resp = ic.client.user_search(self.username)
 
       data = nil
       data = resp.data.select{|el| el['username'].downcase == self.username.downcase }.first if resp.data.size > 0
@@ -133,8 +123,6 @@ class User < ActiveRecord::Base
     exists_username = nil
 
     return false if self.insta_id.blank?
-
-    retries = 0
 
     begin
       ic = InstaClient.new
@@ -178,15 +166,6 @@ class User < ActiveRecord::Base
         self.destroy
       end
       return false
-    rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway,
-      Instagram::InternalServerError, Instagram::GatewayTimeout,
-      JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Faraday::ParsingError, Zlib::BufError,
-      Errno::EPIPE, Errno::ETIMEDOUT => e
-      Rails.logger.debug "Exception catched #{e.class} - #{e.message}"
-      retries += 1
-      sleep 10*retries
-      retry if retries <= 5
-      raise e
     end
 
     self.set_data data
@@ -369,18 +348,10 @@ class User < ActiveRecord::Base
 
       exists = 0
       added = 0
-      retries = 0
 
       begin
         client = InstaClient.new.client
         resp = client.user_follows self.insta_id, cursor: cursor, count: options[:count]
-      rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::InternalServerError,
-        Instagram::GatewayTimeout, JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError,
-        Errno::EPIPE, Errno::ETIMEDOUT => e
-        Rails.logger.info e.message
-        sleep 10*retries
-        retries += 1
-        retry if retries <= 5
       rescue Instagram::BadRequest => e
         Rails.logger.info e.message
         if e.message =~ /you cannot view this resource/
@@ -389,9 +360,6 @@ class User < ActiveRecord::Base
         elsif e.message =~ /this user does not exist/
           self.destroy
           return false
-        elsif e.message =~ /The access_token provided is invalid/
-          ic.invalid_login!
-          retry
         end
         raise e
       end
@@ -537,17 +505,8 @@ class User < ActiveRecord::Base
 
     return user if !user.new_record? && user.grabbed_at.present? && user.grabbed_at > 1.month.ago
 
-    retries = 0
-    begin
-      ic = InstaClient.new
-      resp = ic.client.user_search username
-    rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::BadRequest, Instagram::InternalServerError, Instagram::GatewayTimeout,
-      JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE, Errno::ETIMEDOUT => e
-      sleep 10
-      retries += 1
-      retry if retries <= 5
-      raise e
-    end
+    ic = InstaClient.new
+    resp = ic.client.user_search username
 
     data = nil
     data = resp.data.select{|el| el['username'].downcase == username.to_s }.first if resp.data.size > 0
@@ -612,17 +571,9 @@ class User < ActiveRecord::Base
 
     while true
       time_start = Time.now
-      retries = 0
       begin
         ic = InstaClient.new
         media_list = ic.client.user_recent_media self.insta_id, count: 100, max_id: max_id
-      rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::InternalServerError,
-        Instagram::GatewayTimeout, JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError,
-        Errno::EPIPE, Errno::ETIMEDOUT => e
-        retries += 1
-        sleep 10*retries
-        retry if retries <= 5
-        raise e
       rescue Instagram::BadRequest => e
         # looks likes account became private
         if e.message =~ /you cannot view this resource/
@@ -631,9 +582,6 @@ class User < ActiveRecord::Base
         elsif e.message =~ /this user does not exist/
           self.destroy
           return false
-        elsif e.message =~ /The access_token provided is invalid/
-          ic.invalid_login!
-          retry
         end
         raise e
       end

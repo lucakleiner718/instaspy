@@ -23,7 +23,6 @@ class Media < ActiveRecord::Base
     return false if self.user && self.user.private?
 
     start_time = Time.now
-    retries = 0
 
     begin
       ic = InstaClient.new
@@ -35,19 +34,9 @@ class Media < ActiveRecord::Base
       elsif e.message =~ /you cannot view this resource/
         self.user.update_info! force: true
         return false
-      elsif e.message =~ /The access_token provided is invalid/
-        ic.invalid_login!
-        retry
       else
         raise e
       end
-    rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::BadRequest,
-      Instagram::InternalServerError, JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError,
-      Errno::EPIPE, Faraday::TimeoutError => e
-      sleep 10
-      retries += 1
-      retry if retries <= 5
-      raise e
     end
 
     self.set_user response.data['user']
@@ -175,17 +164,8 @@ class Media < ActiveRecord::Base
     options[:distance] ||= 100
 
     while true
-      retries = 0
-      begin
-        ic = InstaClient.new
-        media_list = ic.client.media_search(lat, lng, distance: options[:distance], min_timestamp: min_timestamp, max_timestamp: max_timestamp, count: 100)
-      rescue Instagram::ServiceUnavailable, Instagram::TooManyRequests, Instagram::BadGateway, Instagram::BadRequest,
-        Instagram::InternalServerError,
-        JSON::ParserError, Faraday::ConnectionFailed, Faraday::SSLError, Zlib::BufError, Errno::EPIPE => e
-        sleep 10
-        retries += 1
-        retry if retries <= 5
-      end
+      ic = InstaClient.new
+      media_list = ic.client.media_search(lat, lng, distance: options[:distance], min_timestamp: min_timestamp, max_timestamp: max_timestamp, count: 100)
 
       added = 0
       avg_created_time = 0

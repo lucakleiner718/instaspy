@@ -12,10 +12,11 @@ class InstaClient
 
     raise unless @login
 
-    @client = Instagram.client access_token: @login.access_token,
+    @ig_client = Instagram.client access_token: @login.access_token,
                                client_id: @login.account.client_id,
                                client_secret: @login.account.client_secret,
                                no_response_wrapper: true
+    @client = Client.new @ig_client, self
   end
 
   def account
@@ -49,5 +50,43 @@ class InstaClient
   # def self.subscribe_tag tag
   #   self.subscriber.create_subscription object: :tag, callback_url: 'http://94.137.22.246:3005/tag_media/added', aspect: :media, object_id: tag, verify_token: 'text1'
   # end
+
+  class Client
+
+    def initialize client, ic
+      @client = client
+      @ic = ic
+    end
+
+    def method_missing(method, *args, &block)
+      retries = 0
+
+      begin
+        @client.send(method, *args, &block)
+      rescue Instagram::TooManyRequests => e
+        @ic.change_login!
+        retry
+      rescue Instagram::ServiceUnavailable, Instagram::BadGateway, Instagram::InternalServerError, Instagram::GatewayTimeout,
+        JSON::ParserError,
+        Faraday::ConnectionFailed, Faraday::SSLError, Faraday::ParsingError, Faraday::TimeoutError,
+        Zlib::BufError,
+        Errno::EPIPE, Errno::EOPNOTSUPP, Errno::ETIMEDOUT => e
+
+        Rails.logger.debug "#{">> issue".red} #{e.class.name} :: #{e.message}"
+        sleep 10*retries
+        retries += 1
+        retry if retries <= 5
+        raise e
+      rescue Instagram::BadRequest => e
+        if e.message =~ /The access_token provided is invalid/
+          ic.invalid_login!
+          retry
+        else
+          raise e
+        end
+      end
+    end
+
+  end
 
 end
