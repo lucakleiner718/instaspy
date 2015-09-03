@@ -1,111 +1,141 @@
 <div class="page page-profile" ng-app="scan">
 
-  <div class="row" ng-controller="scanProfileController">
-    <div class="col-md-5 col-md-offset-2">
+  <div class="row notify-block ng-hide" style="margin-bottom:30px">
+    <%= form_tag users_scan_show_path(username: ''), method: :get, class: 'notify-form' do %>
+    <div class="col-sm-4 col-sm-offset-2" style="line-height: 32px;">
+      Update in progress. Enter email to be notified when ready
+    </div>
+    <div class="col-sm-4">
+      <input type="text" class="form-control" placeholder="Enter Email" name="email">
+      <button type="submit" class="btn btn-default">Submit</button>
+    </div>
+    <% end %>
+  </div>
 
-      <div class="panel panel-profile">
-        <div class="panel-heading text-center bg-info">
-          <img ng-src="{{profilePicture}}" alt="" class="img-circle img80_80">
-          <h3>
-            <a href="https://instagram.com/{{username}}" target="_blank" rel="nofollow me">{{username}}</a>
-          </h3>
-          <p>{{fullName}}</p>
+  <div ng-controller="scanProfileController">
+
+    <div class="row" >
+      <div class="col-md-5 col-md-offset-2">
+
+        <div class="panel panel-profile">
+          <div class="panel-heading text-center bg-info">
+            <img ng-src="{{profilePicture}}" alt="" class="img-circle img80_80">
+            <h3>
+              <a href="https://instagram.com/{{username}}" target="_blank" rel="nofollow me">{{username}}</a>
+            </h3>
+            <p>{{fullName}}</p>
+          </div>
+
+          <div class="list-justified-container">
+            <ul class="list-justified text-center">
+              <li ng-show="avg.likes">
+                <p class="size-h3">{{avg.likes}}</p>
+                <p class="text-muted">AVG Likes</p>
+              </li>
+              <li ng-show="avg.comments">
+                <p class="size-h3">{{avg.comments}}</p>
+                <p class="text-muted">AVG Comments</p>
+              </li>
+              <li>
+                <p class="size-h3">{{followed_by}}</p>
+                <p class="text-muted">
+                  Followers
+                  <small ng-show="followersUpdatedAt"><br>Last updated: {{followersUpdatedAt}}</small>
+                  <span ng-show="popularFollowersPercentage"><br><a href="/users/{{username}}/followers.csv">Download</a></span>
+                </p>
+              </li>
+            </ul>
+          </div>
         </div>
 
-        <div class="list-justified-container">
-          <ul class="list-justified text-center">
-            <li ng-show="avg.likes">
-              <p class="size-h3">{{avg.likes}}</p>
-              <p class="text-muted">AVG Likes</p>
-            </li>
-            <li ng-show="avg.comments">
-              <p class="size-h3">{{avg.comments}}</p>
-              <p class="text-muted">AVG Comments</p>
-            </li>
-            <li>
-              <p class="size-h3">{{followed_by}}</p>
-              <p class="text-muted">
-                Followers
-                <small ng-show="followersUpdatedAt"><br>Last updated: {{followersUpdatedAt}}</small>
-                <span ng-show="popularFollowersPercentage"><br><a href="/users/{{username}}/followers.csv">Download</a></span>
-              </p>
-            </li>
-          </ul>
-        </div>
-      </div>
 
+        <div class="panel panel-default">
+          <div class="panel-heading"><strong><span class="glyphicon glyphicon-th"></span> Profile Info</strong></div>
+          <div class="panel-body">
+            <div class="media">
+              <div class="media-body">
+                <ul class="list-unstyled list-info">
+                  <li ng-show="website">
+                    <span class="icon glyphicon glyphicon-user"></span>
+                    <label>Website</label>
+                    <a href="{{website}}" class="website-link" rel="nofollow me" target="_blank">{{website_wo_schema()}}</a>
+                  </li>
+                  <li ng-show="email">
+                    <span class="icon glyphicon glyphicon-envelope"></span>
+                    <label>Email</label>
+                    {{email}}
+                  </li>
+                  <li ng-show="location">
+                    <span class="icon glyphicon glyphicon-home"></span>
+                    <label>Location</label>
+                    {{location}}
+                  </li>
+                </ul>
 
-      <div class="panel panel-default">
-        <div class="panel-heading"><strong><span class="glyphicon glyphicon-th"></span> Profile Info</strong></div>
-        <div class="panel-body">
-          <div class="media">
-            <div class="media-body">
-              <ul class="list-unstyled list-info">
-                <li ng-show="website">
-                  <span class="icon glyphicon glyphicon-user"></span>
-                  <label>Website</label>
-                  <a href="{{website}}" class="website-link" rel="nofollow me" target="_blank">{{website_wo_schema()}}</a>
-                </li>
-                <li ng-show="email">
-                  <span class="icon glyphicon glyphicon-envelope"></span>
-                  <label>Email</label>
-                  {{email}}
-                </li>
-                <li ng-show="location">
-                  <span class="icon glyphicon glyphicon-home"></span>
-                  <label>Location</label>
-                  {{location}}
-                </li>
-              </ul>
-
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="col-md-3">
-      <div class="row">
-        <div class="col-sm-12">
-          <div class="panel panel-default hide">
-            <div class="panel-heading">
-              <h3 class="panel-title">Popular followers</h3>
-            </div>
-            <div class="panel-body text-center">
-              <div class="piechart popular-followers">
-                <div class="easypiechart">
-                  <span class="pie-percent" ng-bind="popularFollowersPercentage"></span>
+      <div class="col-md-3">
+        <div class="row">
+          <div class="col-sm-12">
+            <div class="panel panel-default hide">
+              <div class="panel-heading">
+                <h3 class="panel-title">Profile preparedness</h3>
+              </div>
+              <div class="panel-body text-center">
+                <div class="piechart profile-preparedness">
+                  <div class="easypiechart">
+                    <span class="pie-percent" ng-bind="profilePreparedness"></span>
+                  </div>
                 </div>
               </div>
-              <p>Percent of followers with user base that have more than 250 followers.</p>
+            </div>
+          </div>
+
+          <div class="col-sm-12">
+            <div class="panel panel-default hide">
+              <div class="panel-heading">
+                <h3 class="panel-title">Popular followers</h3>
+              </div>
+              <div class="panel-body text-center">
+                <div class="piechart popular-followers">
+                  <div class="easypiechart">
+                    <span class="pie-percent" ng-bind="popularFollowersPercentage"></span>
+                  </div>
+                </div>
+                <p>Percent of followers with user base that have more than 250 followers.</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <div class="row">
-    <div class="col-sm-8 col-sm-offset-2">
-      <div class="panel panel-default" ng-show="followersAnalytics">
-        <div class="panel-heading">
-          <h3 class="panel-title">Followers Analytics</h3>
-        </div>
-        <div class="panel-body">
-          <div id="followers-bars"></div>
+    <div class="row">
+      <div class="col-sm-8 col-sm-offset-2">
+        <div class="panel panel-default" ng-show="followersAnalytics">
+          <div class="panel-heading">
+            <h3 class="panel-title">Followers Analytics</h3>
+          </div>
+          <div class="panel-body">
+            <div id="followers-bars"></div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <div class="row">
-    <div class="col-sm-8 col-sm-offset-2">
-      <div class="panel panel-default" ng-show="followersChart">
-        <div class="panel-heading">
-          <h3 class="panel-title">Followers by subscription time</h3>
-        </div>
-        <div class="panel-body">
-          <div id="followers-chart"></div>
+    <div class="row">
+      <div class="col-sm-8 col-sm-offset-2">
+        <div class="panel panel-default" ng-show="followersChart">
+          <div class="panel-heading">
+            <h3 class="panel-title">Followers by subscription time</h3>
+          </div>
+          <div class="panel-body">
+            <div id="followers-chart"></div>
+          </div>
         </div>
       </div>
     </div>

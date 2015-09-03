@@ -160,7 +160,7 @@ class UsersController < ApplicationController
           profile_picture: @user.profile_picture,
           full_name: @user.full_name,
           website: @user.website,
-          location: @user.location,
+          location: (@user.location_updated_at.present? ? (@user.location || 'N/A') : nil),
           email: @user.email,
           avg_likes: @user.avg_likes,
           avg_comments: @user.avg_comments,

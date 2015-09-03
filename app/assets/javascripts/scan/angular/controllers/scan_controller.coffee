@@ -104,14 +104,24 @@ angular.module('scan', ['ngRoute']).controller('scanProfileController', ['$scope
     rotate: 0
 
   $('.piechart.popular-followers .easypiechart').easyPieChart $scope.pieChartOptions
-
   pieChart = $('.piechart.popular-followers .easypiechart').data('easyPieChart')
-
   $scope.$watch 'popularFollowersPercentage', (newValue, oldValue) ->
     panel = $('.piechart.popular-followers').closest('.panel')
     if newValue
       panel.removeClass('hide')
       pieChart.update(newValue)
+    else
+      panel.addClass('hide')
+
+
+  $scope.profilePreparedness = 0
+  $('.piechart.profile-preparedness .easypiechart').easyPieChart $scope.pieChartOptions
+  pieChart2 = $('.piechart.profile-preparedness .easypiechart').data('easyPieChart')
+  $scope.$watch 'profilePreparedness', (newValue, oldValue) ->
+    panel = $('.piechart.profile-preparedness').closest('.panel')
+    if newValue < 100
+      panel.removeClass('hide')
+      pieChart2.update(newValue)
     else
       panel.addClass('hide')
 
@@ -171,6 +181,11 @@ angular.module('scan', ['ngRoute']).controller('scanProfileController', ['$scope
       followersChartHC = followersChart.highcharts()
       followersChartHC.series[0].setData newValue
 
-      console.log $scope.username, followersChartHC.series[0]
+
+  $scope.$watchGroup ['avg.likes', 'followersAnalytics', 'followed_by', 'location'], (newValues, oldValues, scope) ->
+    prepared = 0
+    $.each newValues, (index, value) ->
+      prepared += 1 if value
+    $scope.profilePreparedness = parseInt((prepared / newValues.length) * 100)
 
 ])

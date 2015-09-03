@@ -22,3 +22,16 @@
 .panel .panel-heading.bg-info{
   text-transform: none;
 }
+
+.notify-block{
+  input[type=text]{
+    width: 280px;
+    display: inline-block;
+    vertical-align: top;
+  }
+
+  button{
+    display: inline-block;
+    vertical-align: top;
+  }
+}
