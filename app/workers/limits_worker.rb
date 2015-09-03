@@ -13,11 +13,8 @@ class LimitsWorker
         begin
           ic = InstaClient.new(login)
           resp = ic.client.utils_raw_response
-        rescue Instagram::BadRequest => e
-          if e.message =~ /The access_token provided is invalid/
-            ic.invalid_login!
-            next
-          end
+        rescue Instagram::InternalServerError => e
+          next
         end
 
         if resp.present?

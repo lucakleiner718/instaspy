@@ -54,9 +54,6 @@ class UserUpdateFollowers < ServiceObject
         elsif e.message =~ /this user does not exist/
           user.destroy
           return false
-        elsif e.message =~ /The access_token provided is invalid/
-          ic.invalid_login!
-          retry
         end
         raise e
       end

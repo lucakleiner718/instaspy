@@ -75,7 +75,7 @@ class InstaClient
         Rails.logger.debug "#{">> issue".red} #{e.class.name} :: #{e.message}"
         sleep 10*retries
         retries += 1
-        retry if retries <= 5
+        retry if retries < 3
         raise e
       rescue Instagram::BadRequest => e
         if e.message =~ /The access_token provided is invalid/
