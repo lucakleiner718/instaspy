@@ -131,9 +131,10 @@ class UsersController < ApplicationController
     end
 
     popular_followers_percentage = nil
-    if @user.data_get_value('popular_followers_percentage', lifetime: 14.days).present?
+    if @user.data_get_value('popular_followers_percentage', lifetime: 2.weeks).present?
       popular_followers_percentage = @user.get_popular_followers_percentage
     else
+      popular_followers_percentage = @user.data_get_value('popular_followers_percentage', lifetime: 54.weeks)
       if @user.followers_updated_at && @user.followers_updated_at > 1.month.ago
         UserPopularFollowersWorker.perform_async @user.id
       end
@@ -143,6 +144,7 @@ class UsersController < ApplicationController
     if @user.data_get_value('followers_analytics', lifetime: 2.weeks).present?
       followers_analytics = @user.get_followers_analytics
     else
+      followers_analytics = @user.data_get_value('followers_analytics', lifetime: 54.weeks)
       if @user.followers_updated_at && @user.followers_updated_at > 1.month.ago
         UserFollowersAnalyticsWorker.perform_async @user.id
       end
