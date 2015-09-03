@@ -86,7 +86,7 @@ class Geolocation
       @country = @country_lookup.alpha2 if @country_lookup
     end
 
-    if @country == 'US' && @state.size == 2 && @country_lookup
+    if @country == 'US' && @state && @state.size == 2 && @country_lookup
       state = @country_lookup.states[@state.upcase]
       @state = state['name'] if state
     end

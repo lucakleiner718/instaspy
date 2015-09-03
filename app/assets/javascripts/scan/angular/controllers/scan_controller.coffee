@@ -6,13 +6,12 @@ angular.module('scan', ['ngRoute']).controller('scanProfileController', ['$scope
     else
       null
   $scope.avg = {likes: null, comments: null}
-
-  $scope.otherPieChart = 26
+  $scope.updateTimeout = 30
 
   updateDataWrapper = ->
     setTimeout ->
       $scope.updateData()
-    , 5 * 1000
+    , $scope.updateTimeout * 1000
 
   $scope.updateData = ->
     $http.get("/users/scan/data/#{$scope.username}.json")
@@ -30,6 +29,7 @@ angular.module('scan', ['ngRoute']).controller('scanProfileController', ['$scope
         $scope.popularFollowersPercentage = response.data.popular_followers_percentage
         $scope.followersAnalytics = response.data.followers_analytics
         $scope.email = response.data.email
+        $scope.followersChart = response.data.followers_chart
 
   $scope.updateData()
 
@@ -77,10 +77,9 @@ angular.module('scan', ['ngRoute']).controller('scanProfileController', ['$scope
         update = true
 
     if update
+      $('#followers-bars').closest('.panel').removeClass('ng-hide')
       followersBarsCharts = followersBars.highcharts()
       followersBarsCharts.series[0].setData newValue
-      $('#followers-bars').closest('.panel').removeClass('ng-hide')
-
 
 
   $scope.color =
@@ -116,9 +115,62 @@ angular.module('scan', ['ngRoute']).controller('scanProfileController', ['$scope
     else
       panel.addClass('hide')
 
-  $('.piechart.other-pie-chart .easypiechart').easyPieChart $scope.pieChartOptions
 
-  pieChart2 = $('.piechart.other-pie-chart .easypiechart').data('easyPieChart')
-  pieChart2.update($scope.otherPieChart)
+  followersChart = $('#followers-chart')
+  followersChart.highcharts
+    colors: ['#058DC7', '#5EE63F', '#ED561B', '#DDDF00', '#24CBE5', '#64E572', '#FF9655', '#FFF263', '#6AF9C4']
+    chart:
+      type: 'line'
+    title:
+      text: false
+    xAxis:
+      type: 'datetime'
+      dateTimeLabelFormats:
+        month: '%b \'%y'
+        year: '%Y'
+      lineColor: '#fff'
+      tickColor: '#fff'
+      labels:
+        style:
+          color: '#fff'
+      title: false
+    yAxis:
+      title:
+        text: 'Followers amount'
+        style:
+          color: '#fff'
+      labels:
+        style:
+          color: '#fff'
+      lineColor: '#fff'
+      tickColor: '#fff'
+    plotOptions:
+      line:
+        enableMouseTracking: true
+      series:
+        lineWidth: 4
+    tooltip:
+      headerFormat: '<span style="font-size: 10px">Month: {point.key}</span><br/>'
+      pointFormat: 'Amount: <b>{point.y} users</b>'
+    series: [{}]
+    legend: false
+
+
+  $scope.$watch 'followersChart', (newValue, oldValue) ->
+    update = false
+
+    if newValue
+      if oldValue
+        if newValue.toString() != oldValue.toString()
+          update = true
+      else
+        update = true
+
+    if update
+      followersChart.closest('.panel').removeClass('ng-hide')
+      followersChartHC = followersChart.highcharts()
+      followersChartHC.series[0].setData newValue
+
+      console.log $scope.username, followersChartHC.series[0]
 
 ])

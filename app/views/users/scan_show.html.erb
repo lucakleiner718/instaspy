@@ -81,21 +81,6 @@
             </div>
           </div>
         </div>
-
-        <div class="col-sm-12">
-          <div class="panel panel-default">
-            <div class="panel-heading">
-              <h3 class="panel-title">Some other pie chart</h3>
-            </div>
-            <div class="panel-body text-center">
-              <div class="piechart other-pie-chart">
-                <div class="easypiechart">
-                  <span class="pie-percent" ng-bind="otherPieChart"></span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -108,6 +93,19 @@
         </div>
         <div class="panel-body">
           <div id="followers-bars"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-sm-8 col-sm-offset-2">
+      <div class="panel panel-default" ng-show="followersChart">
+        <div class="panel-heading">
+          <h3 class="panel-title">Followers by subscription time</h3>
+        </div>
+        <div class="panel-body">
+          <div id="followers-chart"></div>
         </div>
       </div>
     </div>

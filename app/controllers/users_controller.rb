@@ -131,21 +131,26 @@ class UsersController < ApplicationController
     end
 
     popular_followers_percentage = nil
-    if @user.data_get_value('popular_followers_percentage', lifetime: 14.days).blank?
+    if @user.data_get_value('popular_followers_percentage', lifetime: 14.days).present?
+      popular_followers_percentage = @user.get_popular_followers_percentage
+    else
       if @user.followers_updated_at && @user.followers_updated_at > 1.month.ago
         UserPopularFollowersWorker.perform_async @user.id
       end
-    else
-      popular_followers_percentage = @user.get_popular_followers_percentage
     end
 
     followers_analytics = nil
-    if @user.data_get_value('followers_analytics', lifetime: 14.days).blank?
+    if @user.data_get_value('followers_analytics', lifetime: 2.weeks).present?
+      followers_analytics = @user.get_followers_analytics
+    else
       if @user.followers_updated_at && @user.followers_updated_at > 1.month.ago
         UserFollowersAnalyticsWorker.perform_async @user.id
       end
-    else
-      followers_analytics = @user.get_followers_analytics
+    end
+
+    followers_chart = nil
+    if @user.followers_info_updated_at.present? && @user.followers_info_updated_at > 1.month.ago && @user.followers_size >= @user.followed_by * 0.95
+      followers_chart = @user.followers_chart_data
     end
 
     respond_to do |format|
@@ -160,7 +165,8 @@ class UsersController < ApplicationController
           followed_by: @user.followed_by,
           followers_updated_at: (@user.followers_updated_at.strftime('%b %d') if @user.followers_updated_at.present?),
           popular_followers_percentage: popular_followers_percentage,
-          followers_analytics: (followers_analytics.to_a if followers_analytics)
+          followers_analytics: (followers_analytics.to_a if followers_analytics),
+          followers_chart: followers_chart
         } }
     end
   end

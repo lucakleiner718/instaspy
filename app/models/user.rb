@@ -1157,4 +1157,24 @@ class User < ActiveRecord::Base
       media.update_column :location_state, state['name'] if state
     end
   end
+
+  def followers_chart_data
+    data = Follower.connection.execute("
+        SELECT * FROM (
+            SELECT sum(1) as total, extract(month from followed_at) as month, extract(year from followed_at) as year
+            FROM followers
+            WHERE user_id=#{self.id} AND followed_at is not null
+            GROUP BY extract(month from followed_at), extract(year from followed_at)
+        ) as temp
+        ORDER BY year, total
+    ")
+
+    data = data.to_a.inject({}) do |obj, el|
+      date = DateTime.parse("#{el['year']}/#{el['month']}/1").to_i * 1000
+      obj[date] = el['total'].to_i
+      obj
+    end
+
+    data.sort
+  end
 end
