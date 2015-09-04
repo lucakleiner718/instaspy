@@ -839,7 +839,7 @@ class User < ActiveRecord::Base
           ['Frankfurt', 'HE']
         ]
       },
-      'CH' => {
+      'CN' => {
         cities: [
           ['Shanghai', '31']
         ]
@@ -861,7 +861,7 @@ class User < ActiveRecord::Base
       }
     }
 
-    predefined.each do |country_code, data|
+    (country ? predefined.select{|cc, d| cc == country} : predefined).each do |country_code, data|
       states = Country[country_code].states
 
       if data[:cities]
@@ -870,7 +870,7 @@ class User < ActiveRecord::Base
           if match && match[1]
             city = row.size == 2 ? row[0] : row[1]
             state = states[row.last]['name']
-            country = country_code
+            country = country_code unless country
             break
           end
         end
