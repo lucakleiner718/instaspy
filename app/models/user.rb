@@ -799,18 +799,31 @@ class User < ActiveRecord::Base
       'US' => {
         states: true,
         cities: [
-          ['San Francisco', 'CA'], ['Bay Area', 'CA'], ['Los Angeles', 'CA'], ['Hollywood', 'CA'], ['Santa Monica', 'CA'],
-          ['Malibu', 'CA'], ['Socal', 'CA'], ['San Diego', 'CA'], ['Burbank', 'CA'],
-          ['Seattle', 'WA'], ['Phoenix', 'AZ'], ['Denver', 'CO'],
+          ['Montgomery', 'AL'], ['Juneau', 'AK'], ['Anchorage', 'AK'], ['Little Rock', 'AR'], ['Phoenix', 'AZ'],
+          ['Sacramento', 'CA'], ['San Francisco', 'CA'], ['Bay Area', 'CA'], ['Los Angeles', 'CA'], ['Hollywood', 'CA'],
+          ['Santa Monica', 'CA'], ['Malibu', 'CA'], ['Socal', 'CA'], ['San Diego', 'CA'], ['Burbank', 'CA'],
+          ['Denver', 'CO'], ['Hartford', 'CT'], ['Bridgeport', 'CT'], ['Dover', 'DE'], ['Wilmington', 'DE'],
+          ['Tallahassee', 'FL'], ['Jacksonville', 'FL'], ['Miami', 'FL'], ['Atlanta', 'GA'], ['Hawaii', 'HI'], ['Boise', 'ID'],
+          ['Springfield', 'IL'], ['Chicago', 'IL'], ['Indiana', 'IN'], ['Des Moines', 'IA'], ['Topeka', 'KS'], ['Wichita', 'KS'],
+          ['Frankfort', 'KY'], ['Louisville', 'KY'], ['Baton Rouge', 'LA'], ['New Orleans', 'LA'],
+          ['Augusta', 'ME'], ['Portland', 'ME'], ['Annapolis', 'MD'], ['Baltimore', 'MD'], ['Boston', 'MA'],
+          ['Lansing', 'MI'], ['Detroit', 'MI'], ['Saint Paul', 'MN'], ['Minneapolis', 'MN'], ['Jackson', 'MS'],
+          ['Billings', 'MT'], ['Omaha', 'NE'],  ['Carson City', 'NV'], ['Las Vegas', 'NV'], ['Concord', 'NH'],
+          ['Trenton', 'NJ'], ['Newark', 'NJ'], ['Santa Fe', 'NM'], ['Albuquerque', 'NM'], ['Raleigh', 'NC'],
+          ['Bismarck', 'ND'], ['Fargo', 'ND'], ['Brooklyn', 'New York', 'NY'], ['New York', 'NY'],['NYC', 'New York', 'NY'],
+          ['Columbus', 'OH'], ['Cleveland', 'OH'], ['Cincinnati', 'OH'], ['Oklahoma', 'OK'], ['Portland', 'OR'],
+          ['Harrisburg', 'PA'], ['Pierre', 'SD'], ['Sioux Falls', 'SD'], ['Nashville', 'TN'], ['Memphis', 'TN'],
+          ['Dallas', 'TX'], ['Houston', 'TX'], ['Austin', 'TX'], ['San Antonio', 'TX'],
           ['S\.L\.C\.', 'Salt Lake City', 'UT'], ['SLC', 'Salt Lake City', 'UT'], ['Salt Lake City', 'UT'],
-          ['Brooklyn', 'New York', 'NY'], ['New York', 'NY'],['NYC', 'New York', 'NY'],
-          ['Atlanta', 'GA'], ['Boston', 'MA'], ['Chicago', 'IL'], ['Miami', 'FL'],
+          ['Montpelier', 'VT'], ['Burlington', 'VT'], ['Richmond', 'VA'], ['Virginia Beach', 'VA'],
+          ['Seattle', 'WA'], ['Charleston', 'WV'], ['Milwaukee', 'WI'], ['Cheyenne', 'WY'],
         ]
       },
       'CA' => {
         states: true,
         cities: [
-          ['Montreal', 'QC'], ['Toronto', 'ON'], ['Ottawa', 'ON']
+          ['Montreal', 'QC'], ['Toronto', 'ON'], ['Ottawa', 'ON'], ['Halifax', 'NS'], ['Fredericton', 'NB'], ['Vancouver', 'BC'],
+          ['Calgary', 'AB']
         ]
       },
       'AU' => {

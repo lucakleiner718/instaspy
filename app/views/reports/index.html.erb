@@ -62,7 +62,9 @@
       </td>
       <td><%= simple_format report.note %></td>
       <td>
-        <div style="white-space: nowrap;"><%= link_to "Input data", report.original_input_url, target: :_blank %></div>
+        <% unless report.format == 'users-export' %>
+          <div style="white-space: nowrap;"><%= link_to "Input data", report.original_input_url, target: :_blank %></div>
+        <% end %>
         <div style="white-space: nowrap;"><%= link_to 'Results file', report.result_data_url, target: :_blank if report.result_data.present? %></div>
       </td>
       <td>
