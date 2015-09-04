@@ -29,6 +29,8 @@ class User < ActiveRecord::Base
       if m && m[1]
         self.email = m[1].sub(/^[\.\-\_]+/, '')
       end
+
+      self.set_location_from_bio
     end
 
     if self.username_changed?
@@ -758,10 +760,140 @@ class User < ActiveRecord::Base
     self.location_country = (city && city[0] && city[0][0]) || (country && country[0])
     self.location_state = (city && city[0] && city[0][1]) || (state && state[0].last)
     self.location_city = city && city[0] && city[0][2]
+
+    unless self.location?
+      self.set_location_from_bio
+    end
+
     self.location_updated_at = Time.now
     self.save
 
     self.location
+  end
+
+  def set_location_from_bio
+    return if location?
+
+    self.update_info! if self.bio.nil?
+
+    return false if self.bio.blank?
+
+    country = nil
+    state = nil
+    city = nil
+
+    match_str = -> (str, substr) {
+      str.match(/\A(#{substr})[^a-z]/i) || str.match(/[^a-z](#{substr})[^a-z]/i) || str.match(/[^a-z](#{substr})\Z/i)
+    }
+
+    Country.all.each do |c|
+      c[0] = [c[0], 'Russia'].join('|') if c[1] == 'RU'
+      match = match_str.call(self.bio, c[0])
+      if match && match[1]
+        country = c[1]
+        break
+      end
+    end
+
+    predefined = {
+      'US' => {
+        states: true,
+        cities: [
+          ['San Francisco', 'CA'], ['Bay Area', 'CA'], ['Los Angeles', 'CA'], ['Hollywood', 'CA'], ['Santa Monica', 'CA'],
+          ['Malibu', 'CA'], ['Socal', 'CA'], ['San Diego', 'CA'], ['Burbank', 'CA'],
+          ['Seattle', 'WA'], ['Phoenix', 'AZ'], ['Denver', 'CO'],
+          ['S\.L\.C\.', 'Salt Lake City', 'UT'], ['SLC', 'Salt Lake City', 'UT'], ['Salt Lake City', 'UT'],
+          ['Brooklyn', 'New York', 'NY'], ['New York', 'NY'],['NYC', 'New York', 'NY'],
+          ['Atlanta', 'GA'], ['Boston', 'MA'], ['Chicago', 'IL'], ['Miami', 'FL'],
+        ]
+      },
+      'CA' => {
+        states: true,
+        cities: [
+          ['Montreal', 'QC'], ['Toronto', 'ON'], ['Ottawa', 'ON']
+        ]
+      },
+      'AU' => {
+        states: true,
+        cities: [
+          ['Sydney', 'NSW'], ['Melbourne', 'VIC'], ['Adelaide', 'SA'], ['Darwin', 'NT'], ['Brisbane', 'QLD'], ['Hobart', 'TAS'],
+          ['Perth', 'WA'], ['Gold Coast', 'QLD'], ['Canberra', 'ACT']
+        ]
+      },
+      'DE' => {
+        states: true,
+        cities: [
+          ['Frankfurt', 'HE']
+        ]
+      },
+      'CH' => {
+        cities: [
+          ['Shanghai', '31']
+        ]
+      },
+      'JP' => {
+        cities: [
+          ['Tokyo', '13'],
+        ]
+      },
+      'RU' => {
+        cities: [
+          ['Moscow', 'MOS']
+        ]
+      },
+      'GB' => {
+        cities: [
+          ['London', 'LND'], ['Manchester', 'MAN']
+        ]
+      }
+    }
+
+    predefined.each do |country_code, data|
+      states = Country[country_code].states
+
+      if data[:cities]
+        data[:cities].each do |row|
+          match = match_str.call(self.bio, row[0])
+          if match && match[1]
+            city = row.size == 2 ? row[0] : row[1]
+            state = states[row.last]['name']
+            country = country_code
+            break
+          end
+        end
+      end
+
+      if data[:states] && states && states.size > 0 && !city && !state
+        states_ar = states.inject([]){|ar, (k,v)| ar << [v['name'], k]; ar}
+        states_ar.each do |row|
+          match = match_str.call(self.bio, row[0])
+          if match && match[1]
+            begin
+              state = states[row.last]['name']
+              country = country_code
+            rescue => e
+              binding.pry
+            end
+            break
+          end
+        end
+      end
+
+      break if city && state && country
+    end
+
+    self.location_country = country if country
+    self.location_state = state if state
+    self.location_city = city if city
+  end
+
+  def get_location_from_bio!
+    self.set_location_from_bio
+
+    if self.changed?
+      self.location_updated_at = Time.now if self.location_country && self.location_state
+      self.save
+    end
   end
 
   def update_media_location
