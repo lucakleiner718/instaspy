@@ -774,7 +774,7 @@ class User < ActiveRecord::Base
   def set_location_from_bio
     return if location?
 
-    self.update_info! if self.bio.nil?
+    self.update_info! if self.bio.nil? || (self.bio.blank? && self.outdated?)
 
     return false if self.bio.blank?
 
@@ -787,8 +787,11 @@ class User < ActiveRecord::Base
     }
 
     Country.all.each do |c|
-      c[0] = [c[0], 'Russia'].join('|') if c[1] == 'RU'
-      match = match_str.call(self.bio, c[0])
+      options = [c[0]]
+      options << 'Russia' if c[1] == 'RU'
+      options << 'USA' if c[1] == 'US'
+      options = options.join('|')
+      match = match_str.call(self.bio, options)
       if match && match[1]
         country = c[1]
         break
@@ -834,7 +837,6 @@ class User < ActiveRecord::Base
         ]
       },
       'DE' => {
-        states: true,
         cities: [
           ['Frankfurt', 'HE']
         ]
