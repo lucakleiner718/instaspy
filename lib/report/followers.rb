@@ -104,7 +104,9 @@ class Report::Followers < Report::Base
       @report.result_data = filepath
 
       File.delete(zipfilename) rescue nil
-      files.each { |filename| File.delete(Rails.root.join('tmp', filename)) }
+      files.each do |filename|
+        File.delete(Rails.root.join('tmp', filename)) rescue nil
+      end
     end
 
     @report.finished_at = Time.now

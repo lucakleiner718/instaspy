@@ -44,3 +44,6 @@ jQuery ($) ->
   $('.report-update-status').on
     'ajax:success': (resp) ->
       window.location.reload()
+
+  $('#new_report').on 'submit', ->
+    $(this).find(':submit').attr('disabled', true)
