@@ -6,7 +6,7 @@ class UserPopularFollowersWorker
   def perform user_id
     begin
       user = User.find(user_id)
-      user.get_popular_followers_percentage
+      user.get_popular_followers_percentage recount: true
     rescue ActiveRecord::RecordNotFound => e
       return
     end

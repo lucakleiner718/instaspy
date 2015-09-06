@@ -268,14 +268,13 @@ class User < ActiveRecord::Base
   # Updating list of all followers for current user
   #
   # @example
-  #   User.get('anton_zaytsev').update_followers continue: true
+  #   User.get('anton_zaytsev').update_followers ignore_exists: true
   #
   # @option options :reload [Boolean] default: false, if reload is set to true,
   #     code will download whole list of followers and replace exists list by new one
   # @option options :ignore_exists [Boolean] default: false, iterates over all followers list
   # @option options :start_cursor [Integer] start time for followers lookup in seconds (timestamp)
-  # @option options :finish_cursor [Integer] end time for followers lookup in seconds (timestamp)
-  # @option options :continue [Boolean] find oldest follower and start looking for followers from it, by default: false
+  # @option options :finish_cursor [Integer] end time for followers lookup in seconds (timestamp
   # @option options :count [Integer] amount of users requesting from Instagram per request
   # @option options :skip_exists [Boolean] skip exists
   #
@@ -299,15 +298,14 @@ class User < ActiveRecord::Base
   # Update list of all profiles user follow
   #
   # @example
-  #   User.get('anton_zaytsev').update_followees continue: true
+  #   User.get('anton_zaytsev').update_followees ignore_exists: true
   #
   # @option options :reload [Boolean] default: false, if reload is set to true,
   #     code will download whole list of followers and replace exists list by new one
   # @option options :deep [Boolean] default: false, if need to updated info for each added user in background
   # @option options :ignore_exists [Boolean] default: false, iterates over all followees list
   # @option options :start_cursor [Integer] start time for followers lookup in seconds (timestamp)
-  # @option options :finish_cursor [Integer] end time for followers lookup in seconds (timestamp)
-  # @option options :continue [Boolean] find oldest follower and start looking for followers from it, by default: false
+  # @option options :finish_cursor [Integer] end time for followers lookup in seconds (timestamp
   # @option options :count [Integer] amount of users requesting from Instagram per request
   #
   # @note
@@ -328,12 +326,12 @@ class User < ActiveRecord::Base
 
     logger.debug ">> [#{self.username.green}] follows: #{self.follows}"
 
-    if options[:continue]
-      last_follow_time = Follower.where(follower_id: self.id).where("followed_at is not null").order(followed_at: :asc).first.try(:followed_at)
-      if last_follow_time
-        cursor = last_follow_time.followed_at.to_i * 1_000
-      end
-    end
+    # if options[:continue]
+    #   last_follow_time = Follower.where(follower_id: self.id).where("followed_at is not null").order(followed_at: :asc).first.try(:followed_at)
+    #   if last_follow_time
+    #     cursor = last_follow_time.followed_at.to_i * 1_000
+    #   end
+    # end
 
     options[:count] ||= 100
 
