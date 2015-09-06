@@ -1305,6 +1305,16 @@ class User < ActiveRecord::Base
     end
   end
 
+  def followers_increase
+    followers_per_month = self.followers_chart_data
+    income_per_month = []
+    followers_per_month.each_with_index do |row, index|
+      row[1] -= followers_per_month[index-1][1] if index > 0
+      income_per_month << row
+    end
+    income_per_month
+  end
+
   def followers_chart_data
     data = Follower.connection.execute("
         SELECT * FROM (
