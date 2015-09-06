@@ -16,7 +16,7 @@ class InstaClient
                                client_id: @login.account.client_id,
                                client_secret: @login.account.client_secret,
                                no_response_wrapper: true
-    @client = Client.new @ig_client, self
+    @client_proxy = Client.new @ig_client, self
   end
 
   def account
@@ -27,8 +27,8 @@ class InstaClient
     @login
   end
 
-  def client
-    @client
+  def client(direct: false)
+    direct ? @ig_client : @client_proxy
   end
 
   def change_login!
@@ -54,7 +54,7 @@ class InstaClient
   class Client
 
     def initialize client, ic
-      @client = client
+      @ig_client = client
       @ic = ic
     end
 
@@ -62,7 +62,7 @@ class InstaClient
       retries = 0
 
       begin
-        @client.send(method, *args, &block)
+        @ig_client.send(method, *args, &block)
       rescue Instagram::TooManyRequests => e
         @ic.change_login!
         retry
@@ -79,7 +79,7 @@ class InstaClient
         raise e
       rescue Instagram::BadRequest => e
         if e.message =~ /The access_token provided is invalid/
-          ic.invalid_login!
+          @ic.invalid_login!
           retry
         else
           raise e
