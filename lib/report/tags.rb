@@ -46,12 +46,18 @@ class Report::Tags < Report::Base
       tag_id = row[1]
       step_index = @report.steps.index{|r| r[0] == tag_id}
 
+      @publishers_media[tag_id] = {}
 
       media_items_key = "tag_#{tag_id}_media_items_file"
       if @report.data[media_items_key].present?
         csv = CSV.parse FileManager.read_file(@report.data[media_items_key])
         keys = csv.shift
         @media_items = csv.map{|el| obj = {}; keys.each_with_index{|key, index| obj[key.to_sym] = el[index]}; obj}
+
+        @media_items.each do |r|
+          @publishers_media[tag_id][r[:user_id]] ||= []
+          @publishers_media[tag_id][r[:user_id]] << r
+        end
       else
         tag_media_ids = MediaTag.where(tag_id: tag_id).pluck(:media_id)
         @media_items = []
@@ -61,6 +67,16 @@ class Report::Tags < Report::Base
           media = media.where("created_time <= ?", @report.date_to) if @report.date_to
 
           @media_items += media.pluck_to_hash(:id, :user_id, :likes_amount, :comments_amount, :link, :image, :created_time)
+        end
+
+        @media_items.each do |r|
+          @publishers_media[tag_id][r[:user_id]] ||= []
+          @publishers_media[tag_id][r[:user_id]] << r
+        end
+
+        unless @report.output_data.include? 'all_media'
+          @publishers_media[tag_id][r[:user_id]] = [@publishers_media[tag_id][r[:user_id]].sort{|a,b| a[:created_time] <=> b[:created_time]}.last]
+          @media_items = @publishers_media[tag_id].values
         end
 
         csv_string = CSV.generate do |csv|
@@ -78,14 +94,8 @@ class Report::Tags < Report::Base
       end
 
 
-      publishers_ids = @media_items.map{ |m| m[:user_id].to_i }.uniq
+      publishers_ids = @publishers_media[tag_id].keys
       @tags_publishers[tag_id] = publishers_ids
-
-      @publishers_media[tag_id] = {}
-      @media_items.each do |r|
-        @publishers_media[tag_id][r[:user_id]] ||= []
-        @publishers_media[tag_id][r[:user_id]] << r
-      end
 
       unless @report.steps[step_index][1].include?('publishers_info')
         users = []
@@ -178,9 +188,6 @@ class Report::Tags < Report::Base
           User.where(id: ids).each do |u|
             users_media = @publishers_media[u.id]
             next unless users_media
-            unless @report.output_data.include? 'all_media'
-              users_media = [users_media.last]
-            end
             users_media.each do |media|
               row = [u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email]
               row += [u.location_country, u.location_state, u.location_city] if @report.output_data.include? 'location'
