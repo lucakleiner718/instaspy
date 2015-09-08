@@ -153,6 +153,7 @@ class UserUpdateFollowers < ServiceObject
 
       cursor = resp.pagination['next_cursor']
 
+      # when code reached end of list
       unless cursor
         if !options[:reload] && !skipped && options[:start_cursor].blank? && options[:finish_cursor].blank?
           current_followers = Follower.where(user_id: user.id).pluck(:follower_id)

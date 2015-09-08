@@ -38,6 +38,7 @@ $(document).on 'ready page:load', ->
           color: '#fff'
       lineColor: '#fff'
       tickColor: '#fff'
+      min: 0
     plotOptions:
       line:
         enableMouseTracking: true

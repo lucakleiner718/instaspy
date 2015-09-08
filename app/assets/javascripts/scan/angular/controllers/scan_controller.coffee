@@ -154,6 +154,7 @@ angular.module('scan', ['ngRoute']).controller('scanProfileController', ['$scope
           color: '#fff'
       lineColor: '#fff'
       tickColor: '#fff'
+      min: 0
     plotOptions:
       line:
         enableMouseTracking: true
