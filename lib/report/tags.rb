@@ -56,7 +56,7 @@ class Report::Tags < Report::Base
           media = media.where("created_time >= ?", @report.date_from) if @report.date_from
           media = media.where("created_time <= ?", @report.date_to) if @report.date_to
 
-          media_ids += media.pluck_to_hash(:id, :user_id)#.uniq{ |r| r[:user_id] }
+          media_ids += media.pluck_to_hash(:id, :user_id)
         end
 
         filepath = "reports/reports_data/report-#{@report.id}-media-ids"
@@ -66,7 +66,7 @@ class Report::Tags < Report::Base
         @report.save
       end
 
-      publishers_ids = media_ids.map{ |m| m[:user_id] }
+      publishers_ids = media_ids.map{ |m| m[:user_id] }.uniq
       @tags_publishers[tag_id] = publishers_ids
 
       @publishers_media[tag_id] = {}
@@ -180,7 +180,7 @@ class Report::Tags < Report::Base
 
       csv_string = CSV.generate do |csv|
         csv << header
-        @tags_publishers[tag_id].in_groups_of(1000, false) do |ids|
+        @tags_publishers[tag_id].in_groups_of(10_000, false) do |ids|
           User.where(id: ids).each do |u|
             users_media = media_list[u.id]
             next unless users_media
