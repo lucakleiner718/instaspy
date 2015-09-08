@@ -47,8 +47,7 @@ class Report::Tags < Report::Base
       step_index = @report.steps.index{|r| r[0] == tag_id}
 
       if @report.data['media_ids_file'].present?
-        media_ids = JSON.parse FileManager.read_file(@report.data['media_ids_file'])
-        media_ids = media_ids.inject([]){|ar, el| ar << el.inject({}){|obj, (k,v)| obj[k.to_sym] = v; obj}; ar}
+        media_ids = JSON.parse FileManager.read_file(@report.data['media_ids_file']), symbolize_names: true
       else
         tag_media_ids = MediaTag.where(tag_id: tag_id).pluck(:media_id)
         media_ids = []
@@ -86,6 +85,7 @@ class Report::Tags < Report::Base
 
         if media_for_update.size == 0
           @report.steps[step_index][1] << 'media_actual'
+          @report.save
         else
           media_for_update.each { |mid| MediaUpdateWorker.perform_async mid }
         end
@@ -99,6 +99,7 @@ class Report::Tags < Report::Base
           end
           if users.size == 0
             @report.steps[step_index][1] << 'publishers_info'
+            @report.save
           else
             users.each { |uid| UserWorker.perform_async uid }
           end
@@ -109,6 +110,7 @@ class Report::Tags < Report::Base
             get_likes = User.where(id: publishers_ids).without_likes.with_media.not_private.pluck(:id)
             if get_likes.size == 0
               @report.steps[step_index][1] << 'likes'
+              @report.save
             else
               get_likes.each { |uid| UserAvgDataWorker.perform_async uid }
             end
@@ -118,6 +120,7 @@ class Report::Tags < Report::Base
             get_location = User.where(id: publishers_ids).without_location.with_media.not_private.pluck(:id)
             if get_location.size == 0
               @report.steps[step_index][1] << 'location'
+              @report.save
             else
               get_location.each { |uid| UserLocationWorker.perform_async uid }
             end
@@ -136,6 +139,7 @@ class Report::Tags < Report::Base
 
             if no_feedly.size == 0
               @report.steps << 'feedly'
+              @report.save
             else
               no_feedly.each { |uid| UserFeedlyWorker.new.perform uid }
               @progress += feedly_exists.size / with_website.size.to_f / @parts_amount
