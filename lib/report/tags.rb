@@ -46,12 +46,26 @@ class Report::Tags < Report::Base
       tag_id = row[1]
       step_index = @report.steps.index{|r| r[0] == tag_id}
 
-      tag_media_ids = MediaTag.where(tag_id: tag_id).pluck(:media_id)
-      media = Media.where(id: tag_media_ids)
-      media = media.where("created_time >= ?", @report.date_from) if @report.date_from
-      media = media.where("created_time <= ?", @report.date_to) if @report.date_to
+      if @report.data['media_ids_file'].present?
+        media_ids = FileManager.read_file(@report.data['media_ids_file']).split(',')
+      else
+        tag_media_ids = MediaTag.where(tag_id: tag_id).pluck(:media_id)
+        media_ids = []
+        tag_media_ids.in_groups_of(100_000, false) do |ids|
+          media = Media.where(id: ids)
+          media = media.where("created_time >= ?", @report.date_from) if @report.date_from
+          media = media.where("created_time <= ?", @report.date_to) if @report.date_to
 
-      media_ids = media.pluck_to_hash(:id, :user_id)#.uniq{ |r| r[:user_id] }
+          media_ids += media.pluck_to_hash(:id, :user_id)#.uniq{ |r| r[:user_id] }
+        end
+
+        filepath = "reports/reports_data/report-#{@report.id}-media-ids"
+        FileManager.save_file filepath, content: media_ids.join(',')
+        @report.data['media_ids_file'] = filepath
+
+        @report.save
+      end
+
       publishers_ids = media_ids.map{ |m| m[:user_id] }
       @tags_publishers[tag_id] = publishers_ids
 
@@ -63,10 +77,10 @@ class Report::Tags < Report::Base
 
       unless @report.steps[step_index][1].include?('media_actual')
         media_for_update = []
-        media_ids.map{ |m| m[:id] }.in_groups_of(10_000, false) do |ids|
-          media_ids = Media.where(id: ids).where(image: nil).pluck(:id, :user_id)
-          users = User.where(id: media_ids.map{|m| m[1]}).where(private: false).pluck(:id)
-          media_for_update.concat media_ids.select{|r| r[1].in?(users)}.map(&:first)
+        media_ids.map{ |m| m[:id] }.in_groups_of(50_000, false) do |ids|
+          local_media_ids = Media.where(id: ids).where(image: nil).pluck(:id, :user_id)
+          users = User.where(id: local_media_ids.map{|m| m[1]}).where(private: false).pluck(:id)
+          media_for_update.concat local_media_ids.select{|r| r[1].in?(users)}.map(&:first)
         end
 
         if media_for_update.size == 0
@@ -79,7 +93,7 @@ class Report::Tags < Report::Base
       if @report.steps[step_index][1].include?('media_actual')
         unless @report.steps[step_index][1].include?('publishers_info')
           users = []
-          publishers_ids.in_groups_of(5_000, false) do |ids|
+          publishers_ids.in_groups_of(50_000, false) do |ids|
             users.concat User.where(id: ids).outdated.pluck(:id)
           end
           if users.size == 0
