@@ -46,38 +46,38 @@ class Report::Tags < Report::Base
       tag_id = row[1]
       step_index = @report.steps.index{|r| r[0] == tag_id}
 
-      if @report.data['media_ids_file'].present?
-        media_ids = JSON.parse FileManager.read_file(@report.data['media_ids_file']), symbolize_names: true
+      if @report.data["tag_#{tag_id}_media_ids_file"].present?
+        @media_items = JSON.parse FileManager.read_file(@report.data['media_ids_file']), symbolize_names: true
       else
         tag_media_ids = MediaTag.where(tag_id: tag_id).pluck(:media_id)
-        media_ids = []
+        @media_items = []
         tag_media_ids.in_groups_of(100_000, false) do |ids|
           media = Media.where(id: ids)
           media = media.where("created_time >= ?", @report.date_from) if @report.date_from
           media = media.where("created_time <= ?", @report.date_to) if @report.date_to
 
-          media_ids += media.pluck_to_hash(:id, :user_id)
+          @media_items += media.pluck_to_hash(:id, :user_id, :likes_amount, :comments_amount, :link, :image, :created_time)
         end
 
-        filepath = "reports/reports_data/report-#{@report.id}-media-ids.json"
-        FileManager.save_file filepath, content: media_ids.to_json
-        @report.data['media_ids_file'] = filepath
+        filepath = "reports/reports_data/report-#{@report.id}-tag-#{tag_id}-media-ids.json"
+        FileManager.save_file filepath, content: @media_items.to_json
+        @report.data["tag_#{tag_id}_media_ids_file"] = filepath
 
         @report.save
       end
 
-      publishers_ids = media_ids.map{ |m| m[:user_id] }.uniq
+      publishers_ids = @media_items.map{ |m| m[:user_id] }.uniq
       @tags_publishers[tag_id] = publishers_ids
 
       @publishers_media[tag_id] = {}
-      media_ids.each do |r|
+      @media_items.each do |r|
         @publishers_media[tag_id][r[:user_id]] ||= []
-        @publishers_media[tag_id][r[:user_id]] << r[:id]
+        @publishers_media[tag_id][r[:user_id]] << r
       end
 
       unless @report.steps[step_index][1].include?('media_actual')
         media_for_update = []
-        media_ids.map{ |m| m[:id] }.in_groups_of(50_000, false) do |ids|
+        @media_items.map{ |m| m[:id] }.in_groups_of(50_000, false) do |ids|
           local_media_ids = Media.where(id: ids).where(image: nil).pluck(:id, :user_id)
           users = User.where(id: local_media_ids.map{|m| m[1]}).where(private: false).pluck(:id)
           media_for_update.concat local_media_ids.select{|r| r[1].in?(users)}.map(&:first)
@@ -152,6 +152,8 @@ class Report::Tags < Report::Base
     @progress += ((@report.steps.inject(0) { |sum, tag_data| sum + tag_data[1].size}.to_f / (@report.processed_csv.size*@parts_amount)).round(2) * 100).to_i
     @report.progress = @progress
 
+    @report.save
+
     if @report.progress == 100
       @report.status = 'finished'
       self.finish
@@ -175,19 +177,12 @@ class Report::Tags < Report::Base
       tag_id = row[1]
       tag = Tag.find(tag_id)
 
-      media_list = {}
-      @publishers_media[tag_id].values.flatten.in_groups_of(10_000, false) do |rows|
-        Media.where(id: rows).pluck_to_hash(:user_id, :likes_amount, :comments_amount, :link, :image, :created_time).each do |media_row|
-          media_list[media_row[:user_id]] ||= []
-          media_list[media_row[:user_id]] << media_row
-        end
-      end
-
       csv_string = CSV.generate do |csv|
         csv << header
-        @tags_publishers[tag_id].in_groups_of(10_000, false) do |ids|
+
+        @tags_publishers[tag_id].in_groups_of(50_000, false) do |ids|
           User.where(id: ids).each do |u|
-            users_media = media_list[u.id]
+            users_media = @publishers_media[u.id]
             next unless users_media
             unless @report.output_data.include? 'all_media'
               users_media = [users_media.last]
