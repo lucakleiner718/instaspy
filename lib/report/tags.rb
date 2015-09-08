@@ -55,16 +55,16 @@ class Report::Tags < Report::Base
         @media_items = csv.map{|el| obj = {}; keys.each_with_index{|key, index| obj[key.to_sym] = el[index]}; obj}
 
         @media_items.each do |r|
-          @publishers_media[tag_id][r[:user_id]] ||= []
-          @publishers_media[tag_id][r[:user_id]] << r
+          @publishers_media[tag_id][r[:user_id].to_i] ||= []
+          @publishers_media[tag_id][r[:user_id].to_i] << r
         end
       else
         tag_media_ids = MediaTag.where(tag_id: tag_id).pluck(:media_id)
         @media_items = []
         tag_media_ids.in_groups_of(100_000, false) do |ids|
           media = Media.where(id: ids)
-          media = media.where("created_time >= ?", @report.date_from) if @report.date_from
-          media = media.where("created_time <= ?", @report.date_to) if @report.date_to
+          media = media.where("created_time >= ?", @report.date_from.beginning_of_day) if @report.date_from
+          media = media.where("created_time <= ?", @report.date_to.end_of_day) if @report.date_to
 
           @media_items += media.pluck_to_hash(:id, :user_id, :likes_amount, :comments_amount, :link, :image, :created_time)
         end
@@ -75,12 +75,12 @@ class Report::Tags < Report::Base
         end
 
         unless @report.output_data.include? 'all_media'
-          @publishers_media[tag_id][r[:user_id]] = [@publishers_media[tag_id][r[:user_id]].sort{|a,b| a[:created_time] <=> b[:created_time]}.last]
-          @media_items = @publishers_media[tag_id].values
+          @publishers_media[tag_id] = @publishers_media[tag_id].inject({}){|obj, (user_id, media)| obj[user_id] = [media.sort{|a,b| a[:created_time] <=> b[:created_time]}.last]; obj}
+          @media_items = @publishers_media[tag_id].values.flatten
         end
 
         csv_string = CSV.generate do |csv|
-          csv << @media_items.first.keys
+          csv << @media_items.flatten.first.keys
           @media_items.each do |media|
             csv << media.values
           end
@@ -186,7 +186,7 @@ class Report::Tags < Report::Base
 
         @tags_publishers[tag_id].in_groups_of(50_000, false) do |ids|
           User.where(id: ids).each do |u|
-            users_media = @publishers_media[u.id]
+            users_media = @publishers_media[tag_id][u.id]
             next unless users_media
             users_media.each do |media|
               row = [u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email]
