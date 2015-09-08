@@ -47,7 +47,8 @@ class Report::Tags < Report::Base
       step_index = @report.steps.index{|r| r[0] == tag_id}
 
       if @report.data['media_ids_file'].present?
-        media_ids = FileManager.read_file(@report.data['media_ids_file']).split(',')
+        media_ids = JSON.parse FileManager.read_file(@report.data['media_ids_file'])
+        media_ids = media_ids.inject([]){|ar, el| ar << el.inject({}){|obj, (k,v)| obj[k.to_sym] = v; obj}; ar}
       else
         tag_media_ids = MediaTag.where(tag_id: tag_id).pluck(:media_id)
         media_ids = []
@@ -59,8 +60,8 @@ class Report::Tags < Report::Base
           media_ids += media.pluck_to_hash(:id, :user_id)
         end
 
-        filepath = "reports/reports_data/report-#{@report.id}-media-ids"
-        FileManager.save_file filepath, content: media_ids.join(',')
+        filepath = "reports/reports_data/report-#{@report.id}-media-ids.json"
+        FileManager.save_file filepath, content: media_ids.to_json
         @report.data['media_ids_file'] = filepath
 
         @report.save
