@@ -46,8 +46,12 @@ class Report::Tags < Report::Base
       tag_id = row[1]
       step_index = @report.steps.index{|r| r[0] == tag_id}
 
-      if @report.data["tag_#{tag_id}_media_ids_file"].present?
-        @media_items = JSON.parse FileManager.read_file(@report.data['media_ids_file']), symbolize_names: true
+
+      media_items_key = "tag_#{tag_id}_media_items_file"
+      if @report.data[media_items_key].present?
+        csv = CSV.parse FileManager.read_file(@report.data[media_items_key])
+        keys = csv.shift
+        @media_items = csv.map{|el| obj = {}; keys.each_with_index{|key, index| obj[key.to_sym] = el[index]}; obj}
       else
         tag_media_ids = MediaTag.where(tag_id: tag_id).pluck(:media_id)
         @media_items = []
@@ -59,14 +63,22 @@ class Report::Tags < Report::Base
           @media_items += media.pluck_to_hash(:id, :user_id, :likes_amount, :comments_amount, :link, :image, :created_time)
         end
 
-        filepath = "reports/reports_data/report-#{@report.id}-tag-#{tag_id}-media-ids.json"
-        FileManager.save_file filepath, content: @media_items.to_json
-        @report.data["tag_#{tag_id}_media_ids_file"] = filepath
+        csv_string = CSV.generate do |csv|
+          csv << @media_items.first.keys
+          @media_items.each do |media|
+            csv << media.values
+          end
+        end
+
+        filepath = "reports/reports_data/report-#{@report.id}-tag-#{tag_id}-media-items.csv"
+        FileManager.save_file filepath, content: csv_string
+        @report.data[media_items_key] = filepath
 
         @report.save
       end
 
-      publishers_ids = @media_items.map{ |m| m[:user_id] }.uniq
+
+      publishers_ids = @media_items.map{ |m| m[:user_id].to_i }.uniq
       @tags_publishers[tag_id] = publishers_ids
 
       @publishers_media[tag_id] = {}
@@ -178,7 +190,7 @@ class Report::Tags < Report::Base
                 row += [feedly ? feedly.subscribers_amount : '']
               end
 
-              row += [media[:link], media[:likes_amount], media[:comments_amount], media[:created_time].strftime('%m/%d/%Y %H:%M:%S')]
+              row += [media[:link], media[:likes_amount], media[:comments_amount], (media[:created_time].is_a?(String) ? DateTime.parse(media[:created_time]) : media[:created_time]).strftime('%m/%d/%Y %H:%M:%S')]
               row += [media[:image]] if @report.output_data.include? 'media_url'
 
               row << tag.name

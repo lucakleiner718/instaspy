@@ -58,7 +58,9 @@
       <td>
         <div style="white-space: nowrap;">C: <%= report.created_at.strftime('%m/%d/%y %H:%M:%S') %></div>
         <div style="white-space: nowrap;"><%= "S: #{report.started_at.strftime('%m/%d/%y %H:%M:%S')}".html_safe if report.started_at %></div>
-        <div style="white-space: nowrap;"><%= "F: #{report.finished_at.strftime('%m/%d/%y %H:%M:%S')}" if report.finished_at %></div>
+        <% if report.finished_at %>
+          <div style="white-space: nowrap;" title="<%= humanize_time(report.finished_at - report.created_at) %>"><%= "F: #{report.finished_at.strftime('%m/%d/%y %H:%M:%S')}" %></div>
+        <% end %>
       </td>
       <td><%= simple_format report.note %></td>
       <td>
