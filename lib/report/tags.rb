@@ -59,6 +59,25 @@ class Report::Tags < Report::Base
           @publishers_media[tag_id][r[:user_id].to_i] << r
         end
       else
+        # res = Media.connection.execute(
+        #   "
+        #    SELECT media.id, media.user_id, media.likes_amount, media.comments_amount, media.link, media.image, media.created_time
+        #    FROM media
+        #    LEFT JOIN (
+        #      SELECT id, media.user_id
+        #      FROM media
+        #      WHERE media.id IN (
+        #        select media_id
+        #        from media_tags
+        #        where tag_id=#{tag_id}
+        #      )
+        #      #{"AND created_time >= '#{@report.date_from.beginning_of_day.strftime('%Y-%m-%d %H:%M:%S')}'" if @report.date_from}
+        #      #{"AND created_time =< '#{@report.date_to.end_of_day.strftime('%Y-%m-%d %H:%M:%S')}'" if @report.date_to}
+        #      GROUP BY user_id, id
+        #    ) as media_tmp ON media_tmp.id = media.id
+        #   "
+        # ).to_a
+
         tag_media_ids = MediaTag.where(tag_id: tag_id).pluck(:media_id)
         @media_items = []
         tag_media_ids.in_groups_of(100_000, false) do |ids|
@@ -79,18 +98,20 @@ class Report::Tags < Report::Base
           @media_items = @publishers_media[tag_id].values.flatten
         end
 
-        csv_string = CSV.generate do |csv|
-          csv << @media_items.flatten.first.keys
-          @media_items.each do |media|
-            csv << media.values
+        if @media_items.size > 0
+          csv_string = CSV.generate do |csv|
+            csv << @media_items.flatten.first.keys
+            @media_items.each do |media|
+              csv << media.values
+            end
           end
+
+          filepath = "reports/reports_data/report-#{@report.id}-tag-#{tag_id}-media-items.csv"
+          FileManager.save_file filepath, content: csv_string
+          @report.data[media_items_key] = filepath
+
+          @report.save
         end
-
-        filepath = "reports/reports_data/report-#{@report.id}-tag-#{tag_id}-media-items.csv"
-        FileManager.save_file filepath, content: csv_string
-        @report.data[media_items_key] = filepath
-
-        @report.save
       end
 
 
