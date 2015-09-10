@@ -1,14 +1,7 @@
 class InstaClient
 
   def initialize login=nil
-    if $insta_client_login
-      @login = $insta_client_login
-      # Rails.logger.debug "I use loaded login #{@login.id}".green
-    else
-      @login = login || InstagramLogin.all.sample
-      $insta_client_login = @login if $insta_client_login.blank? || $insta_client_login.id != @login.id
-      # Rails.logger.debug "I use new login #{@login.id}".cyan
-    end
+    set_login login
 
     raise unless @login
 
@@ -23,6 +16,21 @@ class InstaClient
     @login.account
   end
 
+  def set_login login
+    @login = login
+    # if !@login && $insta_client_login
+    #   @login = $insta_client_login
+    #   # Rails.logger.debug "I use loaded login #{@login.id}".green
+    # else
+    #   @login = login || InstagramLogin.all.sample
+    #   $insta_client_login = @login if $insta_client_login.blank? || $insta_client_login.id != @login.id
+    #   # Rails.logger.debug "I use new login #{@login.id}".cyan
+    # end
+    if !@login
+      @login = InstagramLogin.all.sample
+    end
+  end
+
   def login
     @login
   end
@@ -33,7 +41,7 @@ class InstaClient
 
   def change_login!
     @login = (@login ? InstagramLogin.where('id != ?', @login.id) : InstagramLogin.all).sample
-    $insta_client_login = @login
+    # $insta_client_login = @login
   end
 
   def invalid_login!
