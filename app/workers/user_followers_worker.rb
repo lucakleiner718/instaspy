@@ -2,7 +2,7 @@ class UserFollowersWorker
 
   include Sidekiq::Worker
   sidekiq_options unique: true, unique_args: -> (args) {
-      if args[1] && (args[1][:start_cursor] || args[1]['start_cursor'])
+      if args[1] && (args[1][:start_cursor] || args[1]['start_cursor']) || args[1][:ignore_uniqueness]
         args
       else
         [ args.first ]
@@ -57,7 +57,7 @@ class UserFollowersWorker
     return if user.followers_size >= user.followed_by
 
     if user.followed_by < 2_000
-      UserFollowersWorker.perform_async user.id, ignore_batch: true, ignore_exists: true
+      UserFollowersWorker.perform_async user.id, ignore_batch: true, ignore_exists: true, ignore_uniqueness: true
       return true
     end
 
