@@ -57,7 +57,7 @@ class UserFollowersWorker
     return if user.followers_size >= user.followed_by
 
     if user.followed_by < 2_000
-      UserFollowersWorker.perform_async user.id, ignore_batch: true
+      UserFollowersWorker.perform_async user.id, ignore_batch: true, ignore_exists: true
       return true
     end
 
