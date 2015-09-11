@@ -72,6 +72,7 @@ class InstaClient
       begin
         @ig_client.send(method, *args, &block)
       rescue Instagram::TooManyRequests => e
+        Rails.logger.info "#{">> issue".red} #{e.class.name} :: #{e.message}"
         @ic.change_login!
         retry
       rescue Instagram::ServiceUnavailable, Instagram::BadGateway, Instagram::InternalServerError, Instagram::GatewayTimeout,
@@ -80,12 +81,13 @@ class InstaClient
         Zlib::BufError,
         Errno::EPIPE, Errno::EOPNOTSUPP, Errno::ETIMEDOUT => e
 
-        Rails.logger.debug "#{">> issue".red} #{e.class.name} :: #{e.message}"
+        Rails.logger.info "#{">> issue".red} #{e.class.name} :: #{e.message}"
         sleep 10*retries
         retries += 1
         retry if retries < 3
         raise e
       rescue Instagram::BadRequest => e
+        Rails.logger.info "#{">> issue".red} #{e.class.name} :: #{e.message}"
         if e.message =~ /The access_token provided is invalid/
           @ic.invalid_login!
           retry
