@@ -2,18 +2,20 @@ class InstaClient
 
   def initialize login=nil
     set_login login
-
-    raise unless @login
-
-    @ig_client = Instagram.client access_token: @login.access_token,
-                               client_id: @login.account.client_id,
-                               client_secret: @login.account.client_secret,
-                               no_response_wrapper: true
-    @client_proxy = Client.new @ig_client, self
+    set_client
+    build_client
   end
 
   def account
     @login.account
+  end
+
+  def ig_client
+    @ig_client
+  end
+
+  def build_client
+    @client_proxy = Client.new self
   end
 
   def set_login login
@@ -29,18 +31,28 @@ class InstaClient
     if !@login
       @login = InstagramLogin.all.sample
     end
+
+    raise unless @login
+  end
+
+  def set_client
+    @ig_client = Instagram.client access_token: @login.access_token,
+                client_id: @login.account.client_id,
+                client_secret: @login.account.client_secret,
+                no_response_wrapper: true
   end
 
   def login
     @login
   end
 
-  def client(direct: false)
+  def client direct: false
     direct ? @ig_client : @client_proxy
   end
 
   def change_login!
     @login = (@login ? InstagramLogin.where('id != ?', @login.id) : InstagramLogin.all).sample
+    set_client
     # $insta_client_login = @login
   end
 
@@ -61,20 +73,23 @@ class InstaClient
 
   class Client
 
-    def initialize client, ic
-      @ig_client = client
+    def initialize ic
       @ic = ic
     end
 
     def method_missing(method, *args, &block)
       retries = 0
+      retries_limit = 3
 
       begin
-        @ig_client.send(method, *args, &block)
+        @ic.ig_client.send(method, *args, &block)
       rescue Instagram::TooManyRequests => e
         Rails.logger.info "#{">> issue".red} #{e.class.name} :: #{e.message}"
         @ic.change_login!
-        retry
+        sleep 10*retries
+        retries += 1
+        retry if retries < retries_limit
+        raise e
       rescue Instagram::ServiceUnavailable, Instagram::BadGateway, Instagram::InternalServerError, Instagram::GatewayTimeout,
         JSON::ParserError,
         Faraday::ConnectionFailed, Faraday::SSLError, Faraday::ParsingError, Faraday::TimeoutError,
@@ -84,7 +99,7 @@ class InstaClient
         Rails.logger.info "#{">> issue".red} #{e.class.name} :: #{e.message}"
         sleep 10*retries
         retries += 1
-        retry if retries < 3
+        retry if retries < retries_limit
         raise e
       rescue Instagram::BadRequest => e
         Rails.logger.info "#{">> issue".red} #{e.class.name} :: #{e.message}"
