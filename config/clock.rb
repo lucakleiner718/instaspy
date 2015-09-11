@@ -35,9 +35,8 @@ module Clockwork
     # Save tag stat for chart
     every(1.day, 'TagStat', at: '01:00') { TagStatWorker.spawn }
 
-    every(12.hours, 'media.amount.stat') {
-      DailyMediaStatWorker.spawn
-    }
+    # Update stat data for media chart
+    every(1.day, 'media.amount.stat', at: '04:00') { DailyMediaStatWorker.spawn }
 
     # Update users, which doesn't have info
     every(30.minutes, 'update.users') { UserWorker.spawn }

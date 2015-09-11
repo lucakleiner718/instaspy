@@ -102,7 +102,7 @@ class InstaClient
         retry if retries < retries_limit
         raise e
       rescue Instagram::BadRequest => e
-        Rails.logger.info "#{">> issue".red} #{e.class.name} :: #{e.message}"
+        Rails.logger.info "#{">> issue".red} #{e.class.name} :: #{e.message}" if e.message !~ /you cannot view this resource/
         if e.message =~ /The access_token provided is invalid/
           @ic.invalid_login!
           retry
