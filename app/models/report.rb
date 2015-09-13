@@ -21,6 +21,12 @@ class Report < ActiveRecord::Base
     ReportProcessNewWorker.perform_async self.id
   end
 
+  after_commit do
+    if self.status_changed? && self.status == 'stopped'
+      ReportStopJobs.perform_async self.id
+    end
+  end
+
   OUTPUT_DATA = [
     ['AVG Likes', 'likes'], ['AVG Comments', 'comments'], ['Location', 'location'], ['Feedly subscribers amount', 'feedly'],
     ['Last media date', 'last_media_date'], ['Slim (1k+ followers, with email)', 'slim'],

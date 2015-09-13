@@ -120,7 +120,7 @@ class Report::Followers < Report::Base
 
   def after_finish
     super
-    ReportStopJobs.new.perform @report.id
+    ReportStopJobs.perform_async @report.id
   end
 
 end
