@@ -696,7 +696,7 @@ class User < ActiveRecord::Base
     if self.location_updated_at && self.location_updated_at > 1.month.ago && self.location_country && !options[:force]
       location_correct = true
     end
-    if location_correct && self.location_country == 'US' && self.location_state.size == 2
+    if location_correct && self.location_country == 'US' && self.location_state.present? && self.location_state.size == 2
       location_correct = false
       self.fix_media_us_states
     end
