@@ -1,5 +1,7 @@
 class InstaClient
 
+  USE_GLOBAL_LOGIN = true
+
   def initialize login=nil
     set_login login
     set_client
@@ -20,17 +22,19 @@ class InstaClient
 
   def set_login login
     @login = login
-    # if !@login && $insta_client_login
-    #   @login = $insta_client_login
-    #   # Rails.logger.debug "I use loaded login #{@login.id}".green
-    # else
-    #   @login = login || InstagramLogin.all.sample
-    #   $insta_client_login = @login if $insta_client_login.blank? || $insta_client_login.id != @login.id
-    #   # Rails.logger.debug "I use new login #{@login.id}".cyan
-    # end
-    if !@login
-      @login = InstagramLogin.all.sample
+
+    if USE_GLOBAL_LOGIN
+      if !@login && $insta_client_login
+        @login = $insta_client_login
+        Rails.logger.debug "I use loaded login #{@login.id}".green
+      else
+        @login = login || InstagramLogin.all.sample
+        $insta_client_login = @login if $insta_client_login.blank? || $insta_client_login.id != @login.id
+        Rails.logger.debug "I use new login #{@login.id}".cyan
+      end
     end
+
+    @login = InstagramLogin.all.sample unless @login
 
     raise unless @login
   end
@@ -53,7 +57,7 @@ class InstaClient
   def change_login!
     @login = (@login ? InstagramLogin.where('id != ?', @login.id) : InstagramLogin.all).sample
     set_client
-    # $insta_client_login = @login
+    $insta_client_login = @login if USE_GLOBAL_LOGIN
   end
 
   def invalid_login!
