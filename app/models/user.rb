@@ -126,54 +126,59 @@ class User < ActiveRecord::Base
 
     return false if self.insta_id.blank?
 
-    begin
-      ic = InstaClient.new
-      info = ic.client.user(self.insta_id)
-      data = info.data
-
-      exists_username = nil
-      # if we already have in database user with same username
-      if data['username'] != self.username
-        exists_username = User.where(username: data['username']).first
-        if exists_username
-          # set random username for it, later we will start update_info to get actual username
-          exists_username.username = "#{exists_username.username}#{Time.now.to_i}"
-          exists_username.save!
-        end
-      end
-    rescue Instagram::BadRequest => e
-      if e.message =~ /you cannot view this resource/
-
-        self.private = true
-
-        # if user is private and we don't have it's username, than just remove it from db
-        if self.private? && self.username.blank?
-          self.destroy
-          return false
-        end
-
-        self.grabbed_at = Time.now
-
-        # If account private - try to get info from public page via http
-        resp = self.update_via_http!
-        return false unless resp
-
-        if self.destroyed?
-          return false
-        else
-          self.save!
-          return true
-        end
-      elsif e.message =~ /this user does not exist/
+    if self.private?
+      if self.username.blank?
         self.destroy
+        return false
       end
-      return false
-    end
 
-    self.set_data data
-    self.grabbed_at = Time.now
-    self.private = false if self.private?
-    self.save!
+      resp = self.update_via_http!
+      return false unless resp
+
+      return !self.destroyed?
+    else
+      begin
+        ic = InstaClient.new
+        info = ic.client.user(self.insta_id)
+        data = info.data
+
+        exists_username = nil
+        # if we already have in database user with same username
+        if data['username'] != self.username
+          exists_username = User.where(username: data['username']).first
+          if exists_username
+            # set random username for it, later we will start update_info to get actual username
+            exists_username.username = "#{exists_username.username}#{Time.now.to_i}"
+            exists_username.save!
+          end
+        end
+      rescue Instagram::BadRequest => e
+        if e.message =~ /you cannot view this resource/
+
+          # if user is private and we don't have it's username, than just remove it from db
+          if self.username.blank?
+            self.destroy
+            return false
+          end
+
+          self.private = true
+
+          # If account private - try to get info from public page via http
+          resp = self.update_via_http!
+          return false unless resp
+
+          return !self.destroyed?
+        elsif e.message =~ /this user does not exist/
+          self.destroy
+        end
+        return false
+      end
+
+      self.set_data data
+      self.grabbed_at = Time.now
+      self.private = false if self.private?
+      self.save!
+    end
 
     if exists_username
       exists_username.update_info!
@@ -223,6 +228,8 @@ class User < ActiveRecord::Base
     end
     data = json['entry_data']['ProfilePage'].first['user']
 
+    self.private = data['is_private']
+
     data['profile_picture'] = data['profile_pic_url']
     data['bio'] = data['biography'] || ''
     data['website'] = data['external_url'] || ''
@@ -233,6 +240,7 @@ class User < ActiveRecord::Base
     }
 
     self.set_data data
+    self.grabbed_at = Time.now
     self.save!
   end
 
