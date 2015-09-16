@@ -26,11 +26,11 @@ class InstaClient
     if USE_GLOBAL_LOGIN
       if !@login && $insta_client_login
         @login = $insta_client_login
-        Rails.logger.debug "I use loaded login #{@login.id}".green
+        # Rails.logger.debug "I use loaded login #{@login.id}".green
       else
         @login = login || InstagramLogin.all.sample
         $insta_client_login = @login if $insta_client_login.blank? || $insta_client_login.id != @login.id
-        Rails.logger.debug "I use new login #{@login.id}".cyan
+        # Rails.logger.debug "I use new login #{@login.id}".cyan
       end
     end
 
