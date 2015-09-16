@@ -13,3 +13,7 @@ Sidekiq.configure_client do |config|
 end
 
 SidekiqUniqueJobs.config.unique_args_enabled = true
+
+Sidekiq::Statistic.configure do |config|
+  config.log_file = 'log/sidekiq-statistic.log'
+end
