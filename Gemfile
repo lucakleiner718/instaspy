@@ -52,7 +52,6 @@ gem 'render_csv'
 gem 'sidekiq', '~> 3.3.2'
 gem 'sidekiq-failures', github: 'antonzaytsev/sidekiq-failures', branch: 'short-error-message'
 gem 'sidekiq-unique-jobs'
-gem 'sidekiq-statistic'
 
 gem 'sinatra', require: false # Web interface of Sidekiq processes
 gem 'slim'
