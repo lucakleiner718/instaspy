@@ -121,7 +121,7 @@ class Report::Tags < Report::Base
       unless @report.steps[step_index][1].include?('publishers_info')
         users = []
         publishers_ids.in_groups_of(50_000, false) do |ids|
-          users.concat User.where(id: ids).outdated.pluck(:id)
+          users.concat User.where(id: ids).outdated(7.days.ago(@report.created_at)).pluck(:id)
         end
         if users.size == 0
           @report.steps[step_index][1] << 'publishers_info'

@@ -62,9 +62,7 @@ class Report::Base
     ids ||= @report.processed_ids
 
     unless @report.steps.include?('user_info')
-      users = User.where(id: ids).outdated(1.day).pluck(:id, :grabbed_at)
-      not_updated = users.select{|r| r[1].blank? || r[1] < 36.hours.ago}.map(&:first)
-
+      not_updated = User.where(id: ids).outdated(1.day.ago(@report.created_at)).pluck(:id)
       if not_updated.size == 0
         @report.steps.push 'user_info'
       else
@@ -243,7 +241,7 @@ class Report::Base
         not_updated = []
         followers_to_update.in_groups_of(50_000, false) do |part_ids|
           # grab all users without data and data outdated for 14 days
-          list = User.where(id: part_ids).outdated(30.days).pluck(:id)
+          list = User.where(id: part_ids).outdated(30.days.ago(@report.created_at)).pluck(:id)
 
           # in slim report we need only users with emails and over 1k followers. do not update follower if we grab data
           # for him and there is no email in bio
@@ -317,8 +315,7 @@ class Report::Base
       unless @report.steps.include?('followees_info')
         not_updated = []
         followees_ids.in_groups_of(10_000, false) do |ids|
-          users = User.where(id: ids).outdated(7.days).pluck(:id, :grabbed_at)
-          not_updated.concat users.select{|r| r[1].blank? || r[1] < 8.days.ago}.map(&:first)
+          not_updated.concat User.where(id: ids).outdated(7.days.ago(@report.created_at)).pluck(:id)
         end
         if not_updated.size == 0
           @report.steps << 'followees_info'
