@@ -19,7 +19,7 @@ class UserFollowersWorker
 
     return false if user.private? || user.followers_size >= user.followed_by
 
-    if options[:ignore_batch] && !options[:batch]
+    if (options[:ignore_batch] && !options[:batch]) || user.followed_by < 2_000
       options.delete(:ignore_batch)
       options.delete(:batch)
       UserUpdateFollowers.perform user: user, options: options
