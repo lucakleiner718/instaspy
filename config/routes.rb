@@ -45,7 +45,7 @@ Rails.application.routes.draw do
 
   require 'sidekiq/web'
   Sidekiq::Web.use Rack::Auth::Basic do |username, password|
-    username == 'rob' && password == 'awesomeLA'
+    username == 'rob' && password == 'pass31'
   end if Rails.env.production?
   mount Sidekiq::Web, at: "/sidekiq"
 
