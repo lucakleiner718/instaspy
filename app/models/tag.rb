@@ -62,7 +62,7 @@ class Tag < ActiveRecord::Base
       time_start = Time.now
 
       ic = InstaClient.new
-      media_list = ic.client.tag_recent_media(URI.escape(self.name), max_tag_id: max_tag_id, count: 100)
+      media_list = ic.client.tag_recent_media(self.name, max_tag_id: max_tag_id, count: 100)
 
       ig_time_end = Time.now
 
