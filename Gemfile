@@ -45,7 +45,7 @@ end
 
 gem 'jquery-ui-rails'
 gem 'pry-rails'
-gem 'instagram'
+gem 'instagram', '~> 1.1.6'
 gem 'httparty'
 gem 'render_csv'
 
@@ -76,6 +76,7 @@ gem 'kaminari-bootstrap'
 gem 'colorize'
 gem 'rgeo'
 gem 'rgeo-shapefile'
+# gem 'feedlr'
 gem 'feedlr', github: 'khelll/feedlr'
 gem 'newrelic_rpm'
 gem 'simple_form'

@@ -179,7 +179,7 @@ GEM
       railties (>= 3.0.0)
     faraday (0.9.1)
       multipart-post (>= 1.2, < 3)
-    faraday_middleware (0.10.0)
+    faraday_middleware (0.9.2)
       faraday (>= 0.7.4, < 0.10)
     fastercsv (1.5.5)
     ffi (1.9.10)
@@ -311,10 +311,11 @@ GEM
     i18n (0.7.0)
     i18n_data (0.7.0)
     inflecto (0.0.2)
-    instagram (0.3.2)
-      addressable
-      nibbler (>= 1.2.0)
-      yajl-ruby
+    instagram (1.1.6)
+      faraday (>= 0.7, < 0.10)
+      faraday_middleware (>= 0.8, < 0.10)
+      hashie (>= 0.4.0)
+      multi_json (~> 1.0, >= 1.0.3)
     ipaddress (0.8.0)
     jbuilder (2.3.1)
       activesupport (>= 3.0.0, < 5)
@@ -354,7 +355,6 @@ GEM
       net-ssh (>= 2.6.5)
     net-ssh (2.9.2)
     newrelic_rpm (3.13.0.299)
-    nibbler (1.3.0)
     nokogiri (1.6.6.2)
       mini_portile (~> 0.6.0)
     notiffany (0.0.8)
@@ -520,7 +520,6 @@ GEM
     webmock (1.21.0)
       addressable (>= 2.3.6)
       crack (>= 0.3.2)
-    yajl-ruby (1.2.1)
 
 PLATFORMS
   ruby
@@ -552,7 +551,7 @@ DEPENDENCIES
   god
   guard-rspec
   httparty
-  instagram
+  instagram (~> 1.1.6)
   jbuilder (~> 2.0)
   jquery-rails
   jquery-ui-rails
