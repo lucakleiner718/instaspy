@@ -4,13 +4,14 @@ Rails.application.routes.draw do
   post 'users/duplicates' => 'users#duplicates', as: :users_duplicates
   get 'users/export' => 'users#export', as: :users_export
   post 'users/export/process' => 'users#export_process', as: :users_export_process
-  get 'users/followers-chart/:id' => 'users#followers_chart', as: :user_followers_chart
 
   get 'users/scan' => 'users#scan', as: :users_scan
   get 'users/scan/:username' => 'users#scan_show', as: :users_scan_show
   get 'users/scan/data/:username' => 'users#scan_data', as: :users_scan_data
   get 'users/scan_requests' => 'users#scan_requests', as: :users_scan_requests
   get 'users/:username/followers.csv' => 'users#followers', as: :user_followers
+  get 'users/:username/followers-chart' => 'users#followers_chart', as: :user_followers_chart
+  get 'users/:username/followees-chart' => 'users#followees_chart', as: :user_followees_chart
 
   root to: 'pages#home'
 

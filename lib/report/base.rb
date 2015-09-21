@@ -291,7 +291,9 @@ class Report::Base
 
     if @report.steps.include?('followees')
 
-      if @report.data['followees_file'].blank?
+      if @report.data['followees_file'].present?
+        followees_ids = FileManager.read_file(@report.data['followees_file']).split(',')
+      else
         # ids of ALL followees of provided users
         followees_ids = Follower.where(follower_id: ids)
         followees_ids = followees_ids.where("followed_at >= ?", @report.date_from) if @report.date_from.present?
@@ -304,8 +306,6 @@ class Report::Base
 
         # @report.amounts[:followees] = followees_ids.size
         @report.save
-      else
-        followees_ids = FileManager.read_file(@report.data['followees_file']).split(',')
       end
 
       @followees_ids = followees_ids

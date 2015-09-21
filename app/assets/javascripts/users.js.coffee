@@ -10,10 +10,10 @@ $(document).on 'ready page:load', ->
     chart:
       type: 'line'
       backgroundColor: 'transparent'
-#    title:
-#      text: 'User ' + chart_box.data('username') + ' followers Chart'
-#    subtitle:
-#      text: 'Source: Instagram.com'
+    title:
+      text: 'User ' + chart_box.data('username') + ' followers Chart'
+    subtitle:
+      text: 'Source: Instagram.com'
     xAxis:
       type: 'datetime'
       dateTimeLabelFormats:
