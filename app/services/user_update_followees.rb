@@ -19,13 +19,6 @@ class UserUpdateFollowees < ServiceObject
 
     return false if options[:start_cursor] && options[:start_cursor] < 0
 
-    # if options[:continue]
-    #   last_follow_time = Follower.where(follower_id: user.id).where("followed_at is not null").order(followed_at: :asc).first.try(:followed_at)
-    #   if last_follow_time
-    #     cursor = last_follow_time.followed_at.to_i * 1_000
-    #   end
-    # end
-
     options[:count] ||= 100
 
     if options[:reload]
@@ -146,10 +139,10 @@ class UserUpdateFollowees < ServiceObject
         end
       end
 
-      # if !options[:ignore_exists] && exists > 5
-      #   user.followees_updated_time!
-      #   break
-      # end
+      if !options[:ignore_exists] && exists > 5
+        user.followees_updated_time!
+        break
+      end
 
       cursor = resp.pagination['next_cursor']
 
@@ -164,7 +157,7 @@ class UserUpdateFollowees < ServiceObject
         end
         user.delete_duplicated_followees!
 
-        # user.followees_updated_time!
+        user.followees_updated_time!
 
         break
       end

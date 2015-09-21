@@ -19,13 +19,6 @@ class UserUpdateFollowers < ServiceObject
 
     return false if options[:start_cursor] && options[:start_cursor] < 0
 
-    # if options[:continue]
-    #   last_follow_time = Follower.where(user_id: user.id).where("followed_at is not null").order(followed_at: :asc).first.try(:followed_at)
-    #   if last_follow_time
-    #     cursor = last_follow_time.to_i * 1_000
-    #   end
-    # end
-
     options[:count] ||= 100
 
     if options[:reload]

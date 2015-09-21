@@ -275,8 +275,7 @@ class Report::Base
     ids ||= @report.processed_ids
 
     if @report.steps.include?('user_info') && !@report.steps.include?('followees')
-      users = User.where(id: ids).not_private.where("followees_updated_at is null OR followees_updated_at < ?", 3.days.ago).where('follows > 0').map{ |u| [u.id, u.follows, u.followees_size] }
-      for_update = users.select{|r| r[2]/r[1].to_f < 0.95 || r[2]/r[1].to_f > 1.2 }
+      for_update = User.where(id: ids).not_private.where('follows > 0').map{|u| [u.id, u.follows, u.followees_size, u]}.select{ |r| r[2]/r[1].to_f < 0.95 || r[2]/r[1].to_f > 1.2 }
 
       if for_update.size == 0
         @report.steps << 'followees'

@@ -1108,9 +1108,23 @@ class User < ActiveRecord::Base
     self.data['followers_info_updated_at'] = followers_info_updated_at
   end
 
+  def followees_info_updated_at
+    DateTime.parse(self.data['followees_info_updated_at']) if self.data['followees_info_updated_at'].present?
+  end
+
+  def followees_info_updated_at=followees_info_updated_at
+    self.data['followees_info_updated_at'] = followees_info_updated_at
+  end
+
   def followers_updated_time!
     if self.followed_by/self.followers_size.to_f >= 0.95
       self.update_attribute :followers_updated_at, Time.now
+    end
+  end
+
+  def followees_updated_time!
+    if self.follows/self.followees_size.to_f >= 0.95
+      self.update_attribute :followees_updated_at, Time.now
     end
   end
 

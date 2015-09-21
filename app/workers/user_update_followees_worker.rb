@@ -14,10 +14,10 @@ class UserUpdateFolloweesWorker
         UserWorker.perform_async id
       end
     end
-    # if followees_ids.size > user.follows * 0.9
-    #   user.followees_info_updated_at = Time.now
-    #   user.save
-    # end
+    if followees_ids.size > user.follows * 0.9
+      user.followees_info_updated_at = Time.now
+      user.save
+    end
   end
 
 end

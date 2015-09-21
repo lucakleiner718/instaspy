@@ -36,7 +36,6 @@ class Report::Followers < Report::Base
     @report.save!
 
     if @parts_amount == @report.steps.size
-      @report.status = 'finished'
       self.finish
     end
 
