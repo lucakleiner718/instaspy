@@ -637,13 +637,13 @@ class User < ActiveRecord::Base
     }
 
     Country.all.each do |c|
-      options = [c[0]]
-      options << 'Russia' if c[1] == 'RU'
-      options << 'USA' if c[1] == 'US'
+      options = [c.name]
+      options << 'Russia' if c.alpha2 == 'RU'
+      options << 'USA' if c.alpha2 == 'US'
       options = options.join('|')
       match = match_str.call(self.bio, options)
       if match && match[1]
-        country = c[1]
+        country = c.alpha2
         break
       end
     end
