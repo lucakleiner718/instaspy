@@ -1,4 +1,4 @@
-class UserFollowersWorker
+class UserFollowersCollectWorker
 
   include Sidekiq::Worker
   sidekiq_options unique: true, unique_args: -> (args) {
@@ -22,16 +22,16 @@ class UserFollowersWorker
     if (options[:ignore_batch] && !options[:batch]) || user.followed_by < 2_000
       options.delete(:ignore_batch)
       options.delete(:batch)
-      UserUpdateFollowers.perform user: user, options: options
+      UserFollowersCollect.perform user: user, options: options
     else
       batch_collect user, *args, options
     end
   end
 
   def self.delete_exists_jobs user_id
-    queue_jobs = Sidekiq::Queue.new(UserFollowersWorker.sidekiq_options['queue'])
+    queue_jobs = Sidekiq::Queue.new(UserFollowersCollectWorker.sidekiq_options['queue'])
     queue_jobs.each do |job|
-      if job.klass == 'UserFollowersWorker' && job.args[0].to_i == user_id.to_i
+      if job.klass == UserFollowersCollectWorker.name && job.args[0].to_i == user_id.to_i
         job.delete
       end
     end
@@ -39,9 +39,9 @@ class UserFollowersWorker
 
   def self.get_jobs user_id
     jobs = []
-    queue_jobs = Sidekiq::Queue.new(UserFollowersWorker.sidekiq_options['queue'])
+    queue_jobs = Sidekiq::Queue.new(UserFollowersCollectWorker.sidekiq_options['queue'])
     queue_jobs.each do |job|
-      if job.klass == 'UserFollowersWorker' && job.args[0].to_i == user_id.to_i
+      if job.klass == UserFollowersCollectWorker.name && job.args[0].to_i == user_id.to_i
         jobs << job
       end
     end
@@ -50,14 +50,14 @@ class UserFollowersWorker
 
   def batch_collect user, *args
     options = args.extract_options!
-    return if UserFollowersWorker.jobs_exists?(user.id) && !options[:force_batch]
+    return if UserFollowersCollectWorker.jobs_exists?(user.id) && !options[:force_batch]
 
     user.update_info! force: true
 
     return if user.followers_size >= user.followed_by
 
     if user.followed_by < 2_000
-      UserFollowersWorker.perform_async user.id, ignore_batch: true, ignore_exists: true, ignore_uniqueness: true
+      UserFollowersCollectWorker.perform_async user.id, ignore_batch: true, ignore_exists: true, ignore_uniqueness: true
       return true
     end
 
@@ -72,15 +72,15 @@ class UserFollowersWorker
       start_cursor = i > 0 ? start - offset : nil
       break if start_cursor && start_cursor < 0
       finish_cursor = i+1 < amount ? start-(i+1)*worker_days : nil
-      UserFollowersWorker.perform_async(user.id, start_cursor: start_cursor, finish_cursor: finish_cursor, ignore_exists: true, ignore_batch: true)
+      UserFollowersCollectWorker.perform_async(user.id, start_cursor: start_cursor, finish_cursor: finish_cursor, ignore_exists: true, ignore_batch: true)
     end
   end
 
   def self.jobs_exists? user_id
     exists = false
-    queue_jobs = Sidekiq::Queue.new(UserFollowersWorker.sidekiq_options['queue'])
+    queue_jobs = Sidekiq::Queue.new(UserFollowersCollectWorker.sidekiq_options['queue'])
     queue_jobs.each do |job|
-      if job.klass == 'UserFollowersWorker' && job.args[0].to_i == user_id.to_i
+      if job.klass == UserFollowersCollectWorker.name && job.args[0].to_i == user_id.to_i
         exists = true
         break
       end
@@ -89,7 +89,7 @@ class UserFollowersWorker
     unless exists
       workers = Sidekiq::Workers.new
       workers.each do |process_id, thread_id, work|
-        if work['payload']['class'] == 'UserFollowersWorker' && work['payload']['args'][0].to_i == user_id.to_i
+        if work['payload']['class'] == UserFollowersCollectWorker.name && work['payload']['args'][0].to_i == user_id.to_i
           if work['payload']['args'][1] && work['payload']['args'][1]['ignore_batch']
             exists = true
             break

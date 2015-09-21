@@ -291,7 +291,7 @@ class User < ActiveRecord::Base
   #
   def update_followers *args
     options = args.extract_options!
-    UserUpdateFollowers.perform user: self, options: options
+    UserFollowersCollect.perform user: self, options: options
   end
 
   def delete_duplicated_followers!
@@ -330,7 +330,7 @@ class User < ActiveRecord::Base
   #
   def update_followees *args
     options = args.extract_options!
-    UserUpdateFollowees.perform user: self, options: options
+    UserFolloweesCollect.perform user: self, options: options
   end
 
   def set_data data
@@ -1039,7 +1039,7 @@ class User < ActiveRecord::Base
     if !fa
       if self.followers_info_updated_at.blank? || self.followers_info_updated_at < 1.week.ago
         if self.followers_size < self.followed_by * 0.95
-          UserUpdateFollowersWorker.perform_async self.id
+          UserFollowersUpdateWorker.perform_async self.id
         else
           UserFollowersAnalyticsWorker.perform_async self.id
         end
@@ -1052,7 +1052,6 @@ class User < ActiveRecord::Base
 
       followers_ids = Follower.where(user_id: self.id).pluck(:follower_id)
       followers_ids.in_groups_of(100_000, false) do |ids|
-        # User.where(id: ids).where(followed_by: nil).pluck(:id).each { |id| UserWorker.perform_async id }
         User.where(id: ids).where('followed_by is not null').pluck(:followed_by).each do |followers_size|
           groups.each do |group|
             amounts[group] ||= 0
@@ -1070,7 +1069,7 @@ class User < ActiveRecord::Base
         end
       end
 
-      UserUpdateFollowersWorker.perform_async self.id
+      UserFollowersUpdateWorker.perform_async self.id
 
       fa = amounts
       data_set_value 'followers_analytics', amounts

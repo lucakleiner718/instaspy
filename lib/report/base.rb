@@ -66,7 +66,7 @@ class Report::Base
       if not_updated.size == 0
         @report.steps.push 'user_info'
       else
-        not_updated.map { |uid| UserWorker.perform_async uid, force: true }
+        not_updated.map { |uid| UserUpdateWorker.perform_async uid, force: true }
         @progress += (ids.size - not_updated.size) / ids.size.to_f / @parts_amount
       end
     end
@@ -202,7 +202,7 @@ class Report::Base
         User.where(id: ids).not_private.where("followers_updated_at is null OR followers_updated_at < ?", 10.days.ago).where('followed_by > 0').update_all(followers_updated_at: Time.now)
       else
         for_update.each do |row|
-          UserFollowersWorker.perform_async row[0], ignore_exists: true
+          UserFollowersCollectWorker.perform_async row[0], ignore_exists: true
         end
         @progress += (ids.size - for_update.size) / ids.size.to_f / @parts_amount
       end
@@ -261,7 +261,7 @@ class Report::Base
         else
           # send to update only first 100k users to not overload query
           not_updated[0...100_000].each do |uid|
-            UserWorker.perform_async uid
+            UserUpdateWorker.perform_async uid
           end
           self.save_cached('followers_to_update', not_updated)
           @progress += (followers_ids.size - not_updated.size) / followers_ids.size.to_f / @parts_amount
@@ -280,7 +280,7 @@ class Report::Base
       if for_update.size == 0
         @report.steps << 'followees'
       else
-        for_update.each { |row| UserFolloweesWorker.perform_async(row[0], ignore_exists: true) }
+        for_update.each { |row| UserFolloweesCollectWorker.perform_async(row[0], ignore_exists: true) }
         @progress += (ids.size - for_update.size) / ids.size.to_f/ @parts_amount
       end
     end
@@ -319,7 +319,7 @@ class Report::Base
         if not_updated.size == 0
           @report.steps << 'followees_info'
         else
-          not_updated.each { |uid| UserWorker.perform_async uid }
+          not_updated.each { |uid| UserUpdateWorker.perform_async uid }
           @progress += (followees_ids.size - not_updated.size) / followees_ids.size.to_f / @parts_amount
         end
       end

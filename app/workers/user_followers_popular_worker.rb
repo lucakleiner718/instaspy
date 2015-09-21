@@ -1,4 +1,4 @@
-class UserPopularFollowersWorker
+class UserFollowersPopularWorker
 
   include Sidekiq::Worker
   sidekiq_options unique: true, unique_args: -> (args) { [ args.first ] }

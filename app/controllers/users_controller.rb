@@ -123,10 +123,10 @@ class UsersController < ApplicationController
     end
 
     if @user.followers_updated_at.blank? || @user.followers_updated_at < 1.month.ago
-      UserFollowersWorker.perform_async @user.id, ignore_exists: true
+      UserFollowersCollectWorker.perform_async @user.id, ignore_exists: true
     else
       if @user.followers_info_updated_at.blank? || @user.followers_info_updated_at < 1.week.ago
-        UserUpdateFollowersWorker.perform_async @user.id
+        UserFollowersUpdateWorker.perform_async @user.id
       end
     end
 
@@ -136,7 +136,7 @@ class UsersController < ApplicationController
     else
       popular_followers_percentage = @user.data_get_value('popular_followers_percentage', lifetime: 54.weeks)
       if @user.followers_updated_at && @user.followers_updated_at > 1.month.ago
-        UserPopularFollowersWorker.perform_async @user.id
+        UserFollowersPopularWorker.perform_async @user.id
       end
     end
 

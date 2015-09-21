@@ -28,7 +28,7 @@ module Clockwork
     # Update followers list for specified users
     every(12.hours, 'FollowersReport.update') do
       TrackUser.where(followers: true).pluck(:user_id).each do |user_id|
-        UserFollowersWorker.perform_async user_id
+        UserFollowersCollectWorker.perform_async user_id
       end
     end
 
@@ -38,16 +38,12 @@ module Clockwork
     # Update stat data for media chart
     every(1.day, 'media.amount.stat', at: '04:00') { DailyMediaStatWorker.spawn }
 
-    # Update users, which doesn't have info
-    every(30.minutes, 'update.users') { UserWorker.spawn }
-
     # Weekly Reports
     # Send weekly report about followers for specified users
-    every(1.week, 'FollowersReport.report', at: "Wednesday 02:00") { FollowersReportWorker.perform_async }
+    every(1.week, 'FollowersReport.report', at: "Wednesday 02:00") { RegularReports.followers_weekly }
     # Send weekly report about media
-    every(1.week, 'media.report', at: "Wednesday 03:00") { ReportWorker.perform_async }
+    every(1.week, 'media.report', at: "Wednesday 03:00") { RegularReports.publishers_weekly }
     # Weekly Reports END
-
   end
 
   # Update some stat

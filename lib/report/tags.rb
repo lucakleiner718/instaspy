@@ -127,7 +127,7 @@ class Report::Tags < Report::Base
           @report.steps[step_index][1] << 'publishers_info'
           @report.save
         else
-          users.each { |uid| UserWorker.perform_async uid }
+          users.each { |uid| UserUpdateWorker.perform_async uid }
         end
       end
 

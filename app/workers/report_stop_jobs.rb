@@ -17,9 +17,9 @@ class ReportStopJobs
 
   def stop_followers_grab
     # Stop followers update jobs
-    queue_jobs = Sidekiq::Queue.new(UserFollowersWorker.sidekiq_options['queue'])
+    queue_jobs = Sidekiq::Queue.new(UserFollowersCollectWorker.sidekiq_options['queue'])
     queue_jobs.each do |job|
-      if job.klass == 'UserFollowersWorker' && job.args[0].to_s.in?(@report.processed_ids)
+      if job.klass == UserFollowersCollectWorker.name && job.args[0].to_s.in?(@report.processed_ids)
         job.delete
       end
     end
@@ -27,9 +27,9 @@ class ReportStopJobs
 
   def stop_followees_grab
     # Stop followers update jobs
-    queue_jobs = Sidekiq::Queue.new(UserFolloweesWorker.sidekiq_options['queue'])
+    queue_jobs = Sidekiq::Queue.new(UserFolloweesCollectWorker.sidekiq_options['queue'])
     queue_jobs.each do |job|
-      if job.klass == 'UserFolloweesWorker' && job.args[0].to_s.in?(@report.processed_ids)
+      if job.klass == UserFolloweesCollectWorker.name && job.args[0].to_s.in?(@report.processed_ids)
         job.delete
       end
     end

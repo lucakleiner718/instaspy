@@ -1,4 +1,4 @@
-class UserWorker
+class UserUpdateWorker
 
   include Sidekiq::Worker
   sidekiq_options queue: :middle,
