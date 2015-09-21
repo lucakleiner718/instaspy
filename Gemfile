@@ -5,7 +5,7 @@ ruby '2.1.1'
 
 gem 'rails', '4.2.3'                      # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 
-gem 'sass-rails', '~> 4.0.3'              # Use SCSS for stylesheets
+gem 'sass-rails', '~> 5.0.4'              # Use SCSS for stylesheets
 gem 'uglifier', '>= 1.3.0'                # Use Uglifier as compressor for JavaScript assets
 gem 'coffee-rails', '~> 4.0.0'            # Use CoffeeScript for .js.coffee assets and views
 # gem 'therubyracer', platforms: :ruby     # See https://github.com/sstephenson/execjs#readme for more supported runtimes
@@ -49,9 +49,9 @@ gem 'instagram'
 gem 'httparty'
 gem 'render_csv'
 
-gem 'sidekiq', '~> 3.3.2'
+gem 'sidekiq', '~> 3.5.0'
 gem 'sidekiq-failures', github: 'antonzaytsev/sidekiq-failures', branch: 'short-error-message'
-gem 'sidekiq-unique-jobs'
+gem 'sidekiq-unique-jobs', '~> 3.0.10'
 
 gem 'sinatra', require: false # Web interface of Sidekiq processes
 gem 'slim'

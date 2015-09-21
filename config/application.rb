@@ -26,5 +26,7 @@ module Instaspy
     # config.action_mailer.default_options = { from: 'instaspy@digitallylux.com' }
     config.action_mailer.default_options = { from: 'dev@antonzaytsev.com' }
     config.action_mailer.delivery_method = :smtp
+
+    config.active_record.raise_in_transactional_callbacks = true
   end
 end
