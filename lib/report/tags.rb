@@ -205,6 +205,8 @@ class Report::Tags < Report::Base
       tag_id = row[1]
       tag = Tag.find(tag_id)
 
+      next unless @tags_publishers[tag_id]
+
       csv_string = CSV.generate do |csv|
         csv << header
 
