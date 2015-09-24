@@ -1,8 +1,8 @@
 class UserLocationFixWorker
   include Sidekiq::Worker
 
-  def perform ids
-    states = Country['US'].states
+  def perform ids, states_country: 'US'
+    states = Country[states_country].states
     User.where(id: ids).each do |user|
       country = user.location_country
       state = user.location_state
