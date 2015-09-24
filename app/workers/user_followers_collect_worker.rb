@@ -17,9 +17,11 @@ class UserFollowersCollectWorker
 
     user.update_info! unless user.followed_by
 
-    return false if user.private? || user.followers_size >= user.followed_by
+    present_ratio = user.followers_size / user.followed_by.to_f
 
-    if (options[:ignore_batch] && !options[:batch]) || user.followed_by < 2_000
+    return false if user.private? || (user.followers_size >= user.followed_by && present_ratio < 1.2)
+
+    if (options[:ignore_batch] && !options[:batch]) || user.followed_by < 2_000 || present_ratio > 1.2
       options.delete(:ignore_batch)
       options.delete(:batch)
       UserFollowersCollect.perform user: user, options: options
