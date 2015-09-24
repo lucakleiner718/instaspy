@@ -230,4 +230,33 @@ class Reporter
 
   end
 
+  def self.media_likes media_urls
+    likes_data = {}
+    media_urls.each do |media_url|
+      likes_data[media_url] = []
+
+      media = Media.get_from_url media_url
+
+      likes = media.update_likes
+      likes.data.each do |like|
+        user = User.get(like['id'])
+        user.update_info!
+        likes_data[media_url] << user
+      end
+
+    end
+
+    csv_string = CSV.generate do |csv|
+      csv << ['Instagram ID', 'Username', 'Full name', 'Bio', 'Website', 'Follows', 'Followers', 'Email', 'Media URL']
+      likes_data.each do |media_url, users|
+        users.each do |user|
+          csv << [user.insta_id, user.username, user.full_name, user.bio, user.website, user.follows, user.followed_by, user.email, media_url]
+        end
+      end
+    end
+
+    filepath = "reports/media-users-likes-#{Time.now}.csv"
+    FileManager.save_file(filepath, content: csv_string)
+  end
+
 end

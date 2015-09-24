@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150814062547) do
+ActiveRecord::Schema.define(version: 20150921154458) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -99,6 +99,17 @@ ActiveRecord::Schema.define(version: 20150814062547) do
   end
 
   add_index "media_amount_stats", ["date", "action"], name: "index_media_amount_stats_on_date_and_action", using: :btree
+
+  create_table "media_likes", force: :cascade do |t|
+    t.integer  "media_id"
+    t.integer  "user_id"
+    t.datetime "liked_at", null: false
+  end
+
+  add_index "media_likes", ["liked_at"], name: "index_media_likes_on_liked_at", using: :btree
+  add_index "media_likes", ["media_id", "user_id"], name: "index_media_likes_on_media_id_and_user_id", unique: true, using: :btree
+  add_index "media_likes", ["media_id"], name: "index_media_likes_on_media_id", using: :btree
+  add_index "media_likes", ["user_id"], name: "index_media_likes_on_user_id", using: :btree
 
   create_table "media_tags", force: :cascade do |t|
     t.integer "tag_id"

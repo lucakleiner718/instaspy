@@ -2,6 +2,7 @@ class Media < ActiveRecord::Base
 
   has_many :media_tags, dependent: :destroy
   has_many :tags, through: :media_tags
+  has_many :likes, class_name: 'MediaLike', dependent: :delete_all
   belongs_to :user
 
   scope :with_coordinates, -> { where("location_lat is not null AND location_lng is not null") }
@@ -213,8 +214,12 @@ class Media < ActiveRecord::Base
     end
   end
 
-  def self.get id
-    Media.where(insta_id: id).first
+  def self.get id, user_id: nil
+    media = Media.where(insta_id: id).first
+    if !media && user_id
+      media = Media.create insta_id: id, user_id: user_id
+    end
+    media
   end
 
   def get_country
@@ -230,6 +235,75 @@ class Media < ActiveRecord::Base
       end
     end
     false
+  end
+
+  def update_likes
+    ic = InstaClient.new
+    resp = ic.client.media_likes self.insta_id
+
+    data = resp.data
+    now = Time.now
+
+    existing_users = User.where(insta_id: data.map{|r| r['id']})
+    existing_likes = MediaLike.where(media_id: self.id, user_id: existing_users.pluck(:id))
+
+    data.each do |user_data|
+      user = existing_users.select{|u| u.insta_id == user_data.id}.first
+
+      unless user
+        begin
+          user = User.new
+          user.set_data user_data
+          user.save
+        rescue ActiveRecord::RecordNotUnique => e
+          if e.message =~ /index_users_on_insta_id/
+            user = User.where(insta_id: user_data.id).first
+          elsif e.message =~ /index_users_on_username/
+            user = User.where(username: user_data.username).first
+          end
+        end
+      end
+
+      media_like = existing_likes.select{|r| r.user_id == user.id }.first
+
+      unless media_like
+        MediaLike.create(media_id: self.id, user_id: user.id, liked_at: now)
+      end
+    end
+  end
+
+  def self.get_from_url media_url
+    url = URI.parse(media_url)
+
+    begin
+      resp = Faraday.new(url: 'https://instagram.com') do |f|
+        f.use FaradayMiddleware::FollowRedirects
+        f.adapter :net_http
+      end.get(url.path) do |req|
+        req.headers["User-Agent"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.93 Safari/537.36"
+      end
+    rescue Faraday::ConnectionFailed, Faraday::SSLError, Errno::EPIPE, Errno::ETIMEDOUT => e
+      retries += 1
+      sleep 10*retries
+      retry if retries <= 5
+      return false
+    end
+
+    return false if resp.status == 404
+
+    html = Nokogiri::HTML(resp.body)
+    shared_data_element = html.xpath('//script[contains(text(), "_sharedData")]').first
+    return false unless shared_data_element
+    content = shared_data_element.text.sub('window._sharedData = ', '').sub(/;$/, '')
+    json = JSON.parse content
+    if json['entry_data'].blank?
+      return false
+    end
+
+    media_id = json['entry_data']['PostPage'].first['media']['id']
+    user_id = json['entry_data']['PostPage'].first['media']['owner']['id']
+
+    Media.get(media_id, user_id)
   end
 
   private
