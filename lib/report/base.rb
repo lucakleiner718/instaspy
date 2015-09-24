@@ -194,7 +194,7 @@ class Report::Base
     ids ||= @report.processed_ids
 
     if @report.steps.include?('user_info') && !@report.steps.include?('followers')
-      for_update = User.where(id: ids).not_private.where('followed_by > 0').map{|u| [u.id, u.followed_by, u.followers_size, u]}.select{ |r| r[2]/r[1].to_f < 0.95 || r[2]/r[1].to_f > 1.2 }
+      for_update = User.where(id: ids).not_private.where('followed_by > 0').map{|u| [u.id, u.followed_by, u.followers_size, u]}.select{ |r| r[2]/r[1].to_f < 0.95 || (r[2]/r[1].to_f > 1.2 && row[1] < 50_000) }
 
       if for_update.size == 0
         @report.steps.push 'followers'
@@ -202,7 +202,7 @@ class Report::Base
         User.where(id: ids).not_private.where("followers_updated_at is null OR followers_updated_at < ?", 10.days.ago).where('followed_by > 0').update_all(followers_updated_at: Time.now)
       else
         for_update.each do |row|
-          UserFollowersCollectWorker.perform_async row[0], ignore_exists: true
+          UserFollowersCollectWorker.perform_async row[0], ignore_exists: true, ignore_batch: row[2]/row[1].to_f > 1.2
         end
         @progress += (ids.size - for_update.size) / ids.size.to_f / @parts_amount
       end
@@ -275,12 +275,15 @@ class Report::Base
     ids ||= @report.processed_ids
 
     if @report.steps.include?('user_info') && !@report.steps.include?('followees')
-      for_update = User.where(id: ids).not_private.where('follows > 0').map{|u| [u.id, u.follows, u.followees_size, u]}.select{ |r| r[2]/r[1].to_f < 0.95 || r[2]/r[1].to_f > 1.2 }
+      for_update = User.where(id: ids).not_private.where('follows > 0').map{|u| [u.id, u.follows, u.followees_size, u]}.select{ |r| r[2]/r[1].to_f < 0.95 || (r[2]/r[1].to_f > 1.2 && row[1] < 50_000) }
 
       if for_update.size == 0
-        @report.steps << 'followees'
+        @report.steps.push 'followees'
+        @report.save!
       else
-        for_update.each { |row| UserFolloweesCollectWorker.perform_async(row[0], ignore_exists: true) }
+        for_update.each do |row|
+          UserFolloweesCollectWorker.perform_async row[0], ignore_exists: true, ignore_batch: row[2]/row[1].to_f > 1.2
+        end
         @progress += (ids.size - for_update.size) / ids.size.to_f/ @parts_amount
       end
     end
