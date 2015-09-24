@@ -105,15 +105,18 @@ class Report::Tags < Report::Base
               csv << media.values
             end
           end
-
-          filepath = "reports/reports_data/report-#{@report.id}-tag-#{tag_id}-media-items.csv"
-          FileManager.save_file filepath, content: csv_string
-          @report.data[media_items_key] = filepath
-
-          @report.save
+        else
+          csv_string = ''
         end
+
+        filepath = "reports/reports_data/report-#{@report.id}-tag-#{tag_id}-media-items.csv"
+        FileManager.save_file filepath, content: csv_string
+        @report.data[media_items_key] = filepath
+
+        @report.save
       end
 
+      next if @media_items.size == 0
 
       publishers_ids = @publishers_media[tag_id].keys
       @tags_publishers[tag_id] = publishers_ids
