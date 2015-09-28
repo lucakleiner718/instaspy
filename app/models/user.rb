@@ -430,6 +430,9 @@ class User < ActiveRecord::Base
         # looks likes account became private
         if e.message =~ /you cannot view this resource/
           self.update_info! force: true
+          if !self.private?
+            self.recent_media_via_http
+          end
           break
         elsif e.message =~ /this user does not exist/
           self.destroy
@@ -506,6 +509,46 @@ class User < ActiveRecord::Base
     end
 
     true
+  end
+
+  def recent_media_via_http
+    retries = 0
+    begin
+      resp = Faraday.new(url: 'http://instagram.com') do |f|
+        f.use FaradayMiddleware::FollowRedirects
+        f.adapter :net_http
+      end.get("/#{self.username}/") do |req|
+        req.headers["User-Agent"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.93 Safari/537.36"
+      end
+    rescue Faraday::ConnectionFailed, Faraday::SSLError, Errno::EPIPE, Errno::ETIMEDOUT => e
+      retries += 1
+      sleep 10*retries
+      retry if retries <= 5
+      raise e
+    end
+
+    return false if resp.status == 404
+
+    html = Nokogiri::HTML(resp.body)
+    shared_data_element = html.xpath('//script[contains(text(), "_sharedData")]').first
+    return false unless shared_data_element
+    content = shared_data_element.text.sub('window._sharedData = ', '').sub(/;$/, '')
+    json = JSON.parse content
+
+    media = json['entry_data']['ProfilePage'].first['user']['media']['nodes']
+
+    media_exists = Media.where(insta_id: media.map{|r| r['id']})
+    media.each do |node|
+      item = nil
+      item = media_exists.select{|me| me.insta_id == node['id']}.first if media_exists.size > 0
+      item = Media.new unless item
+      item.user_id = self.id
+      item.likes_amount = node['likes']['count']
+      item.comments_amount = node['comments']['count']
+      item.image = node['display_src']
+      item.link = "https://instagram.com/p/#{node['code']}"
+      item.save
+    end
   end
 
   def media_frequency last=nil
