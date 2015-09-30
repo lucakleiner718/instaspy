@@ -4,7 +4,13 @@ class UserFollowersUpdateWorker
   sidekiq_options unique: true, unique_args: -> (args) { [ args.first ] }
 
   def perform user_id
-    user = User.find(user_id)
+    begin
+      user = User.find(user_id)
+    rescue ActiveRecord::RecordNotFound => e
+      Rails.logger.debug e.message
+      return false
+    end
+
     followers_ids = Follower.where(user_id: user.id).pluck(:follower_id)
     if followers_ids.size < user.followed_by * 0.9
       UserFollowersCollectWorker.perform_async user.id, ignore_exists: true

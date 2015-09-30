@@ -6,9 +6,11 @@ class UserFollowersPopularWorker
   def perform user_id
     begin
       user = User.find(user_id)
-      user.get_popular_followers_percentage recount: true
     rescue ActiveRecord::RecordNotFound => e
-      return
+      Rails.logger.debug e.message
+      return false
     end
+
+    user.get_popular_followers_percentage recount: true
   end
 end

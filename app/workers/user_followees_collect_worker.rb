@@ -13,7 +13,12 @@ class UserFolloweesCollectWorker
     options = args.extract_options!
     options.symbolize_keys!
 
-    user = User.find(user_id)
+    begin
+      user = User.find(user_id)
+    rescue ActiveRecord::RecordNotFound => e
+      Rails.logger.debug e.message
+      return false
+    end
 
     user.update_info! unless user.follows
 
