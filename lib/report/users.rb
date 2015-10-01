@@ -72,7 +72,7 @@ class Report::Users < Report::Base
           amounts = {}
           followers_ids = Follower.where(user_id: u.id).pluck(:follower_id)
           followers_ids.in_groups_of(10_000, false) do |ids|
-            User.where(id: ids).pluck(:followed_by).each do |followers_size|
+            User.where(id: ids).where('followed_by is not null').pluck(:followed_by).each do |followers_size|
               @followers_analytics_groups.each do |group|
                 amounts[group] ||= 0
                 from, to = group.gsub(/,|\+/, '').split('-').map(&:to_i)

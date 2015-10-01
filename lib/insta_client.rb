@@ -92,7 +92,7 @@ class InstaClient
         @ic.change_login!
         sleep 10*retries
         retries += 1
-        retry if retries < retries_limit
+        retry if retries < retries_limit + 2
         raise e
       rescue Instagram::ServiceUnavailable, Instagram::BadGateway, Instagram::InternalServerError, Instagram::GatewayTimeout,
         JSON::ParserError,
