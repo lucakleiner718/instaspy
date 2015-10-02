@@ -1,5 +1,7 @@
 class Report::Base
 
+  FOLS_BATCH_UPDATE = 50_000
+
   def initialize report
     @report = report
     @progress = 0
@@ -123,7 +125,7 @@ class Report::Base
     if @report.output_data.include?('location') && !@report.steps.include?('location')
       ids = self.get_cached('get_location', processed_ids)
       get_location = []
-      ids.in_groups_of(5_000, false) do |g|
+      ids.in_groups_of(20_000, false) do |g|
         users = User.where(id: g).without_location.with_media.not_private.pluck(:id)
         users.each { |uid| UserLocationWorker.perform_async(uid) }
         get_location.concat users
@@ -260,7 +262,7 @@ class Report::Base
           @report.steps.push 'followers_info'
         else
           # send to update only first 100k users to not overload query
-          not_updated[0...100_000].each do |uid|
+          not_updated[0...FOLS_BATCH_UPDATE].each do |uid|
             UserUpdateWorker.perform_async uid
           end
           self.save_cached('followers_to_update', not_updated)
@@ -316,13 +318,15 @@ class Report::Base
       # update followees info, so in report we will have actual media amount, followees and etc. data
       unless @report.steps.include?('followees_info')
         not_updated = []
-        followees_ids.in_groups_of(10_000, false) do |ids|
+        followees_ids.in_groups_of(20_000, false) do |ids|
           not_updated.concat User.where(id: ids).outdated(7.days.ago(@report.created_at)).pluck(:id)
         end
         if not_updated.size == 0
           @report.steps << 'followees_info'
         else
-          not_updated.each { |uid| UserUpdateWorker.perform_async uid }
+          not_updated[0...FOLS_BATCH_UPDATE].each do |uid|
+            UserUpdateWorker.perform_async uid
+          end
           @progress += (followees_ids.size - not_updated.size) / followees_ids.size.to_f / @parts_amount
         end
       end

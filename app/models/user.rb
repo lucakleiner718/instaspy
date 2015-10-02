@@ -284,7 +284,6 @@ class User < ActiveRecord::Base
   # @option options :start_cursor [Integer] start time for followers lookup in seconds (timestamp)
   # @option options :finish_cursor [Integer] end time for followers lookup in seconds (timestamp
   # @option options :count [Integer] amount of users requesting from Instagram per request
-  # @option options :skip_exists [Boolean] skip exists
   #
   # @note
   #   Script stops if found more than 5 exists followers from list in database

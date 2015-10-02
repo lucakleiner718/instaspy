@@ -14,8 +14,8 @@ class UserFollowersCollect < ServiceObject
 
     options.symbolize_keys!
 
-    cursor = options[:start_cursor] ? options[:start_cursor].to_f.round(3).to_i * 1_000 : nil
-    finish_cursor = options[:finish_cursor] ?  options[:finish_cursor].to_f.round(3).to_i * 1_000 : nil
+    cursor = options[:start_cursor].to_f.round(3).to_i * 1_000 if options[:start_cursor]
+    finish_cursor = options[:finish_cursor].to_f.round(3).to_i * 1_000 if options[:finish_cursor]
 
     return false if options[:start_cursor] && options[:start_cursor] < 0
 
@@ -37,6 +37,7 @@ class UserFollowersCollect < ServiceObject
       added = 0
 
       begin
+        cursor ||= Time.now.to_f.round(3).to_i * 1_000
         ic = InstaClient.new
         resp = ic.client.user_followed_by user.insta_id, cursor: cursor, count: options[:count]
       rescue Instagram::BadRequest => e
@@ -59,7 +60,7 @@ class UserFollowersCollect < ServiceObject
       to_create = []
       for_update = []
       # cursor is kind of timestamp or if request is first
-      followed_at = cursor ? Time.at(cursor.to_i/1000) : Time.now.utc
+      followed_at = Time.at(cursor.to_i/1000)
 
       resp.data.each do |user_data|
         new_record = false
@@ -127,17 +128,6 @@ class UserFollowersCollect < ServiceObject
 
       finish = Time.now
       logger.debug ">> [#{user.username.green}] followers:#{user.followed_by} request: #{(finish-start).to_f.round(2)}s :: IG request: #{(end_ig-start).to_f.round(2)}s / exists: #{exists} (#{total_exists.to_s.light_black}) / added: #{added} (#{total_added.to_s.light_black})"
-
-      if exists > 5
-        if options[:skip_exists] && !skipped
-          last_follow_time = Follower.where(user_id: user.id).where.not(followed_at: nil).order(followed_at: :asc).first
-          if last_follow_time
-            cursor = last_follow_time.followed_at.to_i * 1_000
-            skipped = true
-            next
-          end
-        end
-      end
 
       if !options[:ignore_exists] && exists > 5
         user.followers_updated_time!
