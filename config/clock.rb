@@ -16,11 +16,11 @@ module Clockwork
     # Grab new media for observed tags
     every(15.minute, 'get.new.media') { MediaWorker.spawn }
 
-    every(1.day, 'check.media', if: lambda { |t| t.day == 1 }) {
-      Tag.observed.pluck(:id).each do |tag_id|
-        TagCompleteMediaWorker.spawn tag_id
-      end
-    }
+    # every(1.day, 'check.media', if: lambda { |t| t.day == 1 }) {
+    #   Tag.observed.pluck(:id).each do |tag_id|
+    #     TagCompleteMediaWorker.spawn tag_id
+    #   end
+    # }
 
     # Save data for chart in cache, so charts will work fast
     every(6.hours, 'TagChartWorker') { TagChartWorker.spawn }

@@ -116,8 +116,6 @@ class Report::Tags < Report::Base
         @report.save
       end
 
-      next if @media_items.size == 0
-
       publishers_ids = @publishers_media[tag_id].keys
       @tags_publishers[tag_id] = publishers_ids
 
