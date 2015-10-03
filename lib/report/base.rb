@@ -67,6 +67,7 @@ class Report::Base
       not_updated = User.where(id: ids).outdated(1.day.ago(@report.created_at)).pluck(:id)
       if not_updated.size == 0
         @report.steps.push 'user_info'
+        @report.save
       else
         not_updated.map { |uid| UserUpdateWorker.perform_async uid, force: true }
         @progress += (ids.size - not_updated.size) / ids.size.to_f / @parts_amount
@@ -89,6 +90,7 @@ class Report::Base
       if get_likes.size == 0
         self.delete_cached('get_likes')
         @report.steps.push 'likes'
+        @report.save
       else
         self.save_cached('get_likes', get_likes)
         @progress += (processed_ids.size - get_likes.size) / processed_ids.size.to_f / @parts_amount
@@ -111,6 +113,7 @@ class Report::Base
       if get_comments.size == 0
         self.delete_cached('get_comments')
         @report.steps.push 'comments'
+        @report.save
       else
         self.save_cached('get_comments', get_comments)
         @progress += (processed_ids.size - get_comments.size) / processed_ids.size.to_f / @parts_amount
@@ -157,6 +160,7 @@ class Report::Base
 
       if no_feedly.size == 0
         @report.steps.push 'feedly'
+        @report.save
       else
         no_feedly.each { |uid| UserFeedlyWorker.perform_async uid }
         @progress += feedly_exists.size / with_website.size.to_f / @parts_amount
@@ -200,7 +204,7 @@ class Report::Base
 
       if for_update.size == 0
         @report.steps.push 'followers'
-        @report.save!
+        @report.save
         User.where(id: ids).not_private.where("followers_updated_at is null OR followers_updated_at < ?", 10.days.ago).where('followed_by > 0').update_all(followers_updated_at: Time.now)
       else
         for_update.each do |r|
@@ -248,7 +252,12 @@ class Report::Base
           # in slim report we need only users with emails and over 1k followers. do not update follower if we grab data
           # for him and there is no email in bio
           if @report.output_data.include?('slim')
-            users_exclude = User.where(id: list).where('(grabbed_at is not null AND email is null) OR (grabbed_at is not null AND grabbed_at < ? AND followed_by is not null AND followed_by < 900)', 2.months.ago).pluck(:id)
+            users_exclude = User.where(id: list).where('(grabbed_at IS NOT NULL AND email IS NULL) OR (grabbed_at IS NOT NULL AND grabbed_at < ? AND followed_by IS NOT NULL AND followed_by < ?)', 2.months.ago, 900).pluck(:id)
+            list -= users_exclude
+          end
+
+          if @report.output_data.include?('slim_followers')
+            users_exclude = User.where(id: list).where('grabbed_at IS NOT NULL AND grabbed_at < ? AND followed_by IS NOT NULL AND followed_by < ?', 3.months.ago, 900).pluck(:id)
             list -= users_exclude
           end
 
@@ -260,8 +269,9 @@ class Report::Base
         if not_updated.size == 0
           self.delete_cached('followers_to_update')
           @report.steps.push 'followers_info'
+          @report.save
         else
-          # send to update only first 100k users to not overload query
+          # send to update only first N users to not overload query
           not_updated[0...FOLS_BATCH_UPDATE].each do |uid|
             UserUpdateWorker.perform_async uid
           end
@@ -281,7 +291,7 @@ class Report::Base
 
       if for_update.size == 0
         @report.steps.push 'followees'
-        @report.save!
+        @report.save
       else
         for_update.each do |r|
           UserFolloweesCollectWorker.perform_async r[0], ignore_exists: true, ignore_batch: r[2]/r[1].to_f > 1.2
@@ -322,8 +332,10 @@ class Report::Base
           not_updated.concat User.where(id: ids).outdated(7.days.ago(@report.created_at)).pluck(:id)
         end
         if not_updated.size == 0
-          @report.steps << 'followees_info'
+          @report.steps.push 'followees_info'
+          @report.save
         else
+          # send to update only first N users to not overload query
           not_updated[0...FOLS_BATCH_UPDATE].each do |uid|
             UserUpdateWorker.perform_async uid
           end
