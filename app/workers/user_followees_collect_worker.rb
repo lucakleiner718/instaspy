@@ -1,7 +1,7 @@
 class UserFolloweesCollectWorker
 
   include Sidekiq::Worker
-  sidekiq_options unique: true, unique_args: -> (args) {
+  sidekiq_options unique: :until_and_while_executing, unique_args: -> (args) {
       if args[1] && (args[1][:start_cursor] || args[1]['start_cursor'] || args[1][:finish_cursor] || args[1]['finish_cursor'] || args[1][:ignore_uniqueness] || args[1]['ignore_uniqueness'])
         args
       else

@@ -1,7 +1,8 @@
 class TagCompleteMediaWorker
-  include Sidekiq::Worker
 
-  sidekiq_options queue: :low, unique_args: -> (args) { [ args.first ] }
+  include Sidekiq::Worker
+  sidekiq_options queue: :low, unique: :until_and_while_executing,
+      unique_args: -> (args) { [ args.first ] }
 
   def perform tag_id, *args
     options = args.extract_options!
@@ -15,4 +16,5 @@ class TagCompleteMediaWorker
       TagCompleteMediaWorker.perform_async tag_id, offset: (i.hours.ago if i > 0), created_from: (i+1).hours.ago, total_limit: 1_000_000
     end
   end
+
 end

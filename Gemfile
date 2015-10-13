@@ -51,7 +51,7 @@ gem 'render_csv'
 
 gem 'sidekiq', '~> 3.5.0'
 gem 'sidekiq-failures', '~> 0.4.5'
-gem 'sidekiq-unique-jobs', '~> 3.0.10'
+gem 'sidekiq-unique-jobs', '~> 4.0.0'
 
 gem 'sinatra', require: false # Web interface of Sidekiq processes
 gem 'slim'

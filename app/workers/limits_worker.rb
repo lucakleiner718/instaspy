@@ -1,7 +1,7 @@
 class LimitsWorker
   include Sidekiq::Worker
 
-  sidekiq_options queue: :critical, unique: true
+  sidekiq_options queue: :critical, unique: :until_and_while_executing
 
   TOKEN_LIMIT = 5_000
 

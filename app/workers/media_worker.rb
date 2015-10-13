@@ -2,7 +2,7 @@ class MediaWorker
   include Sidekiq::Worker
 
   sidekiq_options queue: :middle
-    # unique: true, unique_args: -> (args) { [ args.first ] },
+    # unique: :until_and_while_executing, unique_args: -> (args) { [ args.first ] },
     # unique_job_expiration: 3*60*60
 
   def perform tag_id, *args

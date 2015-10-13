@@ -1,7 +1,6 @@
 class TagStatWorker
 
   include Sidekiq::Worker
-
   sidekiq_options unqiue: true,
                   unique_args: -> (args) { [ args.first ] }
 

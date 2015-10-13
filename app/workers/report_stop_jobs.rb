@@ -1,7 +1,7 @@
 class ReportStopJobs
 
   include Sidekiq::Worker
-  sidekiq_options unique: true, queue: :critical
+  sidekiq_options unique: :until_and_while_executing, queue: :critical
 
   def perform report_id, report=nil
     @report = report || Report.find(report_id)

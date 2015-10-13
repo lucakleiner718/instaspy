@@ -1,6 +1,7 @@
 class IgApiStatWorker
 
   include Sidekiq::Worker
+  sidekiq_options unique: :until_and_while_executing
 
   def perform
     total_limit = 0
@@ -16,4 +17,5 @@ class IgApiStatWorker
 
     Stat.create key: 'ig_api_stat', value: {limit: total_limit, accounts: accounts.size}, created_at: Time.now.utc
   end
+
 end

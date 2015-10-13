@@ -1,4 +1,5 @@
 class DailyMediaStatWorker
+
   include Sidekiq::Worker
 
   def perform date
@@ -25,4 +26,5 @@ class DailyMediaStatWorker
       DailyMediaStatWorker.perform_async day
     end
   end
+
 end
