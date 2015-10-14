@@ -70,16 +70,16 @@ class Tag < ActiveRecord::Base
 
       data = media_list.data
 
-      media_found = Media.where(insta_id: data.map{|el| el['id']}).to_a
+      media_found_ids = Media.where(insta_id: data.map{|el| el['id']}).pluck(:insta_id)
 
       media_found_end = Time.now
 
       media_to_process = []
       data.each do |media_item|
-        media = media_found.select{|el| el.insta_id == media_item['id']}.first
+        media_present = media_found_ids.include?(media_item['id'])
         created_time_list << Time.at(media_item['created_time'].to_i)
 
-        next if media #&& media.updated_at > 3.days.ago
+        next if media_present #&& media.updated_at > 3.days.ago
         media_to_process << media_item
       end
 
