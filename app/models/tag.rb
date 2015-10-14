@@ -74,33 +74,33 @@ class Tag < ActiveRecord::Base
 
       media_found_end = Time.now
 
-      media_to_process_amount = 0
+      media_to_process = []
       data.each do |media_item|
         media = media_found.select{|el| el.insta_id == media_item['id']}.first
         created_time_list << Time.at(media_item['created_time'].to_i)
 
-        next if media && media.updated_at > 3.days.ago
-        media_to_process_amount += 1
+        next if media #&& media.updated_at > 3.days.ago
+        media_to_process << media_item
       end
 
-      if media_to_process_amount > 0
+      if media_to_process.size > 0
         tags_found.concat(Tag.where(name: data.map{|el| el['tags']}.flatten.uniq.map(&:downcase)).to_a).uniq!
         users_found = User.where(insta_id: data.map{|el| el['user']['id']}.uniq).to_a
 
-        data.each do |media_item|
+        media_to_process.each do |media_item|
           # logger.debug "#{">>".green} Start process #{media_item['id']}"
           # st_time = Time.now
-          media = media_found.select{|el| el.insta_id == media_item['id']}.first
+          # media = media_found.select{|el| el.insta_id == media_item['id']}.first
 
           # don't need to update media if it was recently updated
-          next if media && media.updated_at > 3.days.ago
+          # next if media && media.updated_at > 3.days.ago
 
-          is_new = false
-          unless media
+          # is_new = false
+          # unless media
             media = Media.new(insta_id: media_item['id'])
             added += 1
             is_new = true
-          end
+          # end
 
           media.set_user media_item['user'], users_found
           media.set_data media_item
@@ -111,7 +111,8 @@ class Tag < ActiveRecord::Base
           begin
             media.save!
           rescue ActiveRecord::RecordNotUnique
-            media = Media.find_by_insta_id(media.insta_id)
+            next
+            # media = Media.find_by_insta_id(media.insta_id)
           end
 
           media.set_tags media_item['tags'], tags_found, is_new
@@ -123,9 +124,9 @@ class Tag < ActiveRecord::Base
       end
 
       total_added += added
-      total_processed += media_list.data.size
+      total_processed += media_to_process.size
 
-      break if media_list.data.size == 0
+      break if media_to_process.size == 0
 
       if created_time_list.size > 0
         created_time_list = created_time_list.sort
@@ -136,7 +137,7 @@ class Tag < ActiveRecord::Base
       end
 
       time_end = Time.now
-      logger.debug "#{">>".green} [#{self.name.green}] / #{media_list.data.size}/#{total_processed} #{added.to_s.cyan}/#{total_added.to_s.cyan} / MT: #{((Time.at median_created_time).to_s(:datetime)).to_s.yellow} / IG: #{(ig_time_end-time_start).to_f.round(2)}s / T: #{(time_end-ig_time_end).to_f.round(2)}s / TMedia: #{(media_found_end-ig_time_end).to_f.round(2)}s"
+      logger.debug "#{">>".green} [#{self.name.green}] / #{media_to_process.size}/#{total_processed} #{added.to_s.cyan}/#{total_added.to_s.cyan} / MT: #{((Time.at median_created_time).to_s(:datetime)).to_s.yellow} / IG: #{(ig_time_end-time_start).to_f.round(2)}s / T: #{(time_end-ig_time_end).to_f.round(2)}s / TMedia: #{(media_found_end-ig_time_end).to_f.round(2)}s"
       sleep 2
 
       move_next = false
