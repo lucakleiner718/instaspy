@@ -1,7 +1,7 @@
 class MediaLocationWorker
 
   include Sidekiq::Worker
-  sidekiq_options unique: :until_and_while_executing
+  sidekiq_options unique: :until_executed
 
   def perform media_id
     media = Media.find media_id

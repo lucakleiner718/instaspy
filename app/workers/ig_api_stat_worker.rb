@@ -1,7 +1,7 @@
 class IgApiStatWorker
 
   include Sidekiq::Worker
-  sidekiq_options unique: :until_and_while_executing
+  sidekiq_options unique: :until_executed
 
   def perform
     total_limit = 0

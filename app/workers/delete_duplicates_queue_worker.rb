@@ -1,7 +1,7 @@
 class DeleteDuplicatesQueueWorker
 
   include Sidekiq::Worker
-  sidekiq_options unique: :until_and_while_executing
+  sidekiq_options unique: :until_executed
 
   def perform
     Sidekiq::Queue.all.each do |queue|

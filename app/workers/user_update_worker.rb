@@ -2,7 +2,7 @@ class UserUpdateWorker
 
   include Sidekiq::Worker
   sidekiq_options queue: :middle,
-    unique: :until_and_while_executing, unique_job_expiration: 1 * 60 * 60
+    unique: :until_executed, unique_job_expiration: 1 * 60 * 60
 
   def perform user_id, *args
     options = args.extract_options!

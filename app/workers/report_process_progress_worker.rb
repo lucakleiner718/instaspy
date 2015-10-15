@@ -1,7 +1,7 @@
 class ReportProcessProgressWorker
   include Sidekiq::Worker
 
-  sidekiq_options unique: :until_and_while_executing, queue: :critical
+  sidekiq_options unique: :until_executed, queue: :critical
 
   def perform report_id
     report = Report.where(status: :in_process, id: report_id).first
