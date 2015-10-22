@@ -294,7 +294,7 @@ class Report::Base
         @report.save
       else
         for_update.each do |r|
-          UserFolloweesCollectWorker.perform_async r[0], ignore_exists: true, ignore_batch: r[2]/r[1].to_f > 1.2
+          UserFolloweesCollectWorker.perform_async r[0], ignore_exists: true
         end
         @progress += (ids.size - for_update.size) / ids.size.to_f/ @parts_amount
       end
