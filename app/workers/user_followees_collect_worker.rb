@@ -26,9 +26,9 @@ class UserFolloweesCollectWorker
 
     return false if user.private? || (user.followees_size >= user.follows && present_ratio < 1.2)
 
-    if options[:spawn_next].nil? && (user.follows > 2000 || options[:cursor_cursor])
-      options[:spawn_next] = true
-    end
+    # if options[:spawn_next].nil? && (user.follows > 2000 || options[:cursor_cursor])
+    #   options[:spawn_next] = true
+    # end
 
     UserFolloweesCollect.perform user: user, options: options
   end
