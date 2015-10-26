@@ -1,6 +1,6 @@
 class Report::Base
 
-  FOLS_BATCH_UPDATE = 50_000
+  FOLS_BATCH_UPDATE = 20_000
 
   def initialize report
     @report = report
@@ -208,7 +208,7 @@ class Report::Base
         User.where(id: ids).not_private.where("followers_updated_at is null OR followers_updated_at < ?", 10.days.ago).where('followed_by > 0').update_all(followers_updated_at: Time.now)
       else
         for_update.each do |r|
-          UserFollowersCollectWorker.perform_async r[0], ignore_exists: true, ignore_batch: r[2]/r[1].to_f > 1.2
+          UserFollowersCollectWorker.perform_async r[0], ignore_exists: true
         end
         @progress += (ids.size - for_update.size) / ids.size.to_f / @parts_amount
       end
