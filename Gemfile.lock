@@ -439,7 +439,7 @@ GEM
       redis-namespace (~> 1.5, >= 1.5.2)
     sidekiq-failures (0.4.5)
       sidekiq (>= 2.16.0)
-    sidekiq-unique-jobs (4.0.4)
+    sidekiq-unique-jobs (3.0.15)
       sidekiq (>= 2.6)
     simple_form (3.1.1)
       actionpack (~> 4.0)
@@ -545,7 +545,7 @@ DEPENDENCIES
   sass-rails (~> 5.0.4)
   sidekiq (~> 3.5.0)
   sidekiq-failures (~> 0.4.5)
-  sidekiq-unique-jobs (~> 4.0.0)
+  sidekiq-unique-jobs (~> 3.0)
   simple_form
   sinatra
   slim
