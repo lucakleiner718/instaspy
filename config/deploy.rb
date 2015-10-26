@@ -15,7 +15,7 @@ set :ssh_options, {
 
 set :log_level, :info #:debug
 
-set :linked_files, %w{config/database.yml .env config/god.rb config/sidekiq.yml config/sidekiq2.yml}
+set :linked_files, %w{config/database.yml .env config/god.rb config/sidekiq.yml config/sidekiq2.yml config/sidekiq-fols.yml}
 set :linked_dirs, %w{log tmp/pids tmp/cache tmp/sockets vendor/bundle public/system public/reports}
 
 set :keep_releases, 5
