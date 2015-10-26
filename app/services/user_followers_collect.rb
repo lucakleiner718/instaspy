@@ -14,10 +14,7 @@ class UserFollowersCollect < ServiceObject
 
     options.symbolize_keys!
 
-    cursor = options[:start_cursor].to_f.round(3).to_i * 1_000 if options[:start_cursor]
-    finish_cursor = options[:finish_cursor].to_f.round(3).to_i * 1_000 if options[:finish_cursor]
-
-    return false if options[:start_cursor] && options[:start_cursor] < 0
+    cursor = options[:start_cursor]
 
     options[:count] ||= 100
 
@@ -37,7 +34,6 @@ class UserFollowersCollect < ServiceObject
       added = 0
 
       begin
-        cursor ||= Time.now.to_f.round(3).to_i * 1_000
         ic = InstaClient.new
         resp = ic.client.user_followed_by user.insta_id, cursor: cursor, count: options[:count]
       rescue Instagram::BadRequest => e
@@ -58,9 +54,6 @@ class UserFollowersCollect < ServiceObject
       fols = Follower.where(user_id: user.id, follower_id: exists_users.map(&:id)).to_a
 
       to_create = []
-      for_update = []
-      # cursor is kind of timestamp or if request is first
-      followed_at = Time.at(cursor.to_i/1000)
 
       resp.data.each do |user_data|
         new_record = false
@@ -84,40 +77,31 @@ class UserFollowersCollect < ServiceObject
         followers_ids << row_user.id
 
         if new_record
-          to_create << [user.id, row_user.id, followed_at]
+          to_create << [user.id, row_user.id]
         else
           if options[:reload]
-            to_create << [user.id, row_user.id, followed_at]
+            to_create << [user.id, row_user.id]
           else
             fol_exists = fols.select{ |el| el.follower_id == row_user.id }.first
 
             if fol_exists
-              if fol_exists.followed_at.blank? || fol_exists.followed_at > followed_at
-                # fol_exists.update_column :followed_at, followed_at
-                for_update << fol_exists.id
-              end
               exists += 1
             else
-              to_create << [user.id, row_user.id, followed_at]
+              to_create << [user.id, row_user.id]
             end
           end
         end
-      end
-
-      if for_update.size > 0
-        Follower.where(id: for_update).update_all(followed_at: followed_at)
       end
 
       added += to_create.size
 
       if to_create.size > 0
         begin
-          Follower.connection.execute("INSERT INTO followers (user_id, follower_id, followed_at, created_at) VALUES #{to_create.map{|r| r << Time.now.utc; "(#{r.map{|el| "'#{el}'"}.join(', ')})"}.join(', ')}")
+          Follower.connection.execute("INSERT INTO followers (user_id, follower_id, created_at) VALUES #{to_create.map{|r| r << Time.now.utc; "(#{r.map{|el| "'#{el}'"}.join(', ')})"}.join(', ')}")
         rescue => e
           logger.debug "Exception when try to multiple insert followers".black.on_white
           to_create.each do |follower|
             fol = Follower.where(user_id: follower[0], follower_id: follower[1]).first_or_initialize
-            fol.followed_at = follower[2]
             fol.save! rescue false
           end
         end
@@ -138,7 +122,7 @@ class UserFollowersCollect < ServiceObject
 
       # when code reached end of list
       unless cursor
-        if !options[:reload] && !skipped && options[:start_cursor].blank? && options[:finish_cursor].blank?
+        if !options[:reload] && !skipped && options[:start_cursor].blank?
           current_followers = Follower.where(user_id: user.id).pluck(:follower_id)
           unfollowed = current_followers - followers_ids
           if unfollowed.size > 0
@@ -149,11 +133,6 @@ class UserFollowersCollect < ServiceObject
 
         user.followers_updated_time!
 
-        break
-      end
-
-      if finish_cursor && cursor.to_i < finish_cursor
-        logger.debug "#{"Stopped".red} by finish_cursor point finish_cursor: #{Time.at(finish_cursor/1000)} (#{finish_cursor}) / cursor: #{Time.at(cursor.to_i/1000)} (#{cursor}) / added: #{total_added}"
         break
       end
     end

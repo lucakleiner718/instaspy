@@ -48,10 +48,6 @@ class UserFolloweesCollect < ServiceObject
         raise e
       end
 
-      if options[:spawn_next]
-        UserFolloweesCollectWorker.perform_async user.id, start_cursor: resp.pagination['next_cursor']
-      end
-
       end_ig = Time.now
 
       exists_users = User.where(insta_id: resp.data.map{|el| el['id']}).to_a
@@ -139,10 +135,6 @@ class UserFolloweesCollect < ServiceObject
 
         break
       end
-
-      if options[:spawn_next]
-        break
-      end
     end
 
     user.save! if user.changed?
@@ -151,4 +143,3 @@ class UserFolloweesCollect < ServiceObject
   end
 
 end
-

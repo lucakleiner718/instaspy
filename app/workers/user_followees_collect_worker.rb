@@ -1,13 +1,7 @@
 class UserFolloweesCollectWorker
 
   include Sidekiq::Worker
-  sidekiq_options unique: :until_executed, unique_args: -> (args) {
-      if args[1] && (args[1][:ignore_uniqueness] || args[1]['ignore_uniqueness'])
-        args
-      else
-        [ args.first ]
-      end
-    }
+  sidekiq_options unique: :until_executed, unique_args: -> (args) { [ args.first ] }
 
   def perform user_id, *args
     options = args.extract_options!
@@ -25,10 +19,6 @@ class UserFolloweesCollectWorker
     present_ratio = user.followees_size / user.follows.to_f
 
     return false if user.private? || (user.followees_size >= user.follows && present_ratio < 1.2)
-
-    # if options[:spawn_next].nil? && (user.follows > 2000 || options[:cursor_cursor])
-    #   options[:spawn_next] = true
-    # end
 
     UserFolloweesCollect.perform user: user, options: options
   end

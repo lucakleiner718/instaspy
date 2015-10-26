@@ -10,8 +10,6 @@ Rails.application.routes.draw do
   get 'users/scan/data/:username' => 'users#scan_data', as: :users_scan_data
   get 'users/scan_requests' => 'users#scan_requests', as: :users_scan_requests
   get 'users/:username/followers.csv' => 'users#followers', as: :user_followers
-  get 'users/:username/followers-chart' => 'users#followers_chart', as: :user_followers_chart
-  get 'users/:username/followees-chart' => 'users#followees_chart', as: :user_followees_chart
 
   root to: 'pages#home'
 

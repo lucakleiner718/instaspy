@@ -15,51 +15,6 @@ class UsersController < ApplicationController
     end
   end
 
-  # TODO
-  def followers_chart
-    @user = User.get(params[:username])
-
-    data = Follower.connection.execute("
-        SELECT * FROM (
-            SELECT sum(1) as total, extract(month from followed_at) as month, extract(year from followed_at) as year
-            FROM followers
-            WHERE user_id=#{@user.id} AND followed_at is not null
-            GROUP BY extract(month from followed_at), extract(year from followed_at)
-        ) as temp
-        ORDER BY year, total
-    ")
-
-    data = data.to_a.inject({}) do |obj, el|
-      date = DateTime.parse("#{el['year']}/#{el['month']}/1").to_i * 1000
-      obj[date] = el['total'].to_i
-      obj
-    end
-    @data = data.sort
-  end
-
-  def followees_chart
-    @user = User.get(params[:username])
-
-    data = Follower.connection.execute("
-        SELECT * FROM (
-            SELECT sum(1) as total, extract(month from followed_at) as month, extract(year from followed_at) as year
-            FROM followers
-            WHERE follower_id=#{@user.id} AND followed_at is not null
-            GROUP BY extract(month from followed_at), extract(year from followed_at)
-        ) as temp
-        ORDER BY year, total
-    ")
-
-    data = data.to_a.inject({}) do |obj, el|
-      date = DateTime.parse("#{el['year']}/#{el['month']}/1").to_i * 1000
-      obj[date] = el['total'].to_i
-      obj
-    end
-    @data = data.sort
-
-    render 'followers_chart'
-  end
-
   def duplicates
     content = params[:file].read.split(/\r\n|\r|\n/).map(&:to_i)
     output = {}
