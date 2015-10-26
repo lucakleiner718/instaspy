@@ -1,7 +1,7 @@
 class UserFolloweesCollectWorker
 
   include Sidekiq::Worker
-  sidekiq_options unique: true, unique_args: -> (args) { [ args.first ] }
+  sidekiq_options unique: true, unique_args: -> (args) { [ args.first ] }, queue: :fols_collect
 
   def perform user_id, *args
     options = args.extract_options!
