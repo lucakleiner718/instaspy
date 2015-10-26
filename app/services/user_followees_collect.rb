@@ -99,7 +99,7 @@ class UserFolloweesCollect < ServiceObject
         begin
           Follower.connection.execute("INSERT INTO followers (follower_id, user_id, created_at) VALUES #{to_create.map{|r| r << Time.now.utc; "(#{r.map{|el| "'#{el}'"}.join(', ')})"}.join(', ')}")
         rescue => e
-          logger.debug "Exception when try to multiple insert followers".black.on_white
+          logger.debug "Exception when try to multiple insert followees".black.on_white
           to_create.each do |follower|
             fol = Follower.where(user_id: follower[1], follower_id: follower[0]).first_or_initialize
             fol.save! rescue false
