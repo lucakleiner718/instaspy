@@ -564,7 +564,13 @@ class User < ActiveRecord::Base
 
   def self.fix_exists_username username, exists_insta_id
     user = self.where(username: username).where("insta_id != ?", exists_insta_id).first
-    user.update_info! force: true if user.present?
+    if user.present?
+      if user.private?
+        user.destroy
+      else
+        user.update_info! force: true
+      end
+    end
   end
 
   # urls (array)
