@@ -17,7 +17,7 @@ class ReportProcessProgressWorker
 
   def self.spawn
     Report.where(status: :in_process).order(created_at: :asc).limit(ENV['ACTIVE_REPORTS_AMOUNT'] || 1).each do |report|
-      self.perform_async report.id.to_s
+      self.perform_async report.id
     end
   end
 end
