@@ -1,6 +1,6 @@
 class Report::Base
 
-  FOLS_BATCH_UPDATE = 20_000
+  BATCH_UPDATE = 20_000
 
   def initialize report
     @report = report
@@ -84,7 +84,6 @@ class Report::Base
       get_likes = []
       ids.in_groups_of(5_000, false) do |ids|
         users = User.where(id: ids).without_likes.with_media.not_private.pluck(:id)
-        users.each { |uid| UserAvgDataWorker.perform_async uid }
         get_likes.concat users
       end
       if get_likes.size == 0
@@ -92,6 +91,9 @@ class Report::Base
         @report.steps.push 'likes'
         @report.save
       else
+        get_likes[0..BATCH_UPDATE].each do |uid|
+          UserAvgDataWorker.perform_async uid
+        end
         self.save_cached('get_likes', get_likes)
         @progress += (processed_ids.size - get_likes.size) / processed_ids.size.to_f / @parts_amount
       end
@@ -107,7 +109,6 @@ class Report::Base
       get_comments = []
       ids.in_groups_of(5_000, false) do |ids|
         users = User.where(id: ids).without_comments.with_media.not_private.pluck(:id)
-        users.each { |uid| UserAvgDataWorker.perform_async uid }
         get_comments.concat users
       end
       if get_comments.size == 0
@@ -115,6 +116,9 @@ class Report::Base
         @report.steps.push 'comments'
         @report.save
       else
+        get_comments[0..BATCH_UPDATE].each do |uid|
+          UserAvgDataWorker.perform_async uid
+        end
         self.save_cached('get_comments', get_comments)
         @progress += (processed_ids.size - get_comments.size) / processed_ids.size.to_f / @parts_amount
       end
@@ -130,13 +134,15 @@ class Report::Base
       get_location = []
       ids.in_groups_of(20_000, false) do |g|
         users = User.where(id: g).without_location.with_media.not_private.pluck(:id)
-        users.each { |uid| UserLocationWorker.perform_async(uid) }
         get_location.concat users
       end
       if get_location.size == 0
         self.delete_cached('get_location')
         @report.steps.push 'location'
       else
+        get_location[0..BATCH_UPDATE].each do |uid|
+          UserLocationWorker.perform_async uid
+        end
         self.save_cached('get_location', get_location)
         @progress += (processed_ids.size - get_location.size) / processed_ids.size.to_f / @parts_amount
       end
@@ -272,7 +278,7 @@ class Report::Base
           @report.save
         else
           # send to update only first N users to not overload query
-          not_updated[0...FOLS_BATCH_UPDATE].each do |uid|
+          not_updated[0...BATCH_UPDATE].each do |uid|
             UserUpdateWorker.perform_async uid
           end
           self.save_cached('followers_to_update', not_updated)
@@ -336,7 +342,7 @@ class Report::Base
           @report.save
         else
           # send to update only first N users to not overload query
-          not_updated[0...FOLS_BATCH_UPDATE].each do |uid|
+          not_updated[0...BATCH_UPDATE].each do |uid|
             UserUpdateWorker.perform_async uid
           end
           @progress += (followees_ids.size - not_updated.size) / followees_ids.size.to_f / @parts_amount
