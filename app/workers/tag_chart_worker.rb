@@ -1,7 +1,7 @@
 class TagChartWorker
   include Sidekiq::Worker
 
-  sidekiq_options unique: true, unique_args: -> (args) { [ args.first ] }, unique_job_expiration: 3*60*60, retry: false
+  sidekiq_options unique: :until_executed, unique_args: -> (args) { [ args.first ] }, unique_job_expiration: 3*60*60, retry: false
 
   def perform tag_id, amount_of_days=Tag::CHART_DAYS
     tag =

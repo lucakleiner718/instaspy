@@ -1,7 +1,8 @@
 class MediaWorker
   include Sidekiq::Worker
 
-  sidekiq_options queue: :middle, unique: true, unique_args: -> (args) { [ args.first ] }
+  sidekiq_options queue: :middle, unique: :until_executed, unique_args: -> (args) { [ args.first ] },
+    default_expiration: 3 * 60 * 60
 
   def perform tag_id, *args
     tag = Tag.find(tag_id)

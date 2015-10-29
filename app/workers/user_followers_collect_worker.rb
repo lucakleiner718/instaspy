@@ -1,7 +1,7 @@
 class UserFollowersCollectWorker
 
   include Sidekiq::Worker
-  sidekiq_options unique: true, unique_args: -> (args) { [ args.first ] },
+  sidekiq_options unique: :until_executed, unique_args: -> (args) { [ args.first ] },
     queue: :fols_collect, default_expiration: 3 * 60 * 60
 
   def perform user_id, *args

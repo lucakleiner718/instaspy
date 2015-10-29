@@ -51,14 +51,14 @@ gem 'render_csv'
 
 gem 'sidekiq', '~> 3.5.0'
 gem 'sidekiq-failures', '~> 0.4.5'
-gem 'sidekiq-unique-jobs', '~> 3.0'
+gem 'sidekiq-unique-jobs', '~> 4.0'
 
 gem 'sinatra', require: false # Web interface of Sidekiq processes
 gem 'slim'
 gem 'dotenv', '~> 0.11.1'
 gem 'dotenv-deployment', require: 'dotenv/deployment'       # Automatic Vars in Production/Staging
 gem 'god'
-gem 'redis', '~> 3.2.1'
+gem 'redis', '~> 3.2'
 gem 'redis-rails'
 gem 'daemons'
 gem 'rubyzip', require: 'zip'
