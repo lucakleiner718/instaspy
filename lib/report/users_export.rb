@@ -13,7 +13,12 @@ class Report::UsersExport < Report::Base
   end
 
   def reports_in_process
-    @report.data['parts'].each {|f| File.delete Rails.root.join('tmp', f)}
+    if @report.data['parts'].size > 0
+      @report.data['parts'].each do |f|
+        File.delete(Rails.root.join('tmp', f)) rescue nil
+      end
+      @report.data['parts'] = []
+    end
 
     range = 100_000
     parts_size = (@report.amounts['found_users'] / range.to_f).ceil
