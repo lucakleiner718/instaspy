@@ -42,6 +42,7 @@ Rails.application.routes.draw do
   get 'media/chart' => 'pages#media_chart', as: :media_chart
 
   require 'sidekiq/web'
+  require 'sidekiq/pro/web'
   Sidekiq::Web.use Rack::Auth::Basic do |username, password|
     username == 'rob' && password == 'pass31'
   end if Rails.env.production?

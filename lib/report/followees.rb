@@ -25,7 +25,7 @@ class Report::Followees < Report::Base
 
     # after followeуs list grabbed and all followees updated
     if @report.steps.include?('followees_info')
-      self.process_likes @followees_ids
+      self.process_avg_data @followees_ids
       self.process_location @followees_ids
       self.process_feedly @followees_ids
     end

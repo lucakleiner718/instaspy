@@ -25,7 +25,7 @@ class Report::Followers < Report::Base
 
     # after followers list grabbed and all followers updated
     if @report.steps.include?('followers_info')
-      self.process_likes @followers_ids
+      self.process_avg_data @followers_ids
       self.process_location @followers_ids
       self.process_feedly @followers_ids
     end
@@ -119,9 +119,9 @@ class Report::Followers < Report::Base
     self.after_finish
   end
 
-  def after_finish
-    super
-    ReportStopJobs.perform_async @report.id
-  end
+  # def after_finish
+  #   super
+  #   ReportStopJobs.perform_async @report.id
+  # end
 
 end

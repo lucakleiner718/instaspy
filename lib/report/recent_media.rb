@@ -7,15 +7,19 @@ class Report::RecentMedia < Report::Base
 
     if @report.steps.include?('user_info')
       unless @report.steps.include?('recent_media')
-        not_processed = @report.processed_ids - @report.tmp_list1
-        if not_processed.size == 0
-          @report.steps << 'recent_media'
+        batch = get_batch("recent_media")
+        if batch && batch.jids.size > 0
+          @progress += batch.status.pending / batch.status.total.to_f / @parts_amount
         else
-          not_processed.each do |uid|
-            ReportRecentMediaWorker.perform_async uid, @report.id
+          not_processed = @report.processed_ids - @report.tmp_list1
+          if not_processed.size == 0
+            @report.steps << 'recent_media'
+          else
+            batch.jobs do
+              not_processed.each { |uid| ReportRecentMediaWorker.perform_async uid, @report.id }
+            end
+            @progress += not_processed.size / @report.processed_ids.size.to_f / @parts_amount
           end
-
-          @progress += not_processed.size / @report.processed_ids.size.to_f / @parts_amount
         end
       end
     end

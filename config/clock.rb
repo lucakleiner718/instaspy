@@ -51,8 +51,8 @@ module Clockwork
   every(10.minutes, 'LimitsWorker') { LimitsWorker.perform_async }
 
   # Process reports
-  every(5.minutes, 'ReportProcess') {
-    ReportProcessNewWorker.spawn
+  every(30.minutes, 'ReportProcess') {
+    # ReportProcessNewWorker.spawn
     ReportProcessProgressWorker.spawn
   }
 

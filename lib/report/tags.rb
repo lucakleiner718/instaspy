@@ -120,56 +120,85 @@ class Report::Tags < Report::Base
       @tags_publishers[tag_id] = publishers_ids
 
       unless @report.steps[step_index][1].include?('publishers_info')
-        users = []
-        publishers_ids.in_groups_of(50_000, false) do |ids|
-          users.concat User.where(id: ids).outdated(7.days.ago(@report.created_at)).pluck(:id)
-        end
-        if users.size == 0
-          @report.steps[step_index][1] << 'publishers_info'
-          @report.save
+        batch = get_batch("publishers_info_#{tag_id}")
+        if batch && batch.jids.size > 0
+          @progress += (batch.status.total - batch.status.pending) / batch.status.total.to_f / @parts_amount
         else
-          users.each { |uid| UserUpdateWorker.perform_async uid }
+          users = []
+          publishers_ids.in_groups_of(50_000, false) do |ids|
+            users.concat User.where(id: ids).outdated(7.days.ago(@report.created_at)).pluck(:id)
+          end
+          if users.size == 0
+            @report.steps[step_index][1] << 'publishers_info'
+            @report.save
+          else
+            batch.jobs do
+              users.each { |uid| UserUpdateWorker.perform_async uid }
+            end
+          end
         end
       end
 
       if @report.steps[step_index][1].include?('publishers_info')
-        if @report.output_data.include?('likes') && !@report.steps[step_index][1].include?('likes')
-          get_likes = User.where(id: publishers_ids).without_likes.with_media.not_private.pluck(:id)
-          if get_likes.size == 0
-            @report.steps[step_index][1] << 'likes'
-            @report.save
+        if (@report.output_data.include?('likes') && !@report.steps[step_index][1].include?('likes')) || (@report.output_data.include?('comments') && !@report.steps[step_index][1].include?('comments'))
+          batch = get_batch("avg_data_#{tag_id}")
+          if batch && batch.jids.size > 0
+            @progress += (batch.status.total - batch.status.pending) / batch.status.total.to_f / @parts_amount
           else
-            get_likes.each { |uid| UserAvgDataWorker.perform_async uid }
+            get_likes = User.where(id: publishers_ids).without_avg_data.with_media.not_private.pluck(:id)
+            if get_likes.size == 0
+              @report.steps[step_index][1] << 'likes' if @report.output_data.include?('likes')
+              @report.steps[step_index][1] << 'comments' if @report.output_data.include?('comments')
+              @report.save
+            else
+              batch.jobs do
+                get_likes.each { |uid| UserAvgDataWorker.perform_async uid }
+              end
+            end
           end
         end
 
         if @report.output_data.include?('location') && !@report.steps[step_index][1].include?('location')
-          get_location = User.where(id: publishers_ids).without_location.with_media.not_private.pluck(:id)
-          if get_location.size == 0
-            @report.steps[step_index][1] << 'location'
-            @report.save
+          batch = get_batch("location_#{tag_id}")
+          if batch && batch.jids.size > 0
+            @progress += (batch.status.total - batch.status.pending) / batch.status.total.to_f / @parts_amount
           else
-            get_location.each { |uid| UserLocationWorker.perform_async uid }
+            get_location = User.where(id: publishers_ids).without_location.with_media.not_private.pluck(:id)
+            if get_location.size == 0
+              @report.steps[step_index][1] << 'location'
+              @report.save
+            else
+              batch.jobs do
+                get_location.each { |uid| UserLocationWorker.perform_async uid }
+              end
+            end
           end
         end
 
         if @report.output_data.include?('feedly') && !@report.steps[step_index][1].include?('feedly')
-          with_website = []
-          feedly_exists = []
-          @report.processed_ids.in_groups_of(5_000, false) do |ids|
-            for_process = User.where(id: ids).with_url.pluck(:id)
-            with_website.concat for_process
-            feedly_exists.concat Feedly.where(user_id: for_process).pluck(:user_id)
-          end
-
-          no_feedly = with_website - feedly_exists
-
-          if no_feedly.size == 0
-            @report.steps << 'feedly'
-            @report.save
+          batch = get_batch("feedly_#{tag_id}")
+          if batch && batch.jids.size > 0
+            @progress += (batch.status.total - batch.status.pending) / batch.status.total.to_f / @parts_amount
           else
-            no_feedly.each { |uid| UserFeedlyWorker.new.perform uid }
-            @progress += feedly_exists.size / with_website.size.to_f / @parts_amount
+            with_website = []
+            feedly_exists = []
+            @report.processed_ids.in_groups_of(5_000, false) do |ids|
+              for_process = User.where(id: ids).with_url.pluck(:id)
+              with_website.concat for_process
+              feedly_exists.concat Feedly.where(user_id: for_process).pluck(:user_id)
+            end
+
+            no_feedly = with_website - feedly_exists
+
+            if no_feedly.size == 0
+              @report.steps << 'feedly'
+              @report.save
+            else
+              batch.jobs do
+                no_feedly.each { |uid| UserFeedlyWorker.new.perform uid }
+              end
+              @progress += feedly_exists.size / with_website.size.to_f / @parts_amount
+            end
           end
         end
       end

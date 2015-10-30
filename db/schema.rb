@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150921154458) do
+ActiveRecord::Schema.define(version: 20151029194153) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -151,6 +151,7 @@ ActiveRecord::Schema.define(version: 20150921154458) do
     t.text     "output_data",     default: [],              array: true
     t.text     "not_processed",   default: [],              array: true
     t.json     "steps",           default: []
+    t.json     "batches",         default: {}
   end
 
   create_table "scan_requests", force: :cascade do |t|

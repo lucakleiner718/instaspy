@@ -19,6 +19,7 @@ GIT
 
 GEM
   remote: https://rubygems.org/
+  remote: https://058b026d:dbdee804@gems.contribsys.com/
   specs:
     CFPropertyList (2.3.1)
     actionmailer (4.2.3)
@@ -439,6 +440,8 @@ GEM
       redis-namespace (~> 1.5, >= 1.5.2)
     sidekiq-failures (0.4.5)
       sidekiq (>= 2.16.0)
+    sidekiq-pro (2.1.2)
+      sidekiq (~> 3, >= 3.4.2)
     sidekiq-unique-jobs (4.0.7)
       sidekiq (>= 2.6)
     simple_form (3.1.1)
@@ -543,8 +546,8 @@ DEPENDENCIES
   rspec-rails (~> 3.0)
   rubyzip
   sass-rails (~> 5.0.4)
-  sidekiq (~> 3.5.0)
   sidekiq-failures (~> 0.4.5)
+  sidekiq-pro!
   sidekiq-unique-jobs (~> 4.0)
   simple_form
   sinatra
@@ -556,3 +559,6 @@ DEPENDENCIES
   vcr
   web-console (~> 2.0)
   webmock
+
+BUNDLED WITH
+   1.10.6

@@ -17,6 +17,21 @@ class Report::Base
     ReportProcessProgressWorker.perform_async @report.id
   end
 
+  def get_batch batch_name
+    batch = nil
+    if @report.batches[batch_name.to_s].present?
+      batch = Sidekiq::Batch.new(@report.batches[batch_name.to_s]) rescue nil
+    end
+    unless batch
+      batch = Sidekiq::Batch.new
+      batch.on(:success, 'Report::Callback', class_name: self.class.name, report_id: @report.id)
+      batch.description = "Report #{@report.id} batch for #{batch_name}"
+      @report.batches[batch_name.to_s] = batch.bid
+      @report.save if @report.changed?
+    end
+    batch
+  end
+
   protected
 
   def after_finish
@@ -64,63 +79,52 @@ class Report::Base
     ids ||= @report.processed_ids
 
     unless @report.steps.include?('user_info')
-      not_updated = User.where(id: ids).outdated(1.day.ago(@report.created_at)).pluck(:id)
-      if not_updated.size == 0
-        @report.steps.push 'user_info'
-        @report.save
+      batch = get_batch(:user_info)
+      if batch && batch.jids.size > 0
+        @progress += (batch.status.total - batch.status.pending) / batch.status.total.to_f / @parts_amount
       else
-        not_updated.map { |uid| UserUpdateWorker.perform_async uid, force: true }
-        @progress += (ids.size - not_updated.size) / ids.size.to_f / @parts_amount
+        not_updated = User.where(id: ids).outdated(1.day.ago(@report.created_at)).pluck(:id)
+        if not_updated.size == 0
+          @report.steps.push 'user_info'
+          @report.save
+        else
+          batch.jobs do
+            not_updated.map { |uid| UserUpdateWorker.perform_async uid, force: true }
+          end
+          @progress += (ids.size - not_updated.size) / ids.size.to_f / @parts_amount
+        end
       end
     end
   end
 
-  def process_likes processed_ids=nil
+  def process_avg_data processed_ids=nil
     processed_ids ||= @report.processed_ids
 
     # if we need avg likes data and it is not yet grabbed
-    if @report.output_data.include?('likes') && !@report.steps.include?('likes')
-      ids = self.get_cached('get_likes', processed_ids)
-      get_likes = []
-      ids.in_groups_of(5_000, false) do |ids|
-        users = User.where(id: ids).without_likes.with_media.not_private.pluck(:id)
-        get_likes.concat users
-      end
-      if get_likes.size == 0
-        self.delete_cached('get_likes')
-        @report.steps.push 'likes'
-        @report.save
+    if (@report.output_data.include?('likes') && !@report.steps.include?('likes')) || (@report.output_data.include?('comments') && !@report.steps.include?('comments'))
+      batch = get_batch(:avg_data)
+      if batch && batch.jids.size > 0
+        @progress += (batch.status.total - batch.status.pending) / batch.status.total.to_f / @parts_amount
       else
-        get_likes[0..BATCH_UPDATE].each do |uid|
-          UserAvgDataWorker.perform_async uid
+        ids = self.get_cached('get_avg_data', processed_ids)
+        get_avg_data = []
+        ids.in_groups_of(5_000, false) do |ids|
+          get_avg_data.concat User.where(id: ids).without_avg_data.with_media.not_private.pluck(:id)
         end
-        self.save_cached('get_likes', get_likes)
-        @progress += (processed_ids.size - get_likes.size) / processed_ids.size.to_f / @parts_amount
-      end
-    end
-  end
-
-  def process_comments processed_ids=nil
-    processed_ids ||= @report.processed_ids
-
-    # if we need avg likes data and it is not yet grabbed
-    if @report.output_data.include?('comments') && !@report.steps.include?('comments')
-      ids = self.get_cached('get_comments', processed_ids)
-      get_comments = []
-      ids.in_groups_of(5_000, false) do |ids|
-        users = User.where(id: ids).without_comments.with_media.not_private.pluck(:id)
-        get_comments.concat users
-      end
-      if get_comments.size == 0
-        self.delete_cached('get_comments')
-        @report.steps.push 'comments'
-        @report.save
-      else
-        get_comments[0..BATCH_UPDATE].each do |uid|
-          UserAvgDataWorker.perform_async uid
+        if get_avg_data.size == 0
+          self.delete_cached('get_avg_data')
+          @report.steps.push 'likes' if @report.output_data.include?('likes')
+          @report.steps.push 'comments' if @report.output_data.include?('comments')
+          @report.save
+        else
+          batch.jobs do
+            get_avg_data.each do |uid|
+              UserAvgDataWorker.perform_async uid
+            end
+          end
+          self.save_cached('get_avg_data', get_avg_data)
+          @progress += (processed_ids.size - get_avg_data.size) / processed_ids.size.to_f / @parts_amount
         end
-        self.save_cached('get_comments', get_comments)
-        @progress += (processed_ids.size - get_comments.size) / processed_ids.size.to_f / @parts_amount
       end
     end
   end
@@ -130,21 +134,28 @@ class Report::Base
 
     # if we need location data and it is not yet grabbed
     if @report.output_data.include?('location') && !@report.steps.include?('location')
-      ids = self.get_cached('get_location', processed_ids)
-      get_location = []
-      ids.in_groups_of(20_000, false) do |g|
-        users = User.where(id: g).without_location.with_media.not_private.pluck(:id)
-        get_location.concat users
-      end
-      if get_location.size == 0
-        self.delete_cached('get_location')
-        @report.steps.push 'location'
+      batch = get_batch(:location)
+      if batch && batch.jids.size > 0
+        @progress += (batch.status.total - batch.status.pending) / batch.status.total.to_f / @parts_amount
       else
-        get_location[0..BATCH_UPDATE].each do |uid|
-          UserLocationWorker.perform_async uid
+        ids = self.get_cached('get_location', processed_ids)
+        get_location = []
+        ids.in_groups_of(20_000, false) do |g|
+          users = User.where(id: g).without_location.with_media.not_private.pluck(:id)
+          get_location.concat users
         end
-        self.save_cached('get_location', get_location)
-        @progress += (processed_ids.size - get_location.size) / processed_ids.size.to_f / @parts_amount
+        if get_location.size == 0
+          self.delete_cached('get_location')
+          @report.steps.push 'location'
+        else
+          batch.jobs do
+            get_location.each do |uid|
+              UserLocationWorker.perform_async uid
+            end
+          end
+          self.save_cached('get_location', get_location)
+          @progress += (processed_ids.size - get_location.size) / processed_ids.size.to_f / @parts_amount
+        end
       end
     end
   end
@@ -154,22 +165,31 @@ class Report::Base
 
     # if we need feedly subscribers amount and it is not yet grabbed
     if @report.output_data.include?('feedly') && !@report.steps.include?('feedly')
-      with_website = []
-      feedly_exists = []
-      ids.in_groups_of(5_000, false) do |ids|
-        for_process = User.where(id: ids).with_url.pluck(:id)
-        with_website.concat for_process
-        feedly_exists.concat Feedly.where(user_id: for_process).pluck(:user_id)
-      end
-
-      no_feedly = with_website - feedly_exists
-
-      if no_feedly.size == 0
-        @report.steps.push 'feedly'
-        @report.save
+      batch = get_batch(:feedly)
+      if batch && batch.jids.size > 0
+        @progress += (batch.status.total - batch.status.pending) / batch.status.total.to_f / @parts_amount
       else
-        no_feedly.each { |uid| UserFeedlyWorker.perform_async uid }
-        @progress += feedly_exists.size / with_website.size.to_f / @parts_amount
+        with_website = []
+        feedly_exists = []
+        ids.in_groups_of(5_000, false) do |ids|
+          for_process = User.where(id: ids).with_url.pluck(:id)
+          with_website.concat for_process
+          feedly_exists.concat Feedly.where(user_id: for_process).pluck(:user_id)
+        end
+
+        no_feedly = with_website - feedly_exists
+
+        if no_feedly.size == 0
+          @report.steps.push 'feedly'
+          @report.save
+        else
+          get_batch(:feedly).jobs do
+            no_feedly.each do |uid|
+              UserFeedlyWorker.perform_async uid
+            end
+          end
+          @progress += feedly_exists.size / with_website.size.to_f / @parts_amount
+        end
       end
     end
   end
@@ -206,17 +226,24 @@ class Report::Base
     ids ||= @report.processed_ids
 
     if @report.steps.include?('user_info') && !@report.steps.include?('followers')
-      for_update = User.where(id: ids).not_private.where('followed_by > 0').map{|u| [u.id, u.followed_by, u.followers_size, u]}.select{ |r| r[2]/r[1].to_f < 0.95 || (r[2]/r[1].to_f > 1.2 && r[1] < 50_000) }
-
-      if for_update.size == 0
-        @report.steps.push 'followers'
-        @report.save
-        User.where(id: ids).not_private.where("followers_updated_at is null OR followers_updated_at < ?", 10.days.ago).where('followed_by > 0').update_all(followers_updated_at: Time.now)
+      batch = get_batch(:followers_collect)
+      if batch && batch.jids.size > 0
+        @progress += (batch.status.total - batch.status.pending) / batch.status.total.to_f / @parts_amount
       else
-        for_update.each do |r|
-          UserFollowersCollectWorker.perform_async r[0], ignore_exists: true
+        for_update = User.where(id: ids).not_private.where('followed_by > 0').map{|u| [u.id, u.followed_by, u.followers_size, u]}.select{ |r| r[2]/r[1].to_f < 0.95 || (r[2]/r[1].to_f > 1.2 && r[1] < 50_000) }
+
+        if for_update.size == 0
+          @report.steps.push 'followers'
+          @report.save
+          User.where(id: ids).not_private.where("followers_updated_at is null OR followers_updated_at < ?", 10.days.ago).where('followed_by > 0').update_all(followers_updated_at: Time.now)
+        else
+          get_batch(:followers_collect).jobs do
+            for_update.each do |r|
+              UserFollowersCollectWorker.perform_async r[0], ignore_exists: true
+            end
+          end
+          @progress += (ids.size - for_update.size) / ids.size.to_f / @parts_amount
         end
-        @progress += (ids.size - for_update.size) / ids.size.to_f / @parts_amount
       end
     end
   end
@@ -247,44 +274,49 @@ class Report::Base
 
       # update followers info, so in report we will have actual media amount, followers and etc. data
       unless @report.steps.include?('followers_info')
-
-        followers_to_update = self.get_cached('followers_to_update', followers_ids)
-
-        not_updated = []
-        followers_to_update.in_groups_of(50_000, false) do |part_ids|
-          # grab all users without data and data outdated for 14 days
-          list = User.where(id: part_ids).outdated(30.days.ago(@report.created_at)).pluck(:id)
-
-          # in slim report we need only users with emails and over 1k followers. do not update follower if we grab data
-          # for him and there is no email in bio
-          if @report.output_data.include?('slim')
-            users_exclude = User.where(id: list).where('(grabbed_at IS NOT NULL AND email IS NULL) OR (grabbed_at IS NOT NULL AND grabbed_at < ? AND followed_by IS NOT NULL AND followed_by < ?)', 2.months.ago, 900).pluck(:id)
-            list -= users_exclude
-          end
-
-          if @report.output_data.include?('slim_followers')
-            users_exclude = User.where(id: list).where('grabbed_at IS NOT NULL AND grabbed_at < ? AND followed_by IS NOT NULL AND followed_by < ?', 3.months.ago, 900).pluck(:id)
-            list -= users_exclude
-          end
-
-          if list.size > 0
-            not_updated.concat list
-          end
-        end
-
-        if not_updated.size == 0
-          self.delete_cached('followers_to_update')
-          @report.steps.push 'followers_info'
-          @report.save
+        batch = get_batch(:followers_update)
+        if batch && batch.jids.size > 0
+          @progress += (batch.status.total - batch.status.pending) / batch.status.total.to_f / @parts_amount
         else
-          # send to update only first N users to not overload query
-          not_updated[0...BATCH_UPDATE].each do |uid|
-            UserUpdateWorker.perform_async uid
+          followers_to_update = self.get_cached('followers_to_update', followers_ids)
+
+          not_updated = []
+          followers_to_update.in_groups_of(50_000, false) do |part_ids|
+            # grab all users without data and data outdated for 14 days
+            list = User.where(id: part_ids).outdated(30.days.ago(@report.created_at)).pluck(:id)
+
+            # in slim report we need only users with emails and over 1k followers. do not update follower if we grab data
+            # for him and there is no email in bio
+            if @report.output_data.include?('slim')
+              users_exclude = User.where(id: list).where('(grabbed_at IS NOT NULL AND email IS NULL) OR (grabbed_at IS NOT NULL AND grabbed_at < ? AND followed_by IS NOT NULL AND followed_by < ?)', 2.months.ago, 900).pluck(:id)
+              list -= users_exclude
+            end
+
+            if @report.output_data.include?('slim_followers')
+              users_exclude = User.where(id: list).where('grabbed_at IS NOT NULL AND grabbed_at < ? AND followed_by IS NOT NULL AND followed_by < ?', 3.months.ago, 900).pluck(:id)
+              list -= users_exclude
+            end
+
+            if list.size > 0
+              not_updated.concat list
+            end
           end
-          self.save_cached('followers_to_update', not_updated)
-          @progress += (followers_ids.size - not_updated.size) / followers_ids.size.to_f / @parts_amount
+
+          if not_updated.size == 0
+            self.delete_cached('followers_to_update')
+            @report.steps.push 'followers_info'
+            @report.save
+          else
+            get_batch(:followers_update).jobs do
+              not_updated.each do |uid|
+                UserUpdateWorker.perform_async uid
+              end
+            end
+            self.save_cached('followers_to_update', not_updated)
+            @progress += (followers_ids.size - not_updated.size) / followers_ids.size.to_f / @parts_amount
+          end
+          @report.save
         end
-        @report.save
       end
     end
   end
@@ -293,16 +325,23 @@ class Report::Base
     ids ||= @report.processed_ids
 
     if @report.steps.include?('user_info') && !@report.steps.include?('followees')
-      for_update = User.where(id: ids).not_private.where('follows > 0').map{|u| [u.id, u.follows, u.followees_size, u]}.select{ |r| r[2]/r[1].to_f < 0.95 || (r[2]/r[1].to_f > 1.2 && r[1] < 50_000) }
-
-      if for_update.size == 0
-        @report.steps.push 'followees'
-        @report.save
+      batch = get_batch(:followees_collect)
+      if batch && batch.jids.size > 0
+        @progress += (batch.status.total - batch.status.pending) / batch.status.total.to_f / @parts_amount
       else
-        for_update.each do |r|
-          UserFolloweesCollectWorker.perform_async r[0], ignore_exists: true
+        for_update = User.where(id: ids).not_private.where('follows > 0').map{|u| [u.id, u.follows, u.followees_size, u]}.select{ |r| r[2]/r[1].to_f < 0.95 || (r[2]/r[1].to_f > 1.2 && r[1] < 50_000) }
+
+        if for_update.size == 0
+          @report.steps.push 'followees'
+          @report.save
+        else
+          get_batch(:followees_collect).jobs do
+            for_update.each do |r|
+              UserFolloweesCollectWorker.perform_async r[0], ignore_exists: true
+            end
+          end
+          @progress += (ids.size - for_update.size) / ids.size.to_f/ @parts_amount
         end
-        @progress += (ids.size - for_update.size) / ids.size.to_f/ @parts_amount
       end
     end
   end
@@ -333,19 +372,25 @@ class Report::Base
 
       # update followees info, so in report we will have actual media amount, followees and etc. data
       unless @report.steps.include?('followees_info')
-        not_updated = []
-        followees_ids.in_groups_of(20_000, false) do |ids|
-          not_updated.concat User.where(id: ids).outdated(7.days.ago(@report.created_at)).pluck(:id)
-        end
-        if not_updated.size == 0
-          @report.steps.push 'followees_info'
-          @report.save
+        batch = get_batch(:followees_update)
+        if batch && batch.jids.size > 0
+          @progress += (batch.status.total - batch.status.pending) / batch.status.total.to_f / @parts_amount
         else
-          # send to update only first N users to not overload query
-          not_updated[0...BATCH_UPDATE].each do |uid|
-            UserUpdateWorker.perform_async uid
+          not_updated = []
+          followees_ids.in_groups_of(20_000, false) do |ids|
+            not_updated.concat User.where(id: ids).outdated(7.days.ago(@report.created_at)).pluck(:id)
           end
-          @progress += (followees_ids.size - not_updated.size) / followees_ids.size.to_f / @parts_amount
+          if not_updated.size == 0
+            @report.steps.push 'followees_info'
+            @report.save
+          else
+            get_batch(:followees_update).jobs do
+              not_updated.each do |uid|
+                UserUpdateWorker.perform_async uid
+              end
+            end
+            @progress += (followees_ids.size - not_updated.size) / followees_ids.size.to_f / @parts_amount
+          end
         end
       end
     end

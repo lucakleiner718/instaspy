@@ -15,8 +15,7 @@ class Report::Users < Report::Base
         self.grab_followers
         self.update_followers
       end
-      self.process_likes
-      self.process_comments
+      self.process_avg_data
       self.process_location
       self.process_feedly
     end

@@ -49,7 +49,10 @@ gem 'instagram', '~> 1.1.6'
 gem 'httparty'
 gem 'render_csv'
 
-gem 'sidekiq', '~> 3.5.0'
+# gem 'sidekiq', '~> 3.5.0'
+source "https://058b026d:dbdee804@gems.contribsys.com/" do
+  gem 'sidekiq-pro'
+end
 gem 'sidekiq-failures', '~> 0.4.5'
 gem 'sidekiq-unique-jobs', '~> 4.0'
 
