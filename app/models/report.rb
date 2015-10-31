@@ -24,11 +24,11 @@ class Report < ActiveRecord::Base
   before_update do
     if self.status_changed? && self.status == 'stopped'
       # ReportStopJobs.perform_async self.id
-      @report.batches.each do |name, jid|
+      self.batches.each do |name, jid|
         Sidekiq::Batch.new(jid).invalidate_all rescue nil
         Sidekiq::Batch.new(jid).status.delete rescue nil
       end
-      @report.batches = {}
+      self.batches = {}
     end
   end
 
