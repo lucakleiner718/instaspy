@@ -25,6 +25,7 @@ class Report::Base
     unless batch
       batch = Sidekiq::Batch.new
       batch.on(:success, 'Report::Callback', class_name: self.class.name, report_id: @report.id)
+      batch.on(:complete, 'Report::Callback', class_name: self.class.name, report_id: @report.id)
       batch.description = "Report #{@report.id} batch for #{batch_name}"
       @report.batches[batch_name.to_s] = batch.bid
       @report.save if @report.changed?

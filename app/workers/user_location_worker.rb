@@ -7,7 +7,7 @@ class UserLocationWorker
     begin
       user = User.find(user_id)
       user.update_location!
-    rescue ActiveRecord::RecordNotFound
+    rescue ActiveRecord::RecordNotFound => e
     end
   end
 
