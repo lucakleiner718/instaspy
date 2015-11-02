@@ -30,6 +30,11 @@ class Report::Base
       @report.batches[batch_name.to_s] = batch.bid
       @report.save if @report.changed?
     end
+    if batch && batch.jids.size > 0 && batch.status.pending < 1
+      batch.invalidate_all rescue nil
+      batch.status.delete rescue nil
+      batch = nil
+    end
     batch
   end
 
