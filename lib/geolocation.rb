@@ -43,7 +43,7 @@ class Geolocation
       rescue TimeoutError, SocketError, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Errno::ECONNRESET,
         Zlib::BufError, Zlib::DataError => e
         logger.info "Geocoder exception #{e.class.name} #{e.message}".light_red
-        sleep 10
+        sleep 3
         retries += 1
         retry if retries <= 5
         return false
