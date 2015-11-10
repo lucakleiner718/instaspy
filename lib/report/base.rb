@@ -46,6 +46,11 @@ class Report::Base
         batch = nil
       end
     end
+    if batch && batch.jids.size > 0 && batch.status.pending < 1
+      batch.invalidate_all rescue nil
+      batch.status.delete rescue nil
+      batch = nil
+    end
     unless batch
       batch = Sidekiq::Batch.new
       batch.on(:success, 'Report::Callback', class_name: self.class.name, report_id: @report.id)
@@ -53,11 +58,6 @@ class Report::Base
       batch.description = "Report #{@report.id} batch for #{batch_name}"
       @report.batches[batch_name.to_s] = batch.bid
       @report.save if @report.changed?
-    end
-    if batch && batch.jids.size > 0 && batch.status.pending < 1
-      batch.invalidate_all rescue nil
-      batch.status.delete rescue nil
-      batch = nil
     end
     batch
   end
