@@ -38,6 +38,14 @@ class Report::Base
         batch = nil
       end
     end
+    if batch
+      pending = batch.status.pending
+      if Sidekiq::Queue.all.select{|q| q.size > pending}.size == 0
+        Sidekiq::Batch.new(batch.bid).invalidate_all rescue nil
+        Sidekiq::Batch.new(batch.bid).status.delete rescue nil
+        batch = nil
+      end
+    end
     unless batch
       batch = Sidekiq::Batch.new
       batch.on(:success, 'Report::Callback', class_name: self.class.name, report_id: @report.id)

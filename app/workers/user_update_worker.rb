@@ -5,6 +5,8 @@ class UserUpdateWorker
     unique: :until_executed, unique_job_expiration: 1 * 60 * 60
 
   def perform user_id, *args
+    return unless (valid_within_batch? rescue true) # checks if job in batch and valid
+
     options = args.extract_options!
     if args.size == 1 && args.first.is_a?(TrueClass)
       options[:force] = args.first
