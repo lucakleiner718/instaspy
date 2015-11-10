@@ -264,6 +264,12 @@ class Reporter
       Sidekiq::Batch.new(status.bid).invalidate_all rescue nil
       Sidekiq::Batch.new(status.bid).status.delete rescue nil
     end
+    Report.where(status: 'in_process').each do |report|
+      report.batches.each do |name, bid|
+        Sidekiq::Batch.new(bid).invalidate_all rescue nil
+        Sidekiq::Batch.new(bid).status.delete rescue nil
+      end
+    end
     ReportProcessNewWorker.spawn
     ReportProcessProgressWorker.spawn
   end

@@ -22,6 +22,13 @@ class Report::Base
     if @report.batches[batch_name.to_s].present?
       batch = Sidekiq::Batch.new(@report.batches[batch_name.to_s]) rescue nil
     end
+    if batch
+      unless Sidekiq::BatchSet.new.map{|status| status.bid}.include?(batch.bid)
+        Sidekiq::Batch.new(batch.bid).invalidate_all rescue nil
+        Sidekiq::Batch.new(batch.bid).status.delete rescue nil
+        batch = nil
+      end
+    end
     unless batch
       batch = Sidekiq::Batch.new
       batch.on(:success, 'Report::Callback', class_name: self.class.name, report_id: @report.id)
