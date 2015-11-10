@@ -1,4 +1,11 @@
 GIT
+  remote: git://github.com/antonzaytsev/geocoder.git
+  revision: 94c9e1dc8d25b987b02ea3974b6739d96634e56d
+  branch: patch-1
+  specs:
+    geocoder (1.2.12)
+
+GIT
   remote: git://github.com/khelll/feedlr.git
   revision: d8c87aefab73c5206d2d040ba36fabf50a57b6e8
   specs:
@@ -254,7 +261,6 @@ GEM
       fog-core
       nokogiri (~> 1.5, >= 1.5.11)
     formatador (0.2.5)
-    geocoder (1.2.11)
     globalid (0.3.6)
       activesupport (>= 4.1.0)
     god (0.13.6)
@@ -519,7 +525,7 @@ DEPENDENCIES
   factory_girl_rails
   feedlr!
   fog
-  geocoder
+  geocoder!
   god
   guard-rspec
   httparty
