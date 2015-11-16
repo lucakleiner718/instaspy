@@ -12,5 +12,8 @@ class Report::Callback
       Sidekiq::Batch.new(jid).status.delete
       ReportProcessProgressWorker.spawn
     end
+  rescue Sidekiq::Batch::NoSuchBatch => e
+    Reporter.invalidate_batches
+    ReportProcessProgressWorker.spawn
   end
 end
