@@ -111,10 +111,9 @@ class UserFollowersCollect < ServiceObject
       total_added += added
 
       finish = Time.now
-      logger.debug ">> [#{user.username.green}] followers:#{user.followed_by} request: #{(finish-start).to_f.round(2)}s :: IG request: #{(end_ig-start).to_f.round(2)}s / exists: #{exists} (#{total_exists.to_s.light_black}) / added: #{added} (#{total_added.to_s.light_black})"
+      logger.debug ">> [#{user.username.green}] (#{resp.data.size}) followers:#{user.followed_by} request: #{(finish-start).to_f.round(2)}s :: IG request: #{(end_ig-start).to_f.round(2)}s / exists: #{exists} (#{total_exists.to_s.light_black}) / added: #{added} (#{total_added.to_s.light_black})"
 
       if !options[:ignore_exists] && exists > 5
-        user.followers_updated_time!
         break
       end
 
