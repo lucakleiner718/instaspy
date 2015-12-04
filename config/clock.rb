@@ -52,8 +52,10 @@ module Clockwork
 
   # Process reports
   every(30.minutes, 'ReportProcess') {
-    # ReportProcessNewWorker.spawn
+    ReportProcessNewWorker.spawn
     ReportProcessProgressWorker.spawn
   }
+
+  every(1.hour, 'CleanUpBatches'){ SidekiqBatchesCleanWorker.perform_async }
 
 end
