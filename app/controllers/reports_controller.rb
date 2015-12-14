@@ -5,18 +5,28 @@ class ReportsController < ApplicationController
   def index
     @reports = Report.all
 
-    case params[:format]
+    params[:q] ||= {}
+    params[:q][:status] = 'active' unless params[:q][:status]
+
+    status = params[:q][:status]
+    format = params[:q][:format]
+
+    case status
       when 'all'
 
       when 'new', 'in_process', 'finished'
-        @reports = @reports.where(status: params[:format])
+        @reports = @reports.where(status: status)
       when nil, 'active'
         @reports = @reports.where(status: ['new', 'in_process'])
     end
 
+    if format && format.in?(Report::GOALS.map(&:last))
+      @reports = @reports.where(format: format)
+    end
+
     if params[:sort]
       @reports = @reports.order("#{params[:sort]} #{params[:direction]}")
-    elsif params[:format] == 'finished'
+    elsif status == 'finished'
       @reports = @reports.order(finished_at: :desc)
     else
       @reports = @reports.order(created_at: :desc, started_at: :desc, finished_at: :desc)

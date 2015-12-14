@@ -1,5 +1,5 @@
 <div class="row">
-  <div class="col-sm-6"><h1>Reports <% if params[:format] %> <span class="label label-default"><%= params[:format].titleize %></span><% end %></h1></div>
+  <div class="col-sm-6"><h1>Reports</h1></div>
   <div class="col-sm-6">
     <%= link_to 'Add report', new_report_path, class: 'btn btn-success pull-right', style: 'margin-top: 28px;' %>
   </div>
@@ -7,11 +7,32 @@
 
 <div class="row">
   <div class="col-sm-4">
-    <%= link_to 'Active', reports_path(params: { format: :active }), class: "label label-primary", title: 'New and In Process' %>
-    <%= link_to 'New', reports_path(params: { format: :new }), class: "label label-primary" %>
-    <%= link_to 'In Process', reports_path(params:  { format: :in_process }), class: "label label-primary" %>
-    <%= link_to 'Finished', reports_path(params: { format: :finished }), class: "label label-primary" %>
-    <%= link_to 'All', reports_path(params: { format: :all }), class: "label label-default" %>
+    <div class="btn-group">
+      <% buttons = [
+        { label: 'Active', title: 'New and In Process', status: :active },
+        { label: 'New', status: :new },
+        { label: 'In Process', status: :in_process },
+        { label: 'Finished', status: :finished },
+        { label: 'All', status: :all },
+      ] %>
+      <% current_status = params[:q][:status] %>
+      <% buttons.each do |btn| %>
+        <% active = (current_status.present? && btn[:status].to_s == current_status.to_s) ||
+          (current_status.blank? && btn[:status] == :active) %>
+        <%= link_to btn[:label], reports_path(params: {q: params[:q].merge(status: btn[:status])}), class: "btn btn-primary btn-xs #{'active' if active}", title: btn[:title] %>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="col-sm-5">
+    <div class="btn-group">
+      <% formats = Report::GOALS.sort{|a,b| a[1] <=> b[1]} %>
+      <% formats.each do |format| %>
+        <% active = params[:q] && format[1] == params[:q][:format] %>
+        <%= link_to format[0], reports_path(params: {q: params[:q].merge(format: format[1])}), class: "btn btn-primary btn-xs #{'active' if active}" %>
+      <% end %>
+      <%= link_to 'All', reports_path(params: {q: params[:q].merge(format: :all)}), class: "btn btn-primary btn-xs #{'active' if params[:q][:format].blank? || params[:q][:format] == 'all'}" %>
+    </div>
   </div>
 </div>
 
