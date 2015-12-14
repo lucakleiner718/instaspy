@@ -45,12 +45,7 @@ class Report::Followers < Report::Base
   def finish
     files = []
 
-    header = ['ID', 'Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followers', 'Email']
-    header += ['Country', 'State', 'City'] if @report.output_data.include? 'location'
-    header += ['AVG Likes'] if @report.output_data.include? 'likes'
-    header += ['Feedly Subscribers'] if @report.output_data.include? 'feedly'
-    header.slice! 4,1 if @report.output_data.include?('slim') || @report.output_data.include?('slim_followers')
-    header += ['Relation']
+    header = output_columns
 
     total_followers_amount = 0
 
@@ -59,30 +54,7 @@ class Report::Followers < Report::Base
       unless File.exists? Rails.root.join('tmp', filename)
         csv_string = CSV.generate do |csv|
           csv << header
-          followers_ids = Follower.where(user_id: user.id)
-          followers_ids = followers_ids.where("followed_at >= ?", @report.date_from) if @report.date_from
-          followers_ids = followers_ids.where("followed_at <= ?", @report.date_to) if @report.date_to
-          followers_ids = followers_ids.pluck(:follower_id).uniq
-          followers_ids.in_groups_of(20_000, false) do |followers_ids_part|
-            followers = User.where(id: followers_ids_part)
-            followers = followers.where("email is not null").where("followed_by >= ?", 1_000) if @report.output_data.include? 'slim'
-            followers = followers.where("followed_by >= ?", 1_000) if @report.output_data.include? 'slim_followers'
-            followers.each do |u|
-              row = [u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email]
-              row.slice! 4,1 if @report.output_data.include?('slim') || @report.output_data.include?('slim_followers')
-              row.concat [u.location_country, u.location_state, u.location_city] if @report.output_data.include? 'location'
-              row.concat [u.avg_likes] if @report.output_data.include? 'likes'
-              if @report.output_data.include? 'feedly'
-                feedly = u.feedly.first
-                row.concat [feedly ? feedly.subscribers_amount : '']
-              end
-              row << user.username
-
-              csv << row
-
-              total_followers_amount += 1
-            end
-          end
+          total_followers_amount += build_file_row(user, csv)
         end
 
         File.write Rails.root.join('tmp', filename), csv_string
@@ -119,9 +91,62 @@ class Report::Followers < Report::Base
     self.after_finish
   end
 
-  # def after_finish
-  #   super
-  #   ReportStopJobs.perform_async @report.id
-  # end
+  private
 
+  def output_columns
+    header = []
+    if @report.output_data.include?('email_only')
+      header += ['Username', 'Email']
+    else
+      header += ['ID', 'Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followers', 'Email']
+    end
+
+    header += ['Country', 'State', 'City'] if @report.output_data.include?('location')
+    header += ['AVG Likes'] if @report.output_data.include?('likes')
+    header += ['Feedly Subscribers'] if @report.output_data.include?('feedly')
+    header.slice! 4,1 if @report.output_data.include?('slim') || @report.output_data.include?('slim_followers')
+    header += ['Relation'] unless @report.output_data.include?('email_only')
+
+    header
+  end
+
+  def build_file_row(user, csv)
+    ids = Follower.where(user_id: user.id)
+    ids = ids.where("followed_at >= ?", @report.date_from) if @report.date_from
+    ids = ids.where("followed_at <= ?", @report.date_to) if @report.date_to
+    ids = ids.pluck(:follower_id).uniq
+    followers_amount = 0
+
+    ids.in_groups_of(20_000, false) do |ids_part|
+      followers = User.where(id: ids_part)
+      followers = followers.where("email is not null").where("followed_by >= ?", 1_000) if @report.output_data.include?('slim')
+      followers = followers.where("followed_by >= ?", 1_000) if @report.output_data.include?('slim_followers')
+      followers = followers.where("email is not null") if @report.output_data.include?('email_only')
+
+      followers.each do |u|
+        row = []
+        if @report.output_data.include?('email_only')
+          row += [u.username, u.email]
+        else
+          row += [u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email]
+          row.slice!(4,1) if @report.output_data.include?('slim') || @report.output_data.include?('slim_followers')
+        end
+
+        row += [u.location_country, u.location_state, u.location_city] if @report.output_data.include?('location')
+        row += [u.avg_likes] if @report.output_data.include?('likes')
+        if @report.output_data.include?('feedly')
+          feedly = u.feedly.first
+          row.concat [feedly ? feedly.subscribers_amount : '']
+        end
+        # Relation
+        row << user.username unless @report.output_data.include?('email_only')
+
+        csv << row
+
+        followers_amount += 1
+      end
+    end
+
+    followers_amount
+  end
 end

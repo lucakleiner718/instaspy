@@ -36,7 +36,7 @@ class Report < ActiveRecord::Base
     ['AVG Likes', 'likes'], ['AVG Comments', 'comments'], ['Location', 'location'], ['Feedly subscribers amount', 'feedly'],
     ['Last media date', 'last_media_date'], ['Slim (1k+ followers, with email)', 'slim'],
     ['Slim (1k+ followers)', 'slim_followers'], ['Media Image URL', 'media_url'], ['Include All Media', 'all_media'],
-    ['Followers Analytics', 'followers_analytics']
+    ['Followers Analytics', 'followers_analytics'], ['Email only', 'email_only']
   ]
 
   GOALS = [

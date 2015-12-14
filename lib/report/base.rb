@@ -260,7 +260,7 @@ class Report::Base
       if batch && batch.jids.size > 0
         @progress += (batch.status.total - batch.status.pending) / batch.status.total.to_f / @parts_amount
       else
-        for_update = User.where(id: ids).not_private.where('followed_by > 0').where('followers_updated_at < ?', @report.created_at).map{|u| [u.id, u.followed_by, u.followers_size, u]}.select{ |r| r[2]/r[1].to_f < 0.95 || (r[2]/r[1].to_f > 1.2 && r[1] < 50_000) }
+        for_update = User.where(id: ids).not_private.where('followed_by > 0').where('followers_updated_at IS NULL OR followers_updated_at < ?', @report.created_at).map{|u| [u.id, u.followed_by, u.followers_size, u]}.select{ |r| r[2]/r[1].to_f < 0.95 || (r[2]/r[1].to_f > 1.2 && r[1] < 50_000) }
 
         if for_update.size == 0
           @report.steps.push 'followers'
