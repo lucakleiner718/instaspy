@@ -42,8 +42,6 @@ class Report::Followers < Report::Base
     @report.save!
   end
 
-  private
-
   def finish
     files = []
 
@@ -92,6 +90,8 @@ class Report::Followers < Report::Base
 
     self.after_finish
   end
+
+  private
 
   def output_columns
     header = []
