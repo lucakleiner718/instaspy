@@ -94,17 +94,13 @@ class Report::Followees < Report::Base
 
   def output_columns
     header = []
-    if @report.output_data.include?('email_only')
-      header += ['Username', 'Email']
-    else
-      header += ['ID', 'Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followers', 'Email']
-    end
+    header += ['ID', 'Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followers', 'Email']
 
     header += ['Country', 'State', 'City'] if @report.output_data.include?('location')
     header += ['AVG Likes'] if @report.output_data.include?('likes')
     header += ['Feedly Subscribers'] if @report.output_data.include?('feedly')
     header.slice! 4,1 if @report.output_data.include?('slim') || @report.output_data.include?('slim_followers')
-    header += ['Relation'] unless @report.output_data.include?('email_only')
+    header += ['Relation']
 
     header
   end
@@ -124,12 +120,8 @@ class Report::Followees < Report::Base
 
       followers.each do |u|
         row = []
-        if @report.output_data.include?('email_only')
-          row += [u.username, u.email]
-        else
-          row += [u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email]
-          row.slice!(4,1) if @report.output_data.include?('slim') || @report.output_data.include?('slim_followers')
-        end
+        row += [u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email]
+        row.slice!(4,1) if @report.output_data.include?('slim') || @report.output_data.include?('slim_followers')
 
         row += [u.location_country, u.location_state, u.location_city] if @report.output_data.include?('location')
         row += [u.avg_likes] if @report.output_data.include?('likes')
@@ -137,8 +129,7 @@ class Report::Followees < Report::Base
           feedly = u.feedly.first
           row.concat [feedly ? feedly.subscribers_amount : '']
         end
-        # Relation
-        row << user.username unless @report.output_data.include?('email_only')
+        row += [user.username] # Relation
 
         csv << row
 
