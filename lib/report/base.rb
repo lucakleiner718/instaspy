@@ -139,7 +139,7 @@ class Report::Base
         ids = self.get_cached('get_avg_data', processed_ids)
         get_avg_data = []
         ids.in_groups_of(5_000, false) do |ids|
-          get_avg_data.concat User.where(id: ids).without_avg_data.with_media.not_private.pluck(:id)
+          get_avg_data.concat User.where(id: ids).without_avg_data(1.month.ago(@report.created_at)).with_media.not_private.pluck(:id)
         end
         if get_avg_data.size == 0
           self.delete_cached('get_avg_data')
