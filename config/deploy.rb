@@ -22,13 +22,6 @@ set :keep_releases, 5
 
 set :deploy_to, '/home/app/instaspy'
 
-set :puma_conf, "#{shared_path}/puma.rb"
-set :puma_state, "#{shared_path}/tmp/pids/puma.state"
-set :puma_role, :web
-set :puma_workers, 2
-set :puma_preload_app, false
-set :puma_threads, [0, 4]
-
 set :sidekiq_timeout, 60
 set :sidekiq_run_in_background, false
 
@@ -37,8 +30,6 @@ set :rvm_ruby_version, '2.1.1@instaspy'
 set :rvm_roles, %w{app web}
 
 set :bundle_binstubs, nil
-
-# after 'deploy:restart', 'puma:restart'
 
 set :god_pid, "#{shared_path}/tmp/pids/god.pid"
 set :god_config, "#{release_path}/config/god.rb"
