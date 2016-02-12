@@ -38,7 +38,7 @@ set :rvm_roles, %w{app web}
 
 set :bundle_binstubs, nil
 
-after 'deploy:restart', 'puma:restart'
+# after 'deploy:restart', 'puma:restart'
 
 set :god_pid, "#{shared_path}/tmp/pids/god.pid"
 set :god_config, "#{release_path}/config/god.rb"
