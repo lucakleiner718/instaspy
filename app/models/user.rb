@@ -1025,7 +1025,7 @@ class User < ActiveRecord::Base
       if e.message =~ /index_users_on_insta_id/
         return User.where(username: self.username).first
       elsif e.message =~ /index_users_on_username/
-        exists_user = User.where(username: self.username).first
+        exists_user = User.find_by(username: self.username)
 
         if exists_user.insta_id == self.insta_id
           return exists_user
