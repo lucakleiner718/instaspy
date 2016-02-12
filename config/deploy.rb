@@ -43,43 +43,6 @@ after 'deploy:restart', 'puma:restart'
 set :god_pid, "#{shared_path}/tmp/pids/god.pid"
 set :god_config, "#{release_path}/config/god.rb"
 
-# namespace :god do
-#
-#   task :restart do
-#     on roles(:app), in: :parallel do
-#       within release_path do
-#         with rails_env: fetch(:rails_env) do
-#           pid = capture(:cat, fetch(:god_pid))
-#           execute :kill, pid, '> /dev/null' if pid
-#           execute :bundle, :exec, "god -c config/procs.god --pid #{fetch :god_pid}"
-#         end
-#       end
-#     end
-#   end
-#
-#   task :start do
-#     on roles(:app), in: :parallel do
-#       within release_path do
-#         with rails_env: fetch(:rails_env) do
-#           execute :bundle, :exec, "god -c config/procs.god --pid #{fetch :god_pid}"
-#         end
-#       end
-#     end
-#   end
-#
-#   task :stop do
-#     on roles(:app), in: :parallel do
-#       within release_path do
-#         with rails_env: fetch(:rails_env) do
-#           pid = capture(:cat, fetch(:god_pid))
-#           execute :kill, pid, '> /dev/null' if pid
-#         end
-#       end
-#     end
-#   end
-#
-# end
-
 namespace :god do
   def god_is_running
     capture(:bundle, "exec god status > /dev/null 2>&1 || echo 'god not running'") != 'god not running'
@@ -88,6 +51,10 @@ namespace :god do
   # Must be executed within SSHKit context
   def start_god
     execute :bundle, "exec god -c #{fetch :god_config}"
+  end
+
+  def stop_all_sidekiq
+    execute "kill `ps -ef | grep sidekiq | grep -v grep | awk '{print $2}'`"
   end
 
   desc "Start god and his processes"
@@ -107,6 +74,7 @@ namespace :god do
       within release_path do
         if god_is_running
           execute :bundle, "exec god terminate"
+          stop_all_sidekiq
         end
       end
     end
@@ -119,6 +87,7 @@ namespace :god do
         with RAILS_ENV: fetch(:rails_env) do
           if god_is_running
             execute :bundle, "exec god terminate"
+            stop_all_sidekiq
           end
           start_god
         end
