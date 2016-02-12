@@ -23,7 +23,7 @@ jQuery ($) ->
     else
       $('#report_output_data_slim, #report_output_data_slim_followers, #report_output_data_email_only').closest('.checkbox').hide()
 
-    if $(this).val() == 'tags'
+    if $(this).val() == 'tags' || $(this).val() == 'recent-media'
       $('#report_output_data_media_url, #report_output_data_all_media').closest('.checkbox').show()
     else
       $('#report_output_data_media_url, #report_output_data_all_media').closest('.checkbox').hide()

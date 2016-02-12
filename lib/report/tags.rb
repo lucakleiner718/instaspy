@@ -221,11 +221,11 @@ class Report::Tags < Report::Base
     files = []
 
     header = ['ID', 'Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followers', 'Email']
-    header += ['Country', 'State', 'City'] if @report.output_data.include? 'location'
-    header += ['AVG Likes'] if @report.output_data.include? 'likes'
-    header += ['Feedly Subscribers'] if @report.output_data.include? 'feedly'
+    header += ['Country', 'State', 'City'] if @report.output_data.include?('location')
+    header += ['AVG Likes'] if @report.output_data.include?('likes')
+    header += ['Feedly Subscribers'] if @report.output_data.include?('feedly')
     header += ['Media Link', 'Media Likes', 'Media Comments', 'Media Date']
-    header += ['Media Image'] if @report.output_data.include? 'media_url'
+    header += ['Media Image'] if @report.output_data.include?('media_url')
     header += ['Relation']
 
     @report.processed_csv.each do |row|
@@ -250,9 +250,9 @@ class Report::Tags < Report::Base
                 row += [feedly ? feedly.subscribers_amount : '']
               end
 
-              row += [media[:link], media[:likes_amount], media[:comments_amount], (media[:created_time].is_a?(String) ? DateTime.parse(media[:created_time]) : media[:created_time]).strftime('%m/%d/%Y %H:%M:%S')]
-              row += [media[:image]] if @report.output_data.include? 'media_url'
-
+              row += [media[:link], media[:likes_amount], media[:comments_amount],
+                (media[:created_time].is_a?(String) ? DateTime.parse(media[:created_time]) : media[:created_time]).strftime('%m/%d/%Y %H:%M:%S')]
+              row << media[:image] if @report.output_data.include?('media_url')
               row << tag.name
 
               csv << row

@@ -48,7 +48,12 @@ class Report::RecentMedia < Report::Base
       end
     end
 
-    header = ['ID', 'Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followers', 'Email', 'Media Link', 'Media Likes', 'Media Comments', 'Media Published', 'Media Tags']
+    header = [
+      'ID', 'Username', 'Full Name', 'Website', 'Bio', 'Follows', 'Followers',
+      'Email', 'Media Link', 'Media Likes', 'Media Comments', 'Media Date',
+      ]
+    header << 'Media Image' if @report.output_data.include?('media_url')
+    header << 'Media Tags'
 
     csv_string = CSV.generate do |csv|
       csv << header
@@ -58,12 +63,20 @@ class Report::RecentMedia < Report::Base
         media_ids = users_media[u.id][0,20]
         tags_ids = MediaTag.where(media_id: media_ids.join(',')).pluck(:tag_id, :media_id)
         tags_all = Tag.where(id: tags_ids.map{|r| r[0]}.uniq).pluck(:id, :name)
-        Media.where(id: media_ids).order(created_time: :desc).pluck(:link, :likes_amount, :comments_amount, :created_time, :id).each do |media|
-          tags = tags_ids.select{|r| r[1] == media[4]}.map{|r| r[0]}
+        Media.where(id: media_ids).order(created_time: :desc)
+          .pluck_to_hash(:id, :link, :likes_amount, :comments_amount, :created_time, :image).each do |media|
+
+          tags = tags_ids.select{|r| r[1] == media[:id]}.map{|r| r[0]}
           row = [
-            u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows, u.followed_by, u.email,
-            media[0], media[1], media[2], media[3].strftime('%m/%d/%Y %H:%M:%S'), tags_all.select{|r| r[0].in?(tags)}.map(&:last).join(',')
+            u.insta_id, u.username, u.full_name, u.website, u.bio, u.follows,
+            u.followed_by, u.email,
+            media[:link], media[:likes_amount], media[:comments_amount],
+            media[:created_time].strftime('%m/%d/%Y %H:%M:%S')
           ]
+
+          row << media[:image] if @report.output_data.include?('media_url')
+          row << tags_all.select{|r| r[0].in?(tags)}.map(&:last).join(',')
+
           csv << row
         end
       end
