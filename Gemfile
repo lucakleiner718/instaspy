@@ -48,7 +48,7 @@ gem 'httparty'
 gem 'render_csv'
 
 gem 'sidekiq', '~> 4.0'
-source "https://058b026d:dbdee804@gems.contribsys.com/" do
+source "https://b76a1d1d:0f27412d@gems.contribsys.com/" do
   gem 'sidekiq-pro'
 end
 gem 'sidekiq-failures', '~> 0.4.5'
