@@ -26,7 +26,7 @@ GIT
 
 GEM
   remote: https://rubygems.org/
-  remote: https://058b026d:dbdee804@gems.contribsys.com/
+  remote: https://b76a1d1d:0f27412d@gems.contribsys.com/
   specs:
     CFPropertyList (2.3.1)
     actionmailer (4.2.3)
@@ -104,7 +104,7 @@ GEM
       execjs
     coffee-script-source (1.9.1.1)
     colorize (0.7.7)
-    concurrent-ruby (1.0.0)
+    concurrent-ruby (1.0.1)
     connection_pool (2.2.0)
     countries (1.1.0)
       currencies (~> 0.4.2)
@@ -415,15 +415,14 @@ GEM
       sprockets-rails (>= 2.0, < 4.0)
       tilt (>= 1.1, < 3)
     shellany (0.0.1)
-    sidekiq (4.0.1)
+    sidekiq (4.1.1)
       concurrent-ruby (~> 1.0)
       connection_pool (~> 2.2, >= 2.2.0)
-      json (~> 1.0)
       redis (~> 3.2, >= 3.2.1)
     sidekiq-failures (0.4.5)
       sidekiq (>= 2.16.0)
-    sidekiq-pro (3.0.0)
-      sidekiq (>= 4.0.0.pre1)
+    sidekiq-pro (3.1.0)
+      sidekiq (>= 4.0.0)
     sidekiq-unique-jobs (4.0.7)
       sidekiq (>= 2.6)
     simple_form (3.1.1)
@@ -525,9 +524,9 @@ DEPENDENCIES
   rspec-rails (~> 3.0)
   rubyzip
   sass-rails (~> 5.0.4)
-  sidekiq (~> 4.0)
+  sidekiq (~> 4.1.0)
   sidekiq-failures (~> 0.4.5)
-  sidekiq-pro!
+  sidekiq-pro (~> 3.1.0)!
   sidekiq-unique-jobs (~> 4.0)
   simple_form
   sinatra
