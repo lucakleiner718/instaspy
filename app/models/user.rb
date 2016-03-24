@@ -43,6 +43,9 @@ class User < ActiveRecord::Base
     if self.email_changed? && self.email.present?
       self.email = self.email.downcase
     end
+
+    self.bio = self.bio[0...255] if self.bio.present?
+    self.website = self.website[0...255] if self.website.present?
   end
 
   # around_save do
