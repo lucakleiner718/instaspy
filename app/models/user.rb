@@ -3,9 +3,9 @@ class User < ActiveRecord::Base
   has_many :media, class_name: 'Media', dependent: :destroy
   has_many :feedly
 
-  has_many :user_followers, class_name: 'Follower', foreign_key: :user_id, dependent: :destroy
+  has_many :user_followers, class_name: 'Follower', foreign_key: :user_id, dependent: :delete_all
   has_many :followers, through: :user_followers
-  has_many :user_followees, class_name: 'Follower', foreign_key: :follower_id, dependent: :destroy
+  has_many :user_followees, class_name: 'Follower', foreign_key: :follower_id, dependent: :delete_all
   has_many :followees, through: :user_followees
 
   validates :insta_id, format: { with: /\A\d+\z/ }
